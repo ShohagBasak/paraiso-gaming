@@ -7,7 +7,7 @@ const FAQSection = () => {
     {
       id: 1,
       question: "How do I connect to the server?",
-      answer: "Open GTA San Andreas Multiplayer, click Connect, and enter our IP address: 192.168.1.1:7777. Then click Connect and enjoy the game!"
+      answer: "Open GTA San Andreas Multiplayer, click Connect, and enter our IP address: 999.999.999.99:1999. Then click Connect and enjoy the game!"
     },
     {
       id: 2,
