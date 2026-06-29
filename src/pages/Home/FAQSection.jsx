@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const FAQSection = () => {
   const [openFaq, setOpenFaq] = useState(null);

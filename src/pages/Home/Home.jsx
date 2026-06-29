@@ -13,6 +13,5 @@ const Home = () => {
             <FAQSection></FAQSection>
         </div>
     );
-};
-
+}
 export default Home;

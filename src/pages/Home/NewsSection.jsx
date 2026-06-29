@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-// Icon gulo import kora hoyeche UI sundor korar jonno
-import { FaCopy, FaCheck, FaDiscord, FaServer, FaUsers } from 'react-icons/fa';
+import { FaCopy, FaCheck, FaDiscord, FaServer } from 'react-icons/fa';
+
 
 const NewsSection = () => {
   // IP Copy korar state control
   const [copied, setCopied] = useState(false);
-  // Apnar server er IP ekhane boshaben
   const serverIP = "play.paraiso-rp.com:7777"; 
 
   const handleCopyIP = () => {
     navigator.clipboard.writeText(serverIP);
     setCopied(true);
-    // 2 second por abar 'Copy' icon e fire jabe
     setTimeout(() => setCopied(false), 2000); 
   };
 

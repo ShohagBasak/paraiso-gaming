@@ -24,7 +24,7 @@ const Root = () => {
         <main className="flex-grow">
           <Outlet />
         </main>
-        <Footer/>
+        <Footer></Footer>
       </div>
     </div>
   );

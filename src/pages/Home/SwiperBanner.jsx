@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
@@ -34,7 +34,7 @@ const SwiperBanner = () => {
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
 
             <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
                 <span className='text-2xl sm:text-4xl md:text-5xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0'>
                   Welcome to
                 </span> 
@@ -59,8 +59,8 @@ const SwiperBanner = () => {
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
 
             <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
-                <span className='text-2xl sm:text-4xl md:text-5xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0'>
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
+                <span className='text-xl sm:text-2xl md:text-3xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0'>
                   Explore
                 </span> 
                 NEW FEATURES
@@ -77,8 +77,25 @@ const SwiperBanner = () => {
 
         {/* slide 3 */}
         <SwiperSlide>
-            <div>
-                <img src="/banner" alt="" />
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/banner 1.jpg" alt="" />
+            </div>
+        </SwiperSlide>
+        {/* slide 4 */}
+        <SwiperSlide>
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/banner 2.jpg" alt="" />
+            </div>
+        </SwiperSlide>
+        {/* slide 5 */}
+        <SwiperSlide>
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/banner 3.jpg" alt="" />
+            </div>
+        </SwiperSlide>
+        <SwiperSlide>
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/banner 4.jpg" alt="" />
             </div>
         </SwiperSlide>
 
