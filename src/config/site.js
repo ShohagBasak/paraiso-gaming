@@ -8,7 +8,7 @@ export const SITE = {
   tagline: 'San Andreas Multiplayer · Roleplay Server',
   description:
     'A community-driven SA-MP roleplay server preparing to open its borders. Join the dispatch frequency to become a founding citizen.',
-  discordUrl: 'https://discord.gg/ktcdf5KPY4',
+  discordUrl: 'https://discord.gg/7AsJaG3KSV',
 };
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
