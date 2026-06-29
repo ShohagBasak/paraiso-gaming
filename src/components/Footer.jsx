@@ -1,83 +1,94 @@
-import React from 'react';
-import { FaDiscord, FaComments, FaTwitter, FaTwitch } from 'react-icons/fa';
+import { Link } from 'react-router';
+import { FaDiscord } from 'react-icons/fa';
+import { SITE } from '../config/site';
 
 const Footer = () => {
+  const quickLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Rules', path: '/rules' },
+    { name: 'Community', path: '/community' },
+    { name: 'Staff', path: '/staff' },
+    { name: 'Apply', path: '/apply' },
+  ];
+
   return (
-    <footer className="bg-[#0b131a] text-gray-400 p-10 font-sans border-t border-gray-800">
-      {/* Top Section */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Columns: Site Map & Links */}
-        <div className="md:col-span-4 grid grid-cols-2 gap-4">
-          <div>
-            <h6 className="text-white font-bold tracking-wider uppercase mb-3 text-sm">Site Map</h6>
-            <ul className="space-y-2 text-sm">
-              <li><a href="/site-map" className="hover:text-cyan-400 transition-colors">Site Map</a></li>
-              <li><a href="/forum" className="hover:text-cyan-400 transition-colors">Forum</a></li>
-              <li><a href="/community" className="hover:text-cyan-400 transition-colors">Community</a></li>
-              <li><a href="/connect" className="hover:text-cyan-400 transition-colors">Connect</a></li>
-            </ul>
-          </div>
-          <div>
-            <h6 className="opacity-0 font-bold tracking-wider uppercase mb-3 text-sm hidden md:block">More Links</h6>
-            <ul className="space-y-2 text-sm md:mt-8">
-              <li><a href="/status" className="hover:text-cyan-400 transition-colors">Server Status</a></li>
-              <li><a href="/samp" className="hover:text-cyan-400 transition-colors">SAMP SA:MP</a></li>
-              <li><a href="/twitch" className="hover:text-cyan-400 transition-colors">Twitch</a></li>
-            </ul>
-          </div>
-        </div>
+    <footer className="bg-[#08090c] border-t border-[rgba(232,166,53,0.06)] text-[var(--pg-muted)]">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
-        {/* Center Column: Newsletter Subscription */}
-        <div className="md:col-span-5 flex flex-col space-y-3">
-          <h6 className="text-cyan-400 font-extrabold tracking-wide uppercase text-base">
-            Never Miss An Update!
-          </h6>
-          <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
-            Subscribe to our newsletter for exclusive news, event invites, and special offers.
-          </p>
-          <form onSubmit={(e) => e.preventDefault()} className="flex items-center w-full max-w-md mt-2">
-            <input 
-              type="email" 
-              placeholder="Your Email Address..." 
-              className="input input-bordered bg-[#0f1922] text-white border-gray-700 focus:border-cyan-500 focus:outline-none rounded-r-none w-full text-sm h-11"
-              required
-            />
-            <button 
-              type="submit" 
-              className="btn bg-cyan-400 hover:bg-cyan-500 text-slate-900 border-none font-bold rounded-l-none px-6 h-11 min-h-0 uppercase text-xs tracking-wider"
+          {/* Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-sm overflow-hidden border border-[rgba(232,166,53,0.1)]">
+                <img src="/logo.png" alt={SITE.brandName + ' logo'} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col leading-none">
+                <span className="font-display font-bold text-sm text-[var(--pg-amber)] tracking-wide">Paraíso</span>
+                <span className="font-display text-[9px] text-[var(--pg-dim)] tracking-[0.2em] uppercase">Gaming</span>
+              </div>
+            </div>
+            <p className="text-xs leading-relaxed text-[var(--pg-dim)] max-w-xs">
+              {SITE.description}
+            </p>
+            <a
+              href={SITE.discordUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--pg-amber)] hover:bg-[#d4952e] text-[#0c0e12] font-display font-bold text-xs tracking-wider uppercase transition-all duration-200 w-fit"
             >
-              Subscribe
-            </button>
-          </form>
-        </div>
-
-        {/* Right Column: Social Media */}
-        <div className="md:col-span-3 flex flex-col md:items-end space-y-3">
-          <h6 className="text-white font-bold tracking-wider text-sm">
-            Official Social Media
-          </h6>
-          <div className="flex gap-4 text-2xl text-white">
-            <a href="https://discord.com" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">
-              <FaDiscord />
-            </a>
-            <a href="/forum" className="hover:text-cyan-400 transition-colors">
-              <FaComments />
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">
-              <FaTwitter />
-            </a>
-            <a href="https://twitch.tv" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">
-              <FaTwitch />
+              <FaDiscord size={13} />
+              Join Discord
             </a>
           </div>
+
+          {/* Quick links */}
+          <div>
+            <h6 className="font-display font-bold text-xs tracking-[0.15em] uppercase text-[var(--pg-text)] mb-4">
+              Quick Links
+            </h6>
+            <ul className="space-y-2.5">
+              {quickLinks.map((link) => (
+                <li key={link.path}>
+                  <Link
+                    to={link.path}
+                    className="text-sm text-[var(--pg-muted)] hover:text-[var(--pg-amber)] transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Status */}
+          <div>
+            <h6 className="font-display font-bold text-xs tracking-[0.15em] uppercase text-[var(--pg-text)] mb-4">
+              City Status
+            </h6>
+            <div className="space-y-2.5">
+              {[
+                { label: 'Server Launch', value: 'Preparing' },
+                { label: 'Community', value: 'Open' },
+                { label: 'Applications', value: 'Coming Soon' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--pg-dim)]">{item.label}</span>
+                  <span className="font-mono text-xs text-[var(--pg-amber)]">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-      </div>
-
-      {/* Bottom Section: Copyright */}
-      <div className="border-t border-gray-900 mt-10 pt-6 text-center text-xs text-gray-500 max-w-7xl mx-auto">
-        <p className='text-gray-400'>Copyright © From 2018 to {new Date().getFullYear()} - Developed by <span className='text-blue-400'>Shohag</span></p>
+        {/* Bottom bar */}
+        <div className="border-t border-[rgba(232,166,53,0.04)] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-[var(--pg-dim)]">
+          <p>
+            © {new Date().getFullYear()} Paraíso Gaming — Developed by{' '}
+            <span className="text-[var(--pg-amber)]">Shohag</span>
+          </p>
+          <p className="font-mono tracking-wider uppercase">SA-MP Roleplay · Preparing for Launch</p>
+        </div>
       </div>
     </footer>
   );

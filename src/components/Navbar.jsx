@@ -1,51 +1,58 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { FaDiscord } from 'react-icons/fa';
+import { NAV_LINKS, SITE } from '../config/site';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
-  const toggleMenu = () => setIsOpen(!isOpen);
-
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Connect', path: '/connect' },
-    { name: 'Rules', path: '/rules' },
-    { name: 'Forums', path: '/forums' },
-  ];
-
-  const actionLinks = [
-    { name: 'Community', path: '/community' },
-    { name: 'Staff', path: '/staff' },
-    { name: 'Apply', path: '/apply' },
-  ];
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="bg-slate-900 border-b-2 border-cyan-500 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
-          
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-[#0c0e12]/95 backdrop-blur-md border-b border-[rgba(232,166,53,0.12)] shadow-[0_4px_24px_rgba(0,0,0,0.3)]'
+          : 'bg-[#0c0e12]/80 backdrop-blur-sm border-b border-[rgba(232,166,53,0.06)]'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center h-16 py-2">
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
-              <span className="text-white font-bold text-lg"><img src='./logo.png'></img></span>
+          <Link to="/" className="flex items-center gap-3 flex-shrink-0 group">
+            <div className="w-10 h-10 rounded-sm flex items-center justify-center overflow-hidden border border-[rgba(232,166,53,0.15)] group-hover:border-[rgba(232,166,53,0.4)] transition-all duration-300">
+              <img src="/logo.png" alt={SITE.brandName + ' logo'} className="w-full h-full object-cover" />
             </div>
-            <span className="text-cyan-400 font-bold text-xl hidden sm:inline">Paraiso <span className='text-base-100'>Roleplay</span></span>
+            <div className="flex flex-col leading-none">
+              <span className="font-display font-bold text-base text-[var(--pg-amber)] tracking-wide leading-tight">
+                Paraíso
+              </span>
+              <span className="font-display text-[10px] text-[var(--pg-dim)] tracking-[0.2em] uppercase leading-tight">
+                Gaming
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
+          <div className="hidden lg:flex items-center gap-6">
+            {NAV_LINKS.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`transition-colors font-medium pb-1 ${
+                className={`font-display font-medium text-sm tracking-wide transition-all duration-200 pb-0.5 ${
                   isActive(link.path)
-                    ? 'text-cyan-400 border-b-2 border-cyan-400'
-                    : 'text-gray-300 hover:text-cyan-400 border-b-2 border-transparent hover:border-cyan-400'
+                    ? 'text-[var(--pg-amber)] border-b border-[var(--pg-amber)]'
+                    : 'text-[var(--pg-muted)] hover:text-[var(--pg-text)] border-b border-transparent hover:border-[rgba(232,166,53,0.3)]'
                 }`}
               >
                 {link.name}
@@ -53,79 +60,57 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Desktop Action Links */}
-          <div className="hidden lg:flex items-center gap-4">
-            {actionLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`transition-colors font-medium pb-1 ${
-                  isActive(link.path)
-                    ? 'text-cyan-400 border-b-2 border-cyan-400'
-                    : 'text-gray-300 hover:text-cyan-400 border-b-2 border-transparent hover:border-cyan-400'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <Link
-              to="/login"
-              className="btn btn-sm btn-outline btn-success hover:btn-success"
+          {/* Desktop CTA */}
+          <div className="hidden lg:flex items-center">
+            <a
+              href={SITE.discordUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--pg-amber)] hover:bg-[#d4952e] text-[#0c0e12] font-display font-bold text-xs tracking-wider uppercase transition-all duration-200 hover:shadow-[0_0_16px_rgba(232,166,53,0.3)]"
             >
-              Login / Sign Up
-            </Link>
+              <FaDiscord size={14} />
+              Join Discord
+            </a>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile toggle */}
           <button
-            className="lg:hidden text-cyan-400 bg-none border-none cursor-pointer"
-            onClick={toggleMenu}
+            className="lg:hidden text-[var(--pg-amber)] p-1 rounded transition-colors hover:bg-[rgba(232,166,53,0.08)]"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
           >
-            {isOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+            {isOpen ? <HiX size={22} /> : <HiMenu size={22} />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         {isOpen && (
-          <div className="lg:hidden bg-slate-800 border-t border-cyan-500 animate-in slide-in-from-top-2">
-            <div className="px-4 py-4 space-y-3">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`block py-2 px-2 rounded transition-colors ${
-                    isActive(link.path)
-                      ? 'text-cyan-400 bg-slate-700 font-medium'
-                      : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              <div className="border-t border-cyan-500 pt-3 mt-3">
-                {actionLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`block py-2 px-2 rounded transition-colors mb-2 ${
-                      isActive(link.path)
-                        ? 'text-cyan-400 bg-slate-700 font-medium'
-                        : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700'
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
+          <div className="lg:hidden border-t border-[rgba(232,166,53,0.08)] py-4 space-y-1">
+            {NAV_LINKS.map((link) => (
               <Link
-                to="/login"
-                className="btn btn-sm btn-success w-full mt-2"
+                key={link.path}
+                to={link.path}
+                className={`block py-2.5 px-3 rounded-sm font-display font-medium text-sm tracking-wide transition-colors ${
+                  isActive(link.path)
+                    ? 'text-[var(--pg-amber)] bg-[rgba(232,166,53,0.06)]'
+                    : 'text-[var(--pg-muted)] hover:text-[var(--pg-text)] hover:bg-[rgba(255,255,255,0.03)]'
+                }`}
                 onClick={() => setIsOpen(false)}
               >
-                Login / Sign Up
+                {link.name}
               </Link>
+            ))}
+            <div className="pt-3 border-t border-[rgba(232,166,53,0.06)]">
+              <a
+                href={SITE.discordUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--pg-amber)] hover:bg-[#d4952e] text-[#0c0e12] font-display font-bold text-sm tracking-wider uppercase transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <FaDiscord size={14} />
+                Join Discord
+              </a>
             </div>
           </div>
         )}
