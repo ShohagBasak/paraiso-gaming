@@ -75,6 +75,13 @@ const SwiperBanner = () => {
           </div>
         </SwiperSlide>
 
+        {/* slide 3 */}
+        <SwiperSlide>
+            <div>
+                <img src="/banner" alt="" />
+            </div>
+        </SwiperSlide>
+
         {/* Custom Arrows */}
         <div 
           onClick={() => swiperInstance?.slidePrev()} 

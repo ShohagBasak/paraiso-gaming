@@ -9,11 +9,13 @@ import Apply from '../pages/Apply/Apply';
 import Login from '../pages/Login/Login';
 import Root from '../pages/Root/Root';
 import Connect from '../pages/Connect/Connect';
+import Error from '../pages/Error/Error';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Root />,
+    errorElement: <Error />,
     children: [
       {
         path: '/',
@@ -46,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: <Login />,
+      },
+      {
+        path: "*", 
+        element: <Error />, 
       },
     ],
   },

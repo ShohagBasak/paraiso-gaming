@@ -1,6 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
+// Icon gulo import kora hoyeche UI sundor korar jonno
+import { FaCopy, FaCheck, FaDiscord, FaServer, FaUsers } from 'react-icons/fa';
 
 const NewsSection = () => {
+  // IP Copy korar state control
+  const [copied, setCopied] = useState(false);
+  // Apnar server er IP ekhane boshaben
+  const serverIP = "play.paraiso-rp.com:7777"; 
+
+  const handleCopyIP = () => {
+    navigator.clipboard.writeText(serverIP);
+    setCopied(true);
+    // 2 second por abar 'Copy' icon e fire jabe
+    setTimeout(() => setCopied(false), 2000); 
+  };
+
   const newsData = [
     {
       id: 1,
@@ -33,7 +47,7 @@ const NewsSection = () => {
   ];
 
   return (
-    <section className="py-16 px-4 sm:px-8">
+    <section className="py-16 px-4 sm:px-8 ">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-cyan-400 mb-12 text-center">Latest News</h2>
         
@@ -60,20 +74,64 @@ const NewsSection = () => {
             ))}
           </div>
 
-          {/* Discord Widget Section */}
-          <div className="lg:col-span-4 w-full flex justify-center sticky top-6">
-            <div className="w-full max-w-[400px] lg:max-w-none rounded-2xl overflow-hidden p-2 shadow-2xl shadow-indigo-900/10">
+          {/* Status & Widget Section */}
+          <div className="lg:col-span-4 w-full flex flex-col gap-6 sticky top-6">
+            
+            {/* Server Status & IP Card */}
+            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl shadow-cyan-900/10">
+              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <FaServer className="text-cyan-500" />
+                <span className='text-cyan-500'>Paraiso</span> Gaming Server
+              </h3>
+
+              {/* Click to Copy IP Block */}
+              <div 
+                onClick={handleCopyIP}
+                className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all duration-300 border mb-5 group ${
+                  copied 
+                    ? 'bg-green-500/10 border-green-500 text-green-400' 
+                    : 'bg-[#0a0f14] border-cyan-500/30 text-cyan-400 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                }`}
+              >
+                <div>
+                  <p className="text-xs text-gray-500 mb-1 uppercase font-bold tracking-wider">
+                    {copied ? 'IP Copied!' : 'Click to Copy IP'}
+                  </p>
+                  <p className="font-mono font-bold tracking-wider text-sm sm:text-base">
+                    {serverIP}
+                  </p>
+                </div>
+                <div className="text-xl">
+                  {copied ? <FaCheck /> : <FaCopy className="opacity-50 group-hover:opacity-100 transition-opacity" />}
+                </div>
+              </div>
+
+              {/* Discord Invite Hyperlink Button */}
+              <a 
+                href="https://discord.gg/7AsJaG3KSV" 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn w-full bg-[#5865F2] hover:bg-[#4752C4] border-none text-white shadow-[0_0_15px_rgba(88,101,242,0.3)] transition-all flex items-center gap-2 text-sm uppercase tracking-widest font-bold"
+              >
+                <FaDiscord className="text-2xl" />
+                Join Community
+              </a>
+            </div>
+
+            {/* 2. ORIGINAL: Discord Widget Box */}
+            <div className="w-full overflow-hidden p-2 shadow-2xl shadow-indigo-900/10">
               <iframe 
                 src="https://discord.com/widget?id=1519328496898408519&theme=dark" 
                 width="100%" 
-                height="500" 
+                height="450" 
                 allowtransparency="true" 
                 frameBorder="0" 
                 sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                className="rounded-xl"
+                className="rounded-xl w-full"
                 title="Discord Server Widget"
               ></iframe>
             </div>
+
           </div>
 
         </div>
