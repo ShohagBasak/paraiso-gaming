@@ -8,8 +8,8 @@ import Staff from '../pages/Staff/Staff';
 import Apply from '../pages/Apply/Apply';
 import Login from '../pages/Login/Login';
 import Root from '../pages/Root/Root';
-import Connect from '../pages/Connect/Connect';
 import Error from '../pages/Error/Error';
+import Donate from '../pages/Donate/Donate';
 
 export const router = createBrowserRouter([
   {
@@ -22,8 +22,8 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: '/connect',
-        element: <Connect />,
+        path: '/donate',
+        element: <Donate />,
       },
       {
         path: '/rules',

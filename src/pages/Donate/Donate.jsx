@@ -1,11 +1,11 @@
+import React from 'react';
 
-
-const Forums = () => {
+const Donate = () => {
     return (
         <div className='min-h-screen text-center text-5xl font-bold flex items-center justify-center text-white'>
-            Forums will be coming soon...
+            Donate will be coming soon...
         </div>
     );
 };
 
-export default Forums;
+export default Donate;
