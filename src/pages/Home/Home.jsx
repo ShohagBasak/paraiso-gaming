@@ -1,14 +1,12 @@
 import React from 'react';
 import NewsSection from './NewsSection';
 import FAQSection from './FAQSection';
-import SwiperBanner from './SwiperBanner';
-import FeaturesSlider from './FeaturesSlider';
+import HomeTwo from './HomeTwo';
 
 const Home = () => {
     return (
         <div>
-            <SwiperBanner></SwiperBanner>
-            <FeaturesSlider></FeaturesSlider>
+            <HomeTwo></HomeTwo>
             <NewsSection></NewsSection>
             <FAQSection></FAQSection>
         </div>

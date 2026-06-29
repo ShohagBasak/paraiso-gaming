@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
@@ -11,24 +11,19 @@ const SwiperBanner = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
 
   return (
-    <div className="w-full max-w-7xl mx-auto  sm:px-6 lg:px-2 my-6 md:my-10 relative overflow-hidden">
-      
+    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[#1e293b]">
       <Swiper
         onSwiper={(swiper) => setSwiperInstance(swiper)}
         spaceBetween={0}
         effect={'fade'}
         loop={true}
         grabCursor={true}
-        autoplay={{
-          delay: 5000,
-          disableOnInteraction: false,
-        }}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         modules={[Autoplay, EffectFade, Pagination]}
-        className="w-full h-[500px] sm:h-[580px] md:h-[650px] lg:h-[750px] premium-swiper relative rounded-2xl md:rounded-3xl border border-blue-500 shadow-2xl cursor-grab active:cursor-grabbing overflow-hidden"
+        className="w-full h-[300px] sm:h-[400px] md:h-[450px]"
       >
-        
-        {/* Slide 1 */}
+         {/* Slide 1 */}
         <SwiperSlide>
           <div className="w-full h-full relative flex items-center justify-center bg-[#0a0f14]">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
@@ -102,18 +97,16 @@ const SwiperBanner = () => {
         {/* Custom Arrows */}
         <div 
           onClick={() => swiperInstance?.slidePrev()} 
-          className="hidden md:flex absolute left-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 bg-black/30 backdrop-blur-md border border-cyan-500/30 rounded-full items-center justify-center text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] hover:scale-110"
+          className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full items-center justify-center text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all"
         >
-          <FaChevronLeft className="text-xl mr-1" />
+          <FaChevronLeft />
         </div>
-
         <div 
           onClick={() => swiperInstance?.slideNext()} 
-          className="hidden md:flex absolute right-8 top-1/2 -translate-y-1/2 z-50 w-14 h-14 bg-black/30 backdrop-blur-md border border-cyan-500/30 rounded-full items-center justify-center text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] hover:scale-110"
+          className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full items-center justify-center text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all"
         >
-          <FaChevronRight className="text-xl ml-1" />
+          <FaChevronRight />
         </div>
-
       </Swiper>
     </div>
   );
