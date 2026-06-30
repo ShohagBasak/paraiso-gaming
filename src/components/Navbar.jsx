@@ -133,13 +133,14 @@ const Navbar = () => {
           {/* Desktop Action Links */}
           <div className="hidden lg:flex items-center gap-3">
             {renderLinks(actionLinks, false)}
-            <Link
-              to="/discord"
+            <a
+              href="https://discord.com/invite/7AsJaG3KSV"
               target='_blank'
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-5 py-2 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-white text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40 hover:shadow-cyan-400/60 hover:scale-105 whitespace-nowrap ml-1"
             >
               Join Discord
-            </Link>
+            </a>
           </div>
 
           <button className="lg:hidden text-cyan-400 bg-transparent border-none cursor-pointer" onClick={toggleMenu}>
@@ -161,14 +162,15 @@ const Navbar = () => {
               <div className="border-t border-cyan-500/30 pt-3 mt-3">
                 {renderLinks(actionLinks, true)}
               </div>
-              <Link
-                to="/discord"
+              <a
+                href="https://discord.com/invite/7AsJaG3KSV"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full py-2.5 mt-4 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-900 text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40"
                 onClick={() => setIsOpen(false)}
               >
                 Join Discord
-              </Link>
+              </a>
             </div>
           </div>
         </div>

@@ -15,8 +15,8 @@ const Root = () => {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* Overlay for better text readability */}
-      <div className="fixed inset-0 bg-black/40 pointer-events-none"></div>
+      {/* Dark navy overlay — same as Announcement section */}
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(10, 18, 40, 0.82)' }}></div>
       
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">

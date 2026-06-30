@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
       {
         path: '/discord',
         loader: () => {
-          window.location.href = "https://discord.gg/Za8HMyMebT"; 
+          window.location.href = "https://discord.com/invite/7AsJaG3KSV"; 
           return null;
         },
       },
