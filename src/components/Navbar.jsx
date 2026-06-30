@@ -120,8 +120,8 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
-              <span className="text-white font-bold text-lg"><img src='./logo.png' alt="logo" /></span>
+            <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
+              <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
             </div>
             <span className="text-cyan-400 font-bold text-xl hidden sm:inline">Paraiso <span className='text-base-100'>Gaming</span></span>
           </Link>

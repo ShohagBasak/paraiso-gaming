@@ -35,7 +35,7 @@ const Footer = () => {
             {/* Logo + name */}
             <Link to="/" className="flex items-center gap-3 w-fit group">
               <div className="w-10 h-10 rounded-lg overflow-hidden border border-cyan-500/30 group-hover:border-cyan-400 transition-colors flex-shrink-0 shadow-md shadow-cyan-500/10">
-                <img src="/logo.png" alt="Paraiso Roleplay logo" className="w-full h-full object-cover" />
+                <img src="./logonobg.png" alt="Paraiso Roleplay logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <span className="text-cyan-400 font-bold text-xl leading-none">Paraiso</span>
