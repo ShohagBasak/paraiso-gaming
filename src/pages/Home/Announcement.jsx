@@ -2,7 +2,7 @@ import React from 'react';
 
 const Announcement = () => {
   return (
-    <section className="py-20 px-4 sm:px-8">
+    <section className="pt-20 mb-15 px-4 sm:px-8">
       <div className="max-w-4xl mx-auto">
         
         {/* Top Label */}
