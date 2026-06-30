@@ -39,7 +39,7 @@ const Footer = () => {
               </div>
               <div>
                 <span className="text-cyan-400 font-bold text-xl leading-none">Paraiso</span>
-                <span className="text-white font-bold text-xl leading-none ml-1.5">Roleplay</span>
+                <span className="text-white font-bold text-xl leading-none ml-1.5">Gaming</span>
               </div>
             </Link>
 
