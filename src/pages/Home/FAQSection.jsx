@@ -6,28 +6,28 @@ const FAQSection = () => {
   const faqData = [
     {
       id: 1,
-      question: "How do I connect to the server?",
-      answer: "Open GTA San Andreas Multiplayer, click Connect, and enter our IP address: 999.999.999.99:1999. Then click Connect and enjoy the game!"
+      question: "When is Paraiso Gaming launching?",
+      answer: "Paraiso Gaming is expected to launch within the next 2–3 weeks. Our team is currently completing final testing and polishing every system to deliver the best possible experience at launch. Be sure to join our Discord and Forums to stay up to date with announcements, development updates, giveaways, and the official launch date."
     },
     {
       id: 2,
-      question: "What bonuses do new players get?",
-      answer: "New players receive $500,000 starting money and a 50% discount on purchases for the first 7 days on the server."
+      question: "Can I transfer my stats if I come from Horizon Roleplay?",
+      answer: "Yes. We are honoring many Horizon Roleplay players. Eligible players may qualify for equivalent statistics, faction ranks, leadership positions, and exclusive rewards. Every transfer request is reviewed individually by our management team."
     },
     {
       id: 3,
-      question: "How can I become a staff member?",
-      answer: "Visit the Apply page and submit your application. We regularly recruit new moderators and helpers for the server."
+      question: "How do I get started on Paraiso Gaming?",
+      answer: "Simply create your character and begin your journey. Whether you want to join law enforcement, emergency services, become a business owner, criminal, lawyer, journalist, or simply live as a civilian, Paraiso Gaming offers countless opportunities to create your own story."
     },
     {
       id: 4,
-      question: "How do I level up on the server?",
-      answer: "You can level up by completing various jobs such as: driving a taxi, mining materials, selling goods, or completing special missions."
+      question: "Is Paraiso Gaming beginner-friendly?",
+      answer: "Absolutely. Whether you’re new to SA-MP roleplay or a longtime veteran, our staff and community are here to help. We provide guides, tutorials, and active support to ensure every player has an enjoyable experience from day one."
     },
     {
       id: 5,
-      question: "How many players can play on the server?",
-      answer: "Our server supports up to 1000 players. We have 50+ custom jobs, multiple factions, weekly events, and much more to explore!"
+      question: "What makes Paraiso Gaming different?",
+      answer: "Paraiso Gaming is built around immersive roleplay, fair administration, balanced gameplay, and a player-first philosophy. Our goal is to create a long-lasting community where your decisions, achievements, and roleplay truly matter."
     }
   ];
 

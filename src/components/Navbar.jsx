@@ -41,7 +41,6 @@ const Navbar = () => {
   };
 
   const actionLinks = [
-    { name: 'Community', path: '/community' },
     { name: 'Staff', path: '/staff' },
     { 
       name: 'Apply', 

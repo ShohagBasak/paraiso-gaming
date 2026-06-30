@@ -1,23 +1,17 @@
-import { createBrowserRouter, redirect } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 
 import Home from '../pages/Home/Home';
 import Rules from '../pages/Rules/Rules';
-import Community from '../pages/Community/Community';
 import Staff from '../pages/Staff/Staff';
-import Apply from '../pages/Apply/Apply';
-import Login from '../pages/Login/Login';
 import Root from '../pages/Root/Root';
 import Error from '../pages/Error/Error';
 import Donate from '../pages/Donate/Donate';
 import ServerOffenses from '../pages/Home/ServerOffenses';
+import AuthLayout from '../layouts/AuthLayout';
+import Login from '../pages/Auth/Login/Login';
+import Register from '../pages/Auth/Register/Register';
 
-const forumLoader = () => {
-  return redirect('https://forums.pgaming.net/index.php');
-};
 
-const forumApply = () =>{
-  return redirect('https://forums.pgaming.net/index.php#factions.8');
-}
 
 export const router = createBrowserRouter([
   {
@@ -26,7 +20,7 @@ export const router = createBrowserRouter([
     errorElement: <Error />,
     children: [
       {
-        path: '/',
+        index: true,
         element: <Home />,
       },
       {
@@ -42,21 +36,34 @@ export const router = createBrowserRouter([
         element: <ServerOffenses />,
       },
       {
-        path: '/community',
-        element: <Community />,
-      },
-      {
         path: '/staff',
         element: <Staff />,
       },
       {
-        path: '/login',
-        element: <Login />,
+        path: '/discord',
+        loader: () => {
+          window.location.href = "https://discord.gg/Za8HMyMebT"; 
+          return null;
+        },
       },
       {
-        path: "*", 
-        element: <Error />, 
+        path: "*",
+        element: <Error />,
       },
     ],
   },
+  {
+    path: "/",
+    Component: AuthLayout,
+    children: [
+      {
+        path: 'login',
+        Component: Login
+      },
+      {
+        path: 'register',
+        Component: Register
+      }
+    ]
+  }
 ]);
