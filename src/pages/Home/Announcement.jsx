@@ -78,6 +78,18 @@ const Announcement = () => {
         </div>
 
       </div>
+
+      {/* Bottom Full-Width Divider */}
+      <div className="relative w-full mt-5">
+        <div
+          className="w-full h-px"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, #22d3ee 30%, #3b82f6 50%, #22d3ee 70%, transparent 100%)',
+            boxShadow: '0 0 12px 2px rgba(34, 211, 238, 0.4)',
+          }}
+        />
+      </div>
+
     </section>
   );
 };
