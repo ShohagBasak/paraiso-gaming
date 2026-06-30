@@ -16,7 +16,7 @@ const Root = () => {
       }}
     >
       {/* Dark navy overlay — same as Announcement section */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(10, 18, 40, 0.82)' }}></div>
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(25, 41, 85, 0.6)' }}></div>
       
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
