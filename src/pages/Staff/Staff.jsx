@@ -53,7 +53,8 @@ const Staff = () => {
       members: [
         { name: "Sakura", role: "", country: "ph" }, 
         { name: "Andres", role: "", country: "ph" },
-        { name: "Kloss", role: "", country: "nz" }
+        { name: "Kloss", role: "", country: "nz" },
+        { name: "Pharell", role: "", country: "ca" }
       ]
     },
     {
@@ -65,7 +66,7 @@ const Staff = () => {
       members: [
         { name: "Tyler", role: "", country: "ph" },
         { name: "Larz", role: "", country: "nz" },
-        { name: "Pharell", role: "", country: "ca" }
+        { name: "Malik", role: "", country: "tn" },
       ]
     },
     {

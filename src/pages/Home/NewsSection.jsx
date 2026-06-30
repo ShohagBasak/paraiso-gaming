@@ -16,31 +16,31 @@ const NewsSection = () => {
   const newsData = [
     {
       id: 1,
-      date: "June 24, 2026",
+      date: "July 24, 2026",
       title: "New Summer Season Launched!",
       description: "Featuring new jobs, events, and exclusive rewards for all players.",
       image: "🎉"
     },
     {
       id: 2,
-      date: "June 20, 2026",
+      date: "July 20, 2026",
       title: "Drag Racing Championship Started",
       description: "Win up to 1 million cash prizes every week. Join the competition now!",
       image: "🏎️"
     },
     {
       id: 3,
-      date: "June 18, 2026",
+      date: "July 18, 2026",
       title: "New Staff Members Recruited",
       description: "5 new moderators and 10 helpers have joined our team to serve you better.",
       image: "👥"
     },
     {
       id: 4,
-      date: "June 18, 2026",
-      title: "New Staff Members Recruited",
-      description: "5 new moderators and 10 helpers have joined our team to serve you better.",
-      image: "👥"
+      date: "July 15, 2026",
+      title: "Server Opening Date Announced",
+      description: "Paraiso Roleplay is preparing to open its doors. Stay tuned for the official launch date and founding citizen perks.",
+      image: "🚀"
     }
   ];
 

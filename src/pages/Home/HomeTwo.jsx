@@ -6,7 +6,7 @@ import { FaServer, FaDiscord } from 'react-icons/fa';
 
 const HomeTwo = () => {
   const [copied, setCopied] = useState(false);
-  const serverIP = "play.paraiso-rp.com:7777";
+  const serverIP = "Coming Soon";
 
   const handleCopyIP = () => {
     navigator.clipboard.writeText(serverIP);
@@ -43,7 +43,7 @@ const HomeTwo = () => {
                     {copied ? 'IP Copied!' : 'Click to Copy IP'}
                   </p>
                   <p className={`font-mono font-bold text-sm ${copied ? 'text-green-400' : 'text-cyan-400'}`}>
-                    {serverIP}
+                    Coming Soon...
                   </p>
                 </div>
               </div>

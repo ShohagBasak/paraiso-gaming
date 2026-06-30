@@ -29,21 +29,18 @@ const SwiperBanner = () => {
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
 
             <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
-                <span className='text-2xl sm:text-4xl md:text-5xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0'>
+              <h1 style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3 md:mb-5 leading-tight drop-shadow-xl tracking-wide">
+                <span style={{ fontFamily: "'Rajdhani', sans-serif" }} className='text-2xl sm:text-4xl md:text-5xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0 font-semibold'>
                   Welcome to
-                </span> 
+                </span>{' '}
                 PARAISO ROLEPLAY
               </h1>
-              <p className="text-base sm:text-xl md:text-2xl text-gray-200 mb-3 md:mb-5 font-medium max-w-md sm:max-w-xl md:max-w-2xl drop-shadow-md">
+              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-base sm:text-xl md:text-2xl text-gray-200 mb-3 md:mb-5 font-semibold max-w-md sm:max-w-xl md:max-w-2xl drop-shadow-md tracking-wide">
                 The Ultimate San Andreas Multiplayer Experience
               </p>
-              <p className="text-xs sm:text-sm md:text-lg text-gray-400 max-w-xs sm:max-w-lg md:max-w-2xl mx-auto mb-6 md:mb-10 drop-shadow-sm leading-relaxed">
+              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-xs sm:text-sm md:text-lg text-gray-400 max-w-xs sm:max-w-lg md:max-w-2xl mx-auto mb-6 md:mb-10 drop-shadow-sm leading-relaxed">
                 Join thousands of players in the most immersive multiplayer server
               </p>
-              <button className="relative z-50 btn btn-md sm:btn-lg bg-blue-500 hover:bg-blue-600 border-none text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all duration-300 uppercase tracking-widest text-xs sm:text-sm px-6 sm:px-10">
-                Connect Now
-              </button>
             </div>
           </div>
         </SwiperSlide>
@@ -54,18 +51,15 @@ const SwiperBanner = () => {
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
 
             <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3 md:mb-5 leading-tight drop-shadow-xl">
-                <span className='text-xl sm:text-2xl md:text-3xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0'>
+              <h1 style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3 md:mb-5 leading-tight drop-shadow-xl tracking-wide">
+                <span style={{ fontFamily: "'Rajdhani', sans-serif" }} className='text-xl sm:text-2xl md:text-3xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0 font-semibold'>
                   Explore
-                </span> 
+                </span>{' '}
                 NEW FEATURES
               </h1>
-              <p className="text-base sm:text-xl md:text-2xl text-gray-200 mb-6 md:mb-10 font-medium drop-shadow-md">
-                Custom Economy, Vehicles & Advanced Jobs
+              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-base sm:text-xl md:text-2xl text-gray-200 mb-6 md:mb-10 font-semibold drop-shadow-md tracking-wide">
+                Custom Economy, Vehicles &amp; Advanced Jobs
               </p>
-              <button className="relative z-50 btn btn-md sm:btn-lg bg-purple-500 hover:bg-purple-600 border-none text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300 uppercase tracking-widest text-xs sm:text-sm px-6 sm:px-10">
-                View Changelog
-              </button>
             </div>
           </div>
         </SwiperSlide>

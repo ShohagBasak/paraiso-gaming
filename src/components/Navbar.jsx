@@ -11,7 +11,6 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Donate', path: '/donate' },
     { 
       name: 'Rules', 
       isDropdown: true,
@@ -75,8 +74,8 @@ const Navbar = () => {
             </div>
           </div>
         ) : (
-          <div key={index} className="relative group">
-            <button className="flex items-center gap-1 text-gray-300 hover:text-cyan-400 transition-colors font-medium pb-1 border-b-2 border-transparent group-hover:border-cyan-400 bg-transparent border-none cursor-pointer">
+          <div key={index} className="relative group flex items-center self-center">
+            <button className="flex items-center gap-1 text-gray-300 hover:text-cyan-400 hover:underline hover:underline-offset-4 hover:decoration-cyan-400 transition-all duration-300 font-medium bg-transparent border-0 p-0 cursor-pointer">
               {link.name} <HiChevronDown className="text-sm group-hover:rotate-180 transition-transform duration-300" />
             </button>
             <div className="absolute left-0 top-full mt-2 w-48 bg-slate-800 border border-cyan-500/50 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50">
@@ -84,7 +83,7 @@ const Navbar = () => {
                 <button
                   key={subIndex}
                   onClick={() => handleNavClick(subLink)}
-                  className="text-left px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-cyan-400 hover:bg-slate-700/50 transition-colors"
+                  className="text-left px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-cyan-400 hover:bg-slate-700/50 transition-colors bg-transparent border-0 cursor-pointer"
                 >
                   {subLink.name}
                 </button>
@@ -96,7 +95,7 @@ const Navbar = () => {
 
       const linkClasses = isMobile
         ? `block w-full text-left py-2 px-2 rounded transition-colors mb-2 ${isActive(link.path) ? 'text-cyan-400 bg-slate-700 font-medium' : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700 bg-transparent'}`
-        : `transition-colors font-medium pb-1 ${isActive(link.path) ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-300 hover:text-cyan-400 border-b-2 border-transparent hover:border-cyan-400'}`;
+        : `font-medium self-center underline-offset-4 decoration-cyan-400 transition-all duration-300 ${isActive(link.path) ? 'text-cyan-400 underline' : 'text-gray-300 hover:text-cyan-400 hover:underline'}`;  
 
       if (link.isExternal) {
         return (
@@ -132,10 +131,14 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Action Links */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
             {renderLinks(actionLinks, false)}
-            <Link to="/login" className="btn btn-sm btn-outline btn-success hover:btn-success ml-2">
-              Login / Sign Up
+            <Link
+              to="/discord"
+              target='_blank'
+              className="inline-flex items-center justify-center px-5 py-2 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-white text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40 hover:shadow-cyan-400/60 hover:scale-105 whitespace-nowrap ml-1"
+            >
+              Join Discord
             </Link>
           </div>
 
@@ -144,20 +147,31 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="lg:hidden bg-slate-800 border-t border-cyan-500 animate-in slide-in-from-top-2">
+        {/* Mobile Menu — always mounted, animated via max-height + opacity */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isOpen
+              ? 'max-h-[600px] opacity-100'
+              : 'max-h-0 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="bg-slate-800 border-t border-cyan-500">
             <div className="px-4 py-4 space-y-3">
               {renderLinks(navLinks, true)}
               <div className="border-t border-cyan-500/30 pt-3 mt-3">
                 {renderLinks(actionLinks, true)}
               </div>
-              <Link to="/login" className="btn btn-sm btn-success w-full mt-4" onClick={() => setIsOpen(false)}>
-                Login / Sign Up
+              <Link
+                to="/discord"
+                target="_blank"
+                className="inline-flex items-center justify-center w-full py-2.5 mt-4 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-900 text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40"
+                onClick={() => setIsOpen(false)}
+              >
+                Join Discord
               </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );
