@@ -13,79 +13,79 @@ const Staff = () => {
   const staffData = [
     {
       category: "Management",
-      icon: <FaUserTie className="text-red-600" />,
-      borderColor: "border-red-500/30",
-      hoverBorder: "hover:border-red-500",
-      textColor: "text-red-600",
+      icon: <FaUserTie className="text-[#ff2d2d]" />,
+      borderColor: "border-[#ff2d2d]/30",
+      hoverBorder: "hover:border-[#ff2d2d]",
+      textColor: "text-[#ff2d2d]",
       members: [
-        { name: "Brian", role: "Community Manager", country: "us" }, 
-        { name: "Surreal", role: "Director of Game Affairs | Tech", country: "ph" } 
+        { name: "Brian", role: "", country: "us" }, 
+        { name: "Surreal", role: "", country: "ph" } 
       ]
     },
     {
       category: "Assistant Management",
-      icon: <FaUserCog className="text-red-600" />,
-      borderColor: "border-red-500/30",
-      hoverBorder: "hover:border-red-500",
-      textColor: "text-red-600",
+      icon: <FaUserCog className="text-[#ff2d2d]" />,
+      borderColor: "border-[#ff2d2d]/30",
+      hoverBorder: "hover:border-[#ff2d2d]",
+      textColor: "text-[#ff2d2d]",
       members: [
-        { name: "Leamir", role: "Head Developer", country: "br" } 
+        { name: "Leamir", role: "", country: "br" } 
       ]
     },
     {
       category: "Head Admin",
-      icon: <FaShieldAlt className="text-fuchsia-900" />,
-      borderColor: "border-fuchsia-900/30",
-      hoverBorder: "hover:border-fuchsia-500",
-      textColor: "text-fuchsia-900",
+      icon: <FaShieldAlt className="text-[#9B59B6]" />,
+      borderColor: "border-[#9B59B6]/30",
+      hoverBorder: "hover:border-[#9B59B6]",
+      textColor: "text-[#9B59B6]",
       members: [
-        { name: "Mofuman", role: "Head Administrator", country: "us" },
-        { name: "Danny", role: "Head Administrator", country: "gb" },
-        { name: "Omarito", role: "Director of Gang Management", country: "eg" }
+        { name: "Mofuman", role: "", country: "us" },
+        { name: "Danny", role: "", country: "gb" },
+        { name: "Omarito", role: "", country: "eg" }
       ]
     },
     {
       category: "Senior Admin",
-      icon: <FaUserShield className="text-purple-500" />,
-      borderColor: "border-purple-500/30",
-      hoverBorder: "hover:border-purple-500",
-      textColor: "text-purple-400",
+      icon: <FaUserShield className="text-[#F39C12]" />,
+      borderColor: "border-[#F39C12]/30",
+      hoverBorder: "hover:border-[#F39C12]",
+      textColor: "text-[#F39C12]",
       members: [
-        { name: "Sakura", role: "Director of Helper Management", country: "ph" }, 
-        { name: "Andres", role: "Assistant Director of Helper", country: "ph" },
-        { name: "Kloss", role: "Assistant Director of Helper", country: "nz" }
+        { name: "Sakura", role: "", country: "ph" }, 
+        { name: "Andres", role: "", country: "ph" },
+        { name: "Kloss", role: "", country: "nz" }
       ]
     },
     {
       category: "General Admin",
-      icon: <FaUserShield className="text-blue-500" />,
-      borderColor: "border-blue-500/30",
-      hoverBorder: "hover:border-blue-500",
-      textColor: "text-blue-400",
+      icon: <FaUserShield className="text-[#F1C40F]" />,
+      borderColor: "border-[#F1C40F]/30",
+      hoverBorder: "hover:border-[#F1C40F]",
+      textColor: "text-[#F1C40F]",
       members: [
-        { name: "Tyler", role: "General Administrator", country: "ph" },
-        { name: "Larz", role: "General Administrator", country: "nz" },
-        { name: "Pharell", role: "General Administrator", country: "ca" }
+        { name: "Tyler", role: "", country: "ph" },
+        { name: "Larz", role: "", country: "nz" },
+        { name: "Pharell", role: "", country: "ca" }
       ]
     },
     {
       category: "Junior Admin",
-      icon: <FaUserShield className="text-cyan-500" />,
-      borderColor: "border-cyan-500/30",
-      hoverBorder: "hover:border-cyan-500",
-      textColor: "text-cyan-400",
+      icon: <FaUserShield className="text-[#7ED321]" />,
+      borderColor: "border-[#7ED321]/30",
+      hoverBorder: "hover:border-[#7ED321]",
+      textColor: "text-[#7ED321]",
       members: [
-        {name: "Hataz ", role: "Helper Manager", country: "ph"}
+        {name: "Hataz ", role: "", country: "ph"}
       ]
     },
     {
       category: "Developers",
-      icon: <FaCode className="text-green-500" />,
-      borderColor: "border-green-500/30",
-      hoverBorder: "hover:border-green-500",
-      textColor: "text-green-400",
+      icon: <FaCode className="text-[#1ABC9C]" />,
+      borderColor: "border-[#1ABC9C]/30",
+      hoverBorder: "hover:border-[#1ABC9C]",
+      textColor: "text-[#1ABC9C]",
       members: [
-        { name: "Drizzy", role: "Scripter", country: "ph" }
+        { name: "Drizzy", role: "", country: "ph" }
       ]
     }
   ];
@@ -126,21 +126,22 @@ const Staff = () => {
                       </div>
                       
                       <div>
-
-                        <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+                        <h3 className={`text-lg font-bold ${section.textColor} transition-colors flex items-center gap-2`}>
                           {staff.name}
                           {staff.country && (
                             <img 
-                              src={`https://flagcdn.com/24x18/${staff.country}.png`} 
+                              src={`https://flagcdn.com/24x18/${staff.country.toLowerCase()}.png`} 
                               alt={staff.country} 
                               className="w-5 h-auto rounded-[2px] opacity-90 shadow-sm"
                               title={`Country: ${staff.country.toUpperCase()}`}
                             />
                           )}
                         </h3>
-                        <p className="text-xs font-medium text-slate-400 mt-0.5">
-                          {staff.role}
-                        </p>
+                        {staff.role && (
+                           <p className="text-xs font-medium text-slate-400 mt-0.5">
+                             {staff.role}
+                           </p>
+                        )}
                       </div>
                     </div>
                   ))}
