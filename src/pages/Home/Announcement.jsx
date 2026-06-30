@@ -6,7 +6,7 @@ const Announcement = () => {
       className="pt-16 sm:pt-20 pb-0 px-4 sm:px-8 relative overflow-hidden"
       style={{
         backgroundImage: `url('/bg.png')`,
-        backgroundSize: '100% auto',
+        backgroundSize: '140% auto',
         backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
         minHeight: '600px',

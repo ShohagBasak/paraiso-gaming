@@ -79,12 +79,22 @@ const SwiperBanner = () => {
         {/* slide 5 */}
         <SwiperSlide>
             <div className='w-full h-full'>
-                <img className='w-full h-full' src="/banner 3.jpg" alt="" />
+                <img className='w-full h-full' src="/sp1.png" alt="" />
             </div>
         </SwiperSlide>
         <SwiperSlide>
             <div className='w-full h-full'>
-                <img className='w-full h-full' src="/banner 4.jpg" alt="" />
+                <img className='w-full h-full' src="/sp2.png" alt="" />
+            </div>
+        </SwiperSlide>
+        <SwiperSlide>
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/sp3.png" alt="" />
+            </div>
+        </SwiperSlide>
+        <SwiperSlide>
+            <div className='w-full h-full'>
+                <img className='w-full h-full' src="/sp4.png" alt="" />
             </div>
         </SwiperSlide>
 

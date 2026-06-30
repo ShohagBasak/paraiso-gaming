@@ -7,9 +7,9 @@ import Root from '../pages/Root/Root';
 import Error from '../pages/Error/Error';
 import Donate from '../pages/Donate/Donate';
 import ServerOffenses from '../pages/Home/ServerOffenses';
-import AuthLayout from '../layouts/AuthLayout';
-import Login from '../pages/Auth/Login/Login';
-import Register from '../pages/Auth/Register/Register';
+// import AuthLayout from '../layouts/AuthLayout';
+// import Login from '../pages/Auth/Login/Login';
+// import Register from '../pages/Auth/Register/Register';
 
 
 
