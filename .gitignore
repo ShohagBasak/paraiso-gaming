@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 schema.sql
-.env
+
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +24,4 @@ schema.sql
 *.njsproj
 *.sln
 *.sw?
+.env
