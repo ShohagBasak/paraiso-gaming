@@ -7,12 +7,14 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/pagination";
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const SwiperBanner = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [slides, setSlides] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/banners', { credentials: 'include' })
+    fetch(`${BASE_URL}/banners`, { credentials: 'include' })
       .then(r => {
         if (!r.ok) throw new Error('Failed to fetch');
         return r.json();

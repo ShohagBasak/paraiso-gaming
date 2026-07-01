@@ -5,13 +5,15 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { MdCampaign } from 'react-icons/md';
 import "swiper/css";
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const FeaturesSlider = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [featuresData, setFeaturesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/announcements', { credentials: 'include' })
+    fetch(`${BASE_URL}/announcements`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => setFeaturesData(Array.isArray(data) ? data : []))
       .catch(() => setFeaturesData([]))

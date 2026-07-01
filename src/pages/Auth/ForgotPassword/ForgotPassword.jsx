@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const ForgotPassword = () => {
     const { register, handleSubmit, watch, formState: { errors } } = useForm();
     const [serverError, setServerError] = useState('');
@@ -20,7 +22,7 @@ const ForgotPassword = () => {
         setLoading(true);
 
         try {
-            const res = await fetch('http://localhost:5000/reset-password', {
+            const res = await fetch(`${BASE_URL}/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

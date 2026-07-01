@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { MdAdd, MdDelete, MdImage, MdEdit, MdClose, MdHelpOutline, MdPalette, MdDragIndicator } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const BannerManager = () => {
     const [banners, setBanners] = useState([]);

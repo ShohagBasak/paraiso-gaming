@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { MdPeople, MdShield, MdPerson, MdSearch } from 'react-icons/md';
 import { AuthContext } from '../../context/AuthContext';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const RoleBadge = ({ role }) => (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${

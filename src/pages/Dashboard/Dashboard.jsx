@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { MdImage, MdCampaign, MdTrendingUp, MdPeople } from 'react-icons/md';
 import { Link } from 'react-router';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const StatCard = ({ icon, label, value, color, to }) => (
     <Link to={to} className="block bg-[#0d1117] border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/40 transition-all duration-300 group">
         <div className="flex items-center justify-between mb-4">
@@ -25,9 +27,9 @@ const Dashboard = () => {
         const fetchCounts = async () => {
             try {
                 const [b, a, s] = await Promise.all([
-                    fetch('http://localhost:5000/banners', { credentials: 'include' }).then(r => r.json()),
-                    fetch('http://localhost:5000/announcements', { credentials: 'include' }).then(r => r.json()),
-                    fetch('http://localhost:5000/staff', { credentials: 'include' }).then(r => r.json()),
+                    fetch(`${BASE_URL}/banners`, { credentials: 'include' }).then(r => r.json()),
+                    fetch(`${BASE_URL}/announcements`, { credentials: 'include' }).then(r => r.json()),
+                    fetch(`${BASE_URL}/staff`, { credentials: 'include' }).then(r => r.json()),
                 ]);
                 setBannerCount(Array.isArray(b) ? b.length : 0);
                 setAnnouncementCount(Array.isArray(a) ? a.length : 0);
