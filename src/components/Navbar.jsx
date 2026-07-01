@@ -39,17 +39,17 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Donate', path: '/donate' },
-    { 
-      name: 'Rules', 
+    {
+      name: 'Rules',
       isDropdown: true,
       subLinks: [
         { name: 'General Rules', path: '/rules' },
         { name: 'Server Offenses', path: '/rules/offenses' }
       ]
     },
-    { 
-      name: 'Forums', 
-      path: 'https://forums.pgaming.net/index.php', 
+    {
+      name: 'Forums',
+      path: 'https://forums.pgaming.net/index.php',
       isExternal: true,
       blank: true
     },
@@ -57,15 +57,15 @@ const Navbar = () => {
 
   const handleNavClick = (link) => {
     setIsOpen(false);
-    
+
     if (link.isLogout) {
       logoutUser();
     } else if (link.isExternal && link.blank) {
-      window.open(link.path, '_blank');  
+      window.open(link.path, '_blank');
     } else if (link.isExternal) {
       window.location.href = link.path;
     } else {
-      navigate(link.path);  
+      navigate(link.path);
     }
   };
 
@@ -86,9 +86,9 @@ const Navbar = () => {
 
     return [
       { name: 'Staff', path: '/staff' },
-      { 
-        name: 'Apply', 
-        isDropdown: true, 
+      {
+        name: 'Apply',
+        isDropdown: true,
         subLinks: applySubLinks
       },
     ];
@@ -111,11 +111,10 @@ const Navbar = () => {
                 <button
                   key={subIndex}
                   onClick={() => handleNavClick(subLink)}
-                  className={`block w-full text-left py-2 px-2 rounded transition-colors text-sm bg-transparent border-none cursor-pointer ${
-                    subLink.isLogout 
-                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                  className={`block w-full text-left py-2 px-2 rounded transition-colors text-sm bg-transparent border-none cursor-pointer ${subLink.isLogout
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
                       : 'text-gray-400 hover:text-cyan-400 hover:bg-slate-700'
-                  }`}
+                    }`}
                 >
                   {subLink.name}
                 </button>
@@ -132,11 +131,10 @@ const Navbar = () => {
                 <button
                   key={subIndex}
                   onClick={() => handleNavClick(subLink)}
-                  className={`text-left px-4 py-2.5 text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer ${
-                    subLink.isLogout 
-                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                  className={`text-left px-4 py-2.5 text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer ${subLink.isLogout
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10'
                       : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700/50'
-                  }`}
+                    }`}
                 >
                   {subLink.name}
                 </button>
@@ -148,19 +146,19 @@ const Navbar = () => {
 
       const linkClasses = isMobile
         ? `block w-full text-left py-2 px-2 rounded transition-colors mb-2 ${isActive(link.path) ? 'text-cyan-400 bg-slate-700 font-medium' : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700 bg-transparent'}`
-        : `font-medium self-center underline-offset-4 decoration-cyan-400 transition-all duration-300 ${isActive(link.path) ? 'text-cyan-400 underline' : 'text-gray-300 hover:text-cyan-400 hover:underline'}`;  
+        : `font-medium self-center underline-offset-4 decoration-cyan-400 transition-all duration-300 ${isActive(link.path) ? 'text-cyan-400 underline' : 'text-gray-300 hover:text-cyan-400 hover:underline'}`;
 
       if (link.isLogout) {
         const logoutClasses = isMobile
           ? `block w-full text-left py-2 px-2 rounded transition-colors mb-2 text-red-400 hover:bg-slate-700 bg-transparent`
           : `font-medium self-center underline-offset-4 decoration-red-500 transition-all duration-300 text-gray-300 hover:text-red-400 hover:underline`;
         return (
-          <button 
-            key={index} 
+          <button
+            key={index}
             onClick={() => {
               logoutUser();
               if (isMobile) setIsOpen(false);
-            }} 
+            }}
             className={`${logoutClasses} border-none cursor-pointer bg-transparent`}
           >
             {link.name}
@@ -185,34 +183,33 @@ const Navbar = () => {
   };
 
   return (
-    <nav 
+    <nav
       className={`${isLarge ? 'absolute top-0 left-0 w-full' : 'sticky'} top-0 z-50 transition-all duration-500 ease-in-out`}
       style={{
         backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4">
-        <div 
+        <div
           className="flex justify-between items-center transition-all duration-500 ease-in-out"
           style={{ height: isLarge ? '120px' : '80px' }}
         >
-          
-          <Link 
-            to="/" 
+
+          <Link
+            to="/"
             className="flex items-center gap-2 flex-shrink-0 transition-all duration-500 ease-in-out origin-left"
             style={{ transform: isLarge ? 'scale(1.6)' : 'scale(1)' }}
           >
             <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
               <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
             </div>
-            <span className="text-cyan-400 font-bold text-xl hidden sm:inline">Paraiso <span className='text-base-100'>Gaming</span></span>
           </Link>
 
           {/* Desktop Navigation & Actions aligned to the right */}
           <div className="hidden lg:flex items-center gap-8">
             {renderLinks(navLinks, false)}
             {renderLinks(actionLinks, false)}
-            
+
             <a
               href="https://discord.com/invite/7AsJaG3KSV"
               target='_blank'
@@ -230,11 +227,10 @@ const Navbar = () => {
 
         {/* Mobile Menu — always mounted, animated via max-height + opacity */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isOpen
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen
               ? 'max-h-[600px] opacity-100'
               : 'max-h-0 opacity-0 pointer-events-none'
-          }`}
+            }`}
         >
           <div className="bg-slate-800 border-t border-cyan-500">
             <div className="px-4 py-4 space-y-3">
