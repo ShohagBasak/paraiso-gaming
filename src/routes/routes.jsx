@@ -7,6 +7,7 @@ import Root from '../pages/Root/Root';
 import Error from '../pages/Error/Error';
 import Donate from '../pages/Donate/Donate';
 import ServerOffenses from '../pages/Home/ServerOffenses';
+import About from '../pages/About/About';
 import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/Auth/Login/Login';
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: '/donate',
         element: <Donate />,
+      },
+      {
+        path: '/about',
+        element: <About />,
       },
       {
         path: '/rules',

@@ -1,11 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import { HiMenu, HiX, HiChevronDown } from 'react-icons/hi';
+import useAuth from '../hooks/useAuth';
 
 const Navbar = () => {
+  const { user, logoutUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isHomePage = location.pathname === '/';
+
+  useEffect(() => {
+    if (!isHomePage) {
+      setIsScrolled(false);
+      return;
+    }
+
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isHomePage]);
+
+  const isLarge = isHomePage && !isScrolled;
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -31,7 +58,9 @@ const Navbar = () => {
   const handleNavClick = (link) => {
     setIsOpen(false);
     
-    if (link.isExternal && link.blank) {
+    if (link.isLogout) {
+      logoutUser();
+    } else if (link.isExternal && link.blank) {
       window.open(link.path, '_blank');  
     } else if (link.isExternal) {
       window.location.href = link.path;
@@ -40,17 +69,32 @@ const Navbar = () => {
     }
   };
 
-  const actionLinks = [
-    { name: 'Staff', path: '/staff' },
-    { 
-      name: 'Apply', 
-      isDropdown: true, 
-      subLinks: [
-        { name: 'Faction Apply', path: 'https://forums.pgaming.net/index.php#factions.8', isExternal: true, blank: true },
-        { name: 'Gangs Apply', path: 'https://forums.pgaming.net/index.php#gangs', isExternal: true, blank: true }
-      ]
-    },
-  ];
+  const getActionLinks = () => {
+    const applySubLinks = [
+      { name: 'Faction Apply', path: 'https://forums.pgaming.net/index.php#factions.8', isExternal: true, blank: true },
+      { name: 'Gangs Apply', path: 'https://forums.pgaming.net/index.php#gangs', isExternal: true, blank: true },
+    ];
+
+    if (!user) {
+      applySubLinks.push({ name: 'Login', path: '/login' });
+    } else {
+      if (user.role === 'admin') {
+        applySubLinks.push({ name: 'Dashboard', path: '/dashboard' });
+      }
+      applySubLinks.push({ name: 'Logout', path: '#logout', isLogout: true });
+    }
+
+    return [
+      { name: 'Staff', path: '/staff' },
+      { 
+        name: 'Apply', 
+        isDropdown: true, 
+        subLinks: applySubLinks
+      },
+    ];
+  };
+
+  const actionLinks = getActionLinks();
 
   const isActive = (path) => location.pathname === path;
 
@@ -67,7 +111,11 @@ const Navbar = () => {
                 <button
                   key={subIndex}
                   onClick={() => handleNavClick(subLink)}
-                  className="block w-full text-left py-2 px-2 rounded transition-colors text-sm text-gray-400 hover:text-cyan-400 hover:bg-slate-700 bg-transparent border-none cursor-pointer"
+                  className={`block w-full text-left py-2 px-2 rounded transition-colors text-sm bg-transparent border-none cursor-pointer ${
+                    subLink.isLogout 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                      : 'text-gray-400 hover:text-cyan-400 hover:bg-slate-700'
+                  }`}
                 >
                   {subLink.name}
                 </button>
@@ -84,7 +132,11 @@ const Navbar = () => {
                 <button
                   key={subIndex}
                   onClick={() => handleNavClick(subLink)}
-                  className="text-left px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-cyan-400 hover:bg-slate-700/50 transition-colors bg-transparent border-0 cursor-pointer"
+                  className={`text-left px-4 py-2.5 text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer ${
+                    subLink.isLogout 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' 
+                      : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700/50'
+                  }`}
                 >
                   {subLink.name}
                 </button>
@@ -97,6 +149,24 @@ const Navbar = () => {
       const linkClasses = isMobile
         ? `block w-full text-left py-2 px-2 rounded transition-colors mb-2 ${isActive(link.path) ? 'text-cyan-400 bg-slate-700 font-medium' : 'text-gray-300 hover:text-cyan-400 hover:bg-slate-700 bg-transparent'}`
         : `font-medium self-center underline-offset-4 decoration-cyan-400 transition-all duration-300 ${isActive(link.path) ? 'text-cyan-400 underline' : 'text-gray-300 hover:text-cyan-400 hover:underline'}`;  
+
+      if (link.isLogout) {
+        const logoutClasses = isMobile
+          ? `block w-full text-left py-2 px-2 rounded transition-colors mb-2 text-red-400 hover:bg-slate-700 bg-transparent`
+          : `font-medium self-center underline-offset-4 decoration-red-500 transition-all duration-300 text-gray-300 hover:text-red-400 hover:underline`;
+        return (
+          <button 
+            key={index} 
+            onClick={() => {
+              logoutUser();
+              if (isMobile) setIsOpen(false);
+            }} 
+            className={`${logoutClasses} border-none cursor-pointer bg-transparent`}
+          >
+            {link.name}
+          </button>
+        );
+      }
 
       if (link.isExternal) {
         return (
@@ -115,25 +185,34 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-slate-900 border-b-2 border-cyan-500 sticky top-0 z-50">
+    <nav 
+      className={`${isLarge ? 'absolute top-0 left-0 w-full' : 'sticky'} top-0 z-50 transition-all duration-500 ease-in-out`}
+      style={{
+        backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
+        <div 
+          className="flex justify-between items-center transition-all duration-500 ease-in-out"
+          style={{ height: isLarge ? '120px' : '80px' }}
+        >
           
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <Link 
+            to="/" 
+            className="flex items-center gap-2 flex-shrink-0 transition-all duration-500 ease-in-out origin-left"
+            style={{ transform: isLarge ? 'scale(1.6)' : 'scale(1)' }}
+          >
             <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
               <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
             </div>
             <span className="text-cyan-400 font-bold text-xl hidden sm:inline">Paraiso <span className='text-base-100'>Gaming</span></span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation & Actions aligned to the right */}
           <div className="hidden lg:flex items-center gap-8">
             {renderLinks(navLinks, false)}
-          </div>
-
-          {/* Desktop Action Links */}
-          <div className="hidden lg:flex items-center gap-3">
             {renderLinks(actionLinks, false)}
+            
             <a
               href="https://discord.com/invite/7AsJaG3KSV"
               target='_blank'
@@ -163,6 +242,7 @@ const Navbar = () => {
               <div className="border-t border-cyan-500/30 pt-3 mt-3">
                 {renderLinks(actionLinks, true)}
               </div>
+
               <a
                 href="https://discord.com/invite/7AsJaG3KSV"
                 target="_blank"

@@ -15,7 +15,7 @@ const HomeTwo = () => {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 my-6 md:my-10 min-h-screen">
+    <div id="home-two" className="w-full px-4 sm:px-6 lg:px-8 my-6 md:my-10 min-h-screen">
       <div className="max-w-7xl mx-auto">
         
         {/* Main Image Grid Grid Split Layout Setup */}

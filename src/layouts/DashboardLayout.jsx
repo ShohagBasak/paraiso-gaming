@@ -29,7 +29,7 @@ const DashboardLayout = () => {
         <aside className="w-64 h-full bg-[#0d1117] border-r border-slate-800 flex flex-col">
             {/* Logo */}
             <div className="p-6 border-b border-slate-800">
-                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <div className="w-9 h-9 bg-cyan-500/20 rounded-lg flex items-center justify-center">
                         <FaGamepad className="text-cyan-400" size={18} />
                     </div>
