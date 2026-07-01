@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade, Pagination } from 'swiper/modules';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
@@ -9,6 +9,23 @@ import "swiper/css/pagination";
 
 const SwiperBanner = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
+  const [slides, setSlides] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/banners', { credentials: 'include' })
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch');
+        return r.json();
+      })
+      .then(data => {
+        // console.log("Fetched banners:", data);
+        setSlides(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("Banners fetch error:", err);
+        setSlides([]);
+      });
+  }, []);
 
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-[#1e293b]">
@@ -16,87 +33,65 @@ const SwiperBanner = () => {
         onSwiper={(swiper) => setSwiperInstance(swiper)}
         spaceBetween={0}
         effect={'fade'}
-        loop={true}
+        loop={slides.length > 1}
         grabCursor={true}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         modules={[Autoplay, EffectFade, Pagination]}
         className="w-full h-[300px] sm:h-[400px] md:h-[450px]"
       >
-         {/* Slide 1 */}
-        <SwiperSlide>
-          <div className="w-full h-full relative flex items-center justify-center bg-[#0a0f14]">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
-
-            <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3 md:mb-5 leading-tight drop-shadow-xl tracking-wide">
-                <span style={{ fontFamily: "'Rajdhani', sans-serif" }} className='text-2xl sm:text-4xl md:text-5xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0 font-semibold'>
-                  Welcome to
-                </span>{' '}
-                PARAISO ROLEPLAY
-              </h1>
-              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-base sm:text-xl md:text-2xl text-gray-200 mb-3 md:mb-5 font-semibold max-w-md sm:max-w-xl md:max-w-2xl drop-shadow-md tracking-wide">
-                The Ultimate San Andreas Multiplayer Experience
-              </p>
-              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-xs sm:text-sm md:text-lg text-gray-400 max-w-xs sm:max-w-lg md:max-w-2xl mx-auto mb-6 md:mb-10 drop-shadow-sm leading-relaxed">
-                Join thousands of players in the most immersive multiplayer server
-              </p>
+        {slides.length === 0 ? (
+          /* Default slide when no banners in DB */
+          <SwiperSlide>
+            <div className="w-full h-full relative flex items-center justify-center bg-[#0a0f14]">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
+              <div className="relative z-10 text-center px-4">
+                <h1 style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-4xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-4">
+                  PARAISO ROLEPLAY
+                </h1>
+                <p className="text-gray-300 text-lg">The Ultimate San Andreas Multiplayer Experience</p>
+              </div>
             </div>
-          </div>
-        </SwiperSlide>
-
-        {/* Slide 2 */}
-        <SwiperSlide>
-          <div className="w-full h-full relative flex items-center justify-center bg-[#0a0f14]">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-25"></div>
-
-            <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center justify-center">
-              <h1 style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3 md:mb-5 leading-tight drop-shadow-xl tracking-wide">
-                <span style={{ fontFamily: "'Rajdhani', sans-serif" }} className='text-xl sm:text-2xl md:text-3xl text-base-100 block sm:inline sm:mr-3 mb-1 sm:mb-0 font-semibold'>
-                  Explore
-                </span>{' '}
-                NEW FEATURES
-              </h1>
-              <p style={{ fontFamily: "'Rajdhani', sans-serif" }} className="text-base sm:text-xl md:text-2xl text-gray-200 mb-6 md:mb-10 font-semibold drop-shadow-md tracking-wide">
-                Custom Economy, Vehicles &amp; Advanced Jobs
-              </p>
-            </div>
-          </div>
-        </SwiperSlide>
-
-        {/* slide 3 */}
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/invitation.png" alt="" />
-            </div>
-        </SwiperSlide>
-        {/* slide 4 */}
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/invitationdiscord.png" alt="" />
-            </div>
-        </SwiperSlide>
-        {/* slide 5 */}
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/sp1.png" alt="" />
-            </div>
-        </SwiperSlide>
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/sp2.png" alt="" />
-            </div>
-        </SwiperSlide>
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/sp3.png" alt="" />
-            </div>
-        </SwiperSlide>
-        <SwiperSlide>
-            <div className='w-full h-full'>
-                <img className='w-full h-full' src="/sp4.png" alt="" />
-            </div>
-        </SwiperSlide>
+          </SwiperSlide>
+        ) : (
+          slides.map(slide => (
+            <SwiperSlide key={slide.id}>
+              <div className="w-full h-full relative flex items-center justify-center">
+                <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url('${slide.image_url}')` }}
+                />
+                {/* Subtle text shadow overlay to ensure text readability on light backgrounds */}
+                <div className="absolute inset-0 bg-black/20"></div>
+                
+                <div className="relative z-10 text-center px-4 max-w-4xl mx-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.9)]">
+                  {slide.title && (
+                    <h1 
+                      style={{ 
+                        fontFamily: "'Rajdhani', sans-serif",
+                        color: slide.title_color || '#ffffff'
+                      }} 
+                      className={`font-bold mb-3 tracking-wide drop-shadow-lg ${slide.title_size || 'text-3xl sm:text-5xl md:text-6xl'}`}
+                    >
+                      {slide.title}
+                    </h1>
+                  )}
+                  {slide.subtitle && (
+                    <p 
+                      style={{ 
+                        fontFamily: "'Rajdhani', sans-serif",
+                        color: slide.subtitle_color || '#cbd5e1'
+                      }} 
+                      className={`font-semibold tracking-wide drop-shadow-md ${slide.subtitle_size || 'text-base sm:text-xl md:text-2xl'}`}
+                    >
+                      {slide.subtitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </SwiperSlide>
+          ))
+        )}
 
         {/* Custom Arrows */}
         <div 

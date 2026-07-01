@@ -7,9 +7,17 @@ import Root from '../pages/Root/Root';
 import Error from '../pages/Error/Error';
 import Donate from '../pages/Donate/Donate';
 import ServerOffenses from '../pages/Home/ServerOffenses';
-// import AuthLayout from '../layouts/AuthLayout';
-// import Login from '../pages/Auth/Login/Login';
-// import Register from '../pages/Auth/Register/Register';
+import AuthLayout from '../layouts/AuthLayout';
+import DashboardLayout from '../layouts/DashboardLayout';
+import Login from '../pages/Auth/Login/Login';
+import Register from '../pages/Auth/Register/Register';
+import ForgotPassword from '../pages/Auth/ForgotPassword/ForgotPassword';
+import Dashboard from '../pages/Dashboard/Dashboard';
+import BannerManager from '../pages/Dashboard/BannerManager';
+import AnnouncementManager from '../pages/Dashboard/AnnouncementManager';
+import UserManager from '../pages/Dashboard/UserManager';
+import StaffManager from '../pages/Dashboard/StaffManager';
+import AdminRoute from '../components/AdminRoute';
 
 
 
@@ -52,18 +60,28 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // {
-  //   path: "/",
-  //   Component: AuthLayout,
-  //   children: [
-  //     {
-  //       path: 'login',
-  //       Component: Login
-  //     },
-  //     {
-  //       path: 'register',
-  //       Component: Register
-  //     }
-  //   ]
-  // }
+  {
+    path: "/",
+    Component: AuthLayout,
+    children: [
+      { path: 'login', Component: Login },
+      { path: 'register', Component: Register },
+      { path: 'forgot-password', Component: ForgotPassword }
+    ]
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <AdminRoute>
+        <DashboardLayout />
+      </AdminRoute>
+    ),
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: 'banners', element: <BannerManager /> },
+      { path: 'announcements', element: <AnnouncementManager /> },
+      { path: 'users', element: <UserManager /> },
+      { path: 'staff', element: <StaffManager /> },
+    ]
+  }
 ]);
