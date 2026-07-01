@@ -42,6 +42,7 @@ const Navbar = () => {
     {
       name: 'Rules',
       isDropdown: true,
+      align: 'left',
       subLinks: [
         { name: 'General Rules', path: '/rules' },
         { name: 'Server Offenses', path: '/rules/offenses' }
@@ -89,6 +90,7 @@ const Navbar = () => {
       {
         name: 'Apply',
         isDropdown: true,
+        align: 'right',
         subLinks: applySubLinks
       },
     ];
@@ -126,7 +128,7 @@ const Navbar = () => {
             <button className="flex items-center gap-1 text-gray-300 hover:text-cyan-400 hover:underline hover:underline-offset-4 hover:decoration-cyan-400 transition-all duration-300 font-medium bg-transparent border-0 p-0 cursor-pointer">
               {link.name} <HiChevronDown className="text-sm group-hover:rotate-180 transition-transform duration-300" />
             </button>
-            <div className="absolute left-0 top-full mt-2 w-48 bg-slate-800 border border-cyan-500/50 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50">
+            <div className={`absolute ${link.align === 'left' ? 'left-0' : 'right-0'} top-full mt-2 w-48 bg-slate-800 border border-cyan-500/50 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 flex flex-col py-2 z-50`}>
               {link.subLinks.map((subLink, subIndex) => (
                 <button
                   key={subIndex}
@@ -184,7 +186,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`${isLarge ? 'absolute top-0 left-0 w-full' : 'sticky'} top-0 z-50 transition-all duration-500 ease-in-out`}
+      className={`${isLarge ? 'absolute top-0 inset-x-0' : 'sticky'} top-0 z-50 transition-all duration-500 ease-in-out`}
       style={{
         backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
       }}
@@ -206,18 +208,9 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation & Actions aligned to the right */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-4 xl:gap-8">
             {renderLinks(navLinks, false)}
             {renderLinks(actionLinks, false)}
-
-            <a
-              href="https://discord.com/invite/7AsJaG3KSV"
-              target='_blank'
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-5 py-2 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-white text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40 hover:shadow-cyan-400/60 hover:scale-105 whitespace-nowrap ml-1"
-            >
-              Join Discord
-            </a>
           </div>
 
           <button className="lg:hidden text-cyan-400 bg-transparent border-none cursor-pointer" onClick={toggleMenu}>
@@ -238,16 +231,6 @@ const Navbar = () => {
               <div className="border-t border-cyan-500/30 pt-3 mt-3">
                 {renderLinks(actionLinks, true)}
               </div>
-
-              <a
-                href="https://discord.com/invite/7AsJaG3KSV"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full py-2.5 mt-4 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-900 text-sm font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/40"
-                onClick={() => setIsOpen(false)}
-              >
-                Join Discord
-              </a>
             </div>
           </div>
         </div>

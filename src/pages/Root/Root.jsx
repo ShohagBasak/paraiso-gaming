@@ -7,7 +7,7 @@ import Footer from '../../components/Footer';
 const Root = () => {
   return (
     <div 
-      className="flex flex-col min-h-screen bg-[#070a13]"
+      className="flex flex-col min-h-screen bg-[#070a13] overflow-x-hidden"
     >
       
       {/* Content */}

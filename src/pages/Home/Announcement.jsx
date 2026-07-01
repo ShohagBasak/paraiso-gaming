@@ -48,7 +48,7 @@ const Announcement = () => {
           <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto mb-8 sm:mb-12"></div>
 
           {/* Action Buttons */}
-          <div className="flex flex-row items-center justify-center gap-5 sm:gap-6 mt-8">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-8">
             <Link
               to="/about"
               className="inline-flex items-center justify-center px-8 py-3 border-2 border-cyan-500 hover:bg-cyan-500 hover:text-black active:scale-95 text-cyan-400 font-bold rounded-full transition-all duration-200 hover:scale-105 whitespace-nowrap min-w-[150px]"
