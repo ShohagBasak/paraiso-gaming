@@ -18,6 +18,9 @@ import AnnouncementManager from '../pages/Dashboard/AnnouncementManager';
 import UserManager from '../pages/Dashboard/UserManager';
 import StaffManager from '../pages/Dashboard/StaffManager';
 import AdminRoute from '../components/AdminRoute';
+import GovernmentRoster from '../pages/Roster/GovernmentRoster';
+import RosterManager from '../pages/Dashboard/RosterManager';
+import ChainOfCommand from '../pages/Roster/ChainOfCommand';
 
 
 
@@ -46,6 +49,14 @@ export const router = createBrowserRouter([
       {
         path: '/staff',
         element: <Staff />,
+      },
+      {
+        path: '/roster/chain-of-command',
+        element: <ChainOfCommand />,
+      },
+      {
+        path: '/roster/government',
+        element: <GovernmentRoster />,
       },
       {
         path: '/discord',
@@ -82,6 +93,7 @@ export const router = createBrowserRouter([
       { path: 'announcements', element: <AnnouncementManager /> },
       { path: 'users', element: <UserManager /> },
       { path: 'staff', element: <StaffManager /> },
+      { path: 'roster', element: <RosterManager /> },
     ]
   }
 ]);

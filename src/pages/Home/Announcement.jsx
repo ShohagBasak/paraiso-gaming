@@ -22,7 +22,7 @@ const Announcement = () => {
     <>
       {/* Hero Banner Section */}
       <section
-        className="pt-16 sm:pt-20 pb-16 px-4 sm:px-8 relative overflow-hidden"
+        className="pt-24 sm:pt-24 pb-16 px-4 sm:px-8 relative overflow-hidden"
         style={{
           backgroundImage: `url('/bg.png')`,
           backgroundSize: isMobile ? '550% auto' : '140% auto',

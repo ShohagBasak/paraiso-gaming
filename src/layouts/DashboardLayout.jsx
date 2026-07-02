@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance
 } from 'react-icons/md';
 import { FaGamepad } from 'react-icons/fa';
 
@@ -12,6 +12,7 @@ const navItems = [
     { to: '/dashboard/banners', label: 'Banner Slides', icon: <MdImage size={20} /> },
     { to: '/dashboard/announcements', label: 'Announcements', icon: <MdCampaign size={20} /> },
     { to: '/dashboard/staff', label: 'Staff Roster', icon: <MdSupervisedUserCircle size={20} /> },
+    { to: '/dashboard/roster', label: 'Faction Roster', icon: <MdOutlineAccountBalance size={20} /> },
     { to: '/dashboard/users', label: 'Users', icon: <MdPeople size={20} /> },
 ];
 

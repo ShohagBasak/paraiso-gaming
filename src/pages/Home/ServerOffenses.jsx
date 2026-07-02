@@ -113,7 +113,7 @@ const ServerOffenses = () => {
   );
 
   return (
-    <section className="py-20 px-4 sm:px-8 min-h-screen text-slate-300">
+    <section className="py-20 mt-10 px-4 sm:px-8 min-h-screen text-slate-300">
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}

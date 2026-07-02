@@ -22,7 +22,7 @@ const Rules = () => {
   ];
 
   return (
-    <section className="py-16 px-4 sm:px-8 min-h-screen">
+    <section className="py-16 px-4 mt-10 sm:px-8 min-h-screen">
       <div className="max-w-5xl mx-auto">
         
         {/* Page Header */}

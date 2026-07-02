@@ -54,6 +54,15 @@ const Navbar = () => {
       isExternal: true,
       blank: true
     },
+    {
+      name: 'Factions',
+      isDropdown: true,
+      align: 'left',
+      subLinks: [
+        { name: 'Govt Chain of Command', path: '/roster/chain-of-command' },
+        { name: 'Faction Roster', path: '/roster/government' },
+      ]
+    },
   ];
 
   const handleNavClick = (link) => {
