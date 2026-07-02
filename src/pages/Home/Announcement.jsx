@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSun } from 'react-icons/fa';
 
 const Announcement = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const scrollToServer = (e) => {
     e.preventDefault();
     const element = document.getElementById('home-two');
@@ -17,10 +25,10 @@ const Announcement = () => {
         className="pt-16 sm:pt-20 pb-16 px-4 sm:px-8 relative overflow-hidden"
         style={{
           backgroundImage: `url('/bg.png')`,
-          backgroundSize: '140% auto',
+          backgroundSize: isMobile ? '550% auto' : '140% auto',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
-          minHeight: '600px',
+          minHeight: isMobile ? 'auto' : '600px',
           backgroundColor: '#050811',
         }}
       >
@@ -28,7 +36,7 @@ const Announcement = () => {
         <div 
           className="absolute inset-0 pointer-events-none" 
           style={{ 
-            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.88) 50%, rgba(5, 8, 17, 1) 85%, rgba(5, 8, 17, 1) 100%)' 
+            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.88) 50%, rgba(5, 8, 17, 1) 85%, rgba(5, 8, 17, 1) 100%)'
           }} 
         />
 
@@ -67,12 +75,12 @@ const Announcement = () => {
           </div>
 
           {/* SA:MP Server Card Button */}
-          <div className="flex justify-center mt-10">
+          {/* <div className="flex justify-center mt-10">
             <button
               onClick={scrollToServer}
               className="flex items-center gap-4 bg-[#0d1219]/45 backdrop-blur-md border border-[#1e293b]/70 hover:border-cyan-500/60 hover:bg-[#121a24]/45 transition-all duration-300 px-6 py-3.5 rounded-2xl cursor-pointer text-left group shadow-lg min-w-[280px] select-none animate-fade-up animation-delay-2-2s"
             >
-              {/* Orange Sun Icon */}
+              
               <div className="text-yellow-500 group-hover:rotate-45 transition-transform duration-500 text-3xl flex items-center justify-center">
                 <FaSun />
               </div>
@@ -85,7 +93,7 @@ const Announcement = () => {
                 </p>
               </div>
             </button>
-          </div>
+          </div> */}
 
           {/* The Foundation Section */}
           <div className="mt-12 p-4 sm:p-8 md:p-10 bg-[#0d1219]/40 backdrop-blur-md border border-cyan-500/25 rounded-2xl max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative z-10">

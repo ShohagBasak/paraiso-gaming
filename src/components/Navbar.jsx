@@ -186,9 +186,11 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`${isLarge ? 'absolute top-0 inset-x-0' : 'sticky'} top-0 z-50 transition-all duration-500 ease-in-out`}
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-in-out`}
       style={{
         backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: isScrolled ? 'blur(10px)' : 'none',
+        borderBottom: isScrolled ? '1px solid rgba(6,182,212,0.15)' : 'none',
       }}
     >
       <div className="max-w-7xl mx-auto px-4">
