@@ -232,12 +232,12 @@ const Navbar = () => {
         {/* Mobile Menu — always mounted, animated via max-height + opacity */}
         <div
           className={`lg:hidden transition-all duration-300 ease-in-out ${isOpen
-              ? 'max-h-[75vh] opacity-100 overflow-y-auto'
+              ? 'max-h-[80vh] opacity-100 overflow-y-auto'
               : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
             }`}
         >
           <div className="bg-slate-800 border-t border-cyan-500">
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 pt-4 pb-12 space-y-3">
               {renderLinks(navLinks, true)}
               <div className="border-t border-cyan-500/30 pt-3 mt-3">
                 {renderLinks(actionLinks, true)}
