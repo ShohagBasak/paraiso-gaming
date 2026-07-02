@@ -36,7 +36,7 @@ const Announcement = () => {
         <div 
           className="absolute inset-0 pointer-events-none" 
           style={{ 
-            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.88) 50%, rgba(5, 8, 17, 1) 85%, rgba(5, 8, 17, 1) 100%)'
+            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.9) 0%, rgba(5, 8, 17, 0.96) 60%, rgba(5, 8, 17, 1) 100%)'
           }} 
         />
 
