@@ -22,7 +22,7 @@ const Announcement = () => {
     <>
       {/* Hero Banner Section */}
       <section
-        className="pt-24 sm:pt-24 pb-16 px-4 sm:px-8 relative overflow-hidden"
+        className="pt-24 pb-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         style={{
           backgroundImage: `url('/bg.png')`,
           backgroundSize: isMobile ? '550% auto' : '140% auto',
@@ -40,7 +40,7 @@ const Announcement = () => {
           }} 
         />
 
-        <div className="max-w-4xl lg:max-w-6xl mx-auto relative z-10">
+        <div className="w-full max-w-7xl mx-auto relative z-10">
           {/* Main Title */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-playfair font-bold text-white text-center mb-4 sm:mb-6 leading-tight animate-fade-up animation-delay-1-2s">
             The United States of <span className="text-cyan-400">Paraiso</span>
@@ -96,7 +96,7 @@ const Announcement = () => {
           </div> */}
 
           {/* The Foundation Section */}
-          <div className="mt-12 p-4 sm:p-8 md:p-10 bg-[#0d1219]/40 backdrop-blur-md border border-cyan-500/25 rounded-2xl max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative z-10">
+          <div className="w-full mt-12 p-4 sm:p-8 md:p-10 bg-[#0d1219]/40 backdrop-blur-md border border-cyan-500/25 rounded-2xl max-w-7xl mx-auto shadow-2xl relative z-10">
             {/* Top Label */}
             <div className="text-center mb-6 sm:mb-8">
               <p className="text-cyan-400 font-space-mono font-bold text-xs sm:text-sm uppercase tracking-widest">

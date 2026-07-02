@@ -15,14 +15,14 @@ const HomeTwo = () => {
   };
 
   return (
-    <div id="home-two" className="w-full px-4 sm:px-6 lg:px-8 my-6 md:my-10 min-h-screen">
+    <div id="home-two" className="w-full px-4 sm:px-6 lg:px-8 my-4 md:my-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
         
         {/* Main Image Grid Grid Split Layout Setup */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* LEFT AREA: Both Sliders mapped dynamically (Takes 8 Columns) */}
-          <div className="lg:col-span-8 flex flex-col gap-10">
+          <div className="lg:col-span-8 flex flex-col gap-6">
             <SwiperBanner />
             <FeaturesSlider />
           </div>

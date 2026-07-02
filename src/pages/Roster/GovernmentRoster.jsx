@@ -92,7 +92,7 @@ const GovernmentRoster = () => {
     >
       {/* ── HERO HEADER (unchanged, kept as is) ── */}
       <div
-        className="w-full flex flex-col items-center justify-center pt-28 pb-12 px-4 relative overflow-hidden"
+        className="w-full flex flex-col items-center justify-center pt-20 pb-8 px-4 relative overflow-hidden"
         style={{
           background: 'linear-gradient(180deg, #0a0f1e 0%, #0d1526 60%, #080d18 100%)',
           borderBottom: '1px solid rgba(34,211,238,0.12)',
@@ -126,7 +126,7 @@ const GovernmentRoster = () => {
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto px-4 py-14 space-y-16">
+        <div className="relative max-w-4xl mx-auto px-4 py-8 space-y-10">
 
           {/* Loading */}
           {loading && (
@@ -169,7 +169,7 @@ const GovernmentRoster = () => {
             return (
               <div key={sec.name}>
                 {/* Section Header */}
-                <div className="relative mb-10">
+                <div className="relative mb-6">
                   {/* Top bar */}
                   <div 
                     className="h-px w-full mb-6 opacity-70"

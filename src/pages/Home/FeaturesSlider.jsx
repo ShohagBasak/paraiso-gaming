@@ -21,7 +21,7 @@ const FeaturesSlider = () => {
   }, []);
 
   return (
-    <div className="w-full py-10 px-4">
+    <div className="w-full pt-2 pb-6 px-4">
       <div className="flex justify-between items-end mb-8 max-w-6xl mx-auto">
         <div>
           <h2 className="text-3xl font-black text-white uppercase tracking-wider">
