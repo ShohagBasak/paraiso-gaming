@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome
 } from 'react-icons/md';
 import { FaGamepad } from 'react-icons/fa';
 
@@ -115,7 +115,14 @@ const DashboardLayout = () => {
                     <h1 className="text-white font-bold text-base md:text-lg uppercase tracking-wider">
                         Admin Dashboard
                     </h1>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            to="/"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all duration-200"
+                        >
+                            <MdHome size={16} />
+                            <span className="hidden sm:inline">Home</span>
+                        </Link>
                         <span className="hidden sm:block text-slate-400 text-sm">{user?.email}</span>
                         <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs uppercase">
                             {user?.username?.[0] || 'A'}
