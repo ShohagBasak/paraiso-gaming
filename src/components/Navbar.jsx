@@ -55,12 +55,12 @@ const Navbar = () => {
       blank: true
     },
     {
-      name: 'Factions',
+      name: 'Government',
       isDropdown: true,
       align: 'left',
       subLinks: [
+        { name: 'Govt Roster', path: '/roster/government' },
         { name: 'Govt Chain of Command', path: '/roster/chain-of-command' },
-        { name: 'Faction Roster', path: '/roster/government' },
       ]
     },
   ];
@@ -86,7 +86,7 @@ const Navbar = () => {
     ];
 
     if (!user) {
-      applySubLinks.push({ name: 'Login', path: '/login' });
+      applySubLinks.push({ name: 'Webmaster Login', path: '/login' });
     } else {
       if (user.role === 'admin') {
         applySubLinks.push({ name: 'Dashboard', path: '/dashboard' });
@@ -231,9 +231,9 @@ const Navbar = () => {
 
         {/* Mobile Menu — always mounted, animated via max-height + opacity */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen
-              ? 'max-h-[600px] opacity-100'
-              : 'max-h-0 opacity-0 pointer-events-none'
+          className={`lg:hidden transition-all duration-300 ease-in-out ${isOpen
+              ? 'max-h-[75vh] opacity-100 overflow-y-auto'
+              : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
             }`}
         >
           <div className="bg-slate-800 border-t border-cyan-500">
