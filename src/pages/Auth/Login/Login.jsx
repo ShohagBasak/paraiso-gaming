@@ -7,14 +7,16 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const Login = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const { signInUser, loading } = useAuth();
+    const { signInUser } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
     const [serverError, setServerError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (data) => {
         setServerError('');
-        
+        setSubmitting(true);
+
         try {
             const user = await signInUser(data.email, data.password);
             if (user?.role === 'admin') {
@@ -24,6 +26,8 @@ const Login = () => {
             }
         } catch (error) {
             setServerError(error.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -92,10 +96,10 @@ const Login = () => {
                     {/* Login Button */}
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={submitting}
                         className="w-full mb-5 py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold uppercase tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] mt-4 active:scale-95"
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {submitting ? 'Logging in...' : 'Login'}
                     </button>
                 </fieldset>
                 <p className='text-base-100'>New at Paraiso Gaming? Please <Link to="/register" className='text-cyan-400 underline'>Register</Link></p>

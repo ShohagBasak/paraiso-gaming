@@ -6,18 +6,22 @@ import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Register = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const { registerUser, loading } = useAuth();
+    const { registerUser } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
     const [serverError, setServerError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleRegistration = async (data) => {
         setServerError('');
+        setSubmitting(true);
         try {
             await registerUser(data.username, data.email, data.password);
             navigate('/');
         } catch (error) {
             setServerError(error.message || 'Registration failed. Please try again.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -98,10 +102,10 @@ const Register = () => {
                     {/* Register Button */}
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={submitting}
                         className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold uppercase tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] mt-4 active:scale-95 mb-5"
                     >
-                        {loading ? 'Registering...' : 'Register'}
+                        {submitting ? 'Registering...' : 'Register'}
                     </button>
                 </fieldset>
                 <p className='text-base-100'>Already have an account? <Link to="/login" className='text-cyan-400 underline'>Login</Link></p>

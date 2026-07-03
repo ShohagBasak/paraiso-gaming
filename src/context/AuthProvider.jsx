@@ -9,7 +9,6 @@ const AuthProvider = ({ children }) => {
 
     // Register — POST /register
     const registerUser = async (username, email, password) => {
-        setLoading(true);
         const res = await fetch(`${BASE_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -19,13 +18,11 @@ const AuthProvider = ({ children }) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Registration failed');
         setUser(data.user || data);
-        setLoading(false);
         return data;
     };
 
     // Login — POST /login
     const signInUser = async (email, password) => {
-        setLoading(true);
         const res = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -36,7 +33,6 @@ const AuthProvider = ({ children }) => {
         if (!res.ok) throw new Error(data.message || 'Login failed');
         const userData = data.user || data;
         setUser(userData);
-        setLoading(false);
         return userData;
     };
 
