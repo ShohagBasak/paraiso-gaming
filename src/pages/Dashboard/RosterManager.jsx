@@ -407,7 +407,10 @@ const RosterManager = () => {
                 credentials: 'include',
                 body: JSON.stringify({ orders }),
             });
-            if (!res.ok) throw new Error('Reorder failed');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || errData.message || 'Reorder failed');
+            }
             toast.success('Order saved!', { id: t });
         } catch (err) {
             toast.error(err.message || 'Reorder failed', { id: t });
@@ -521,7 +524,10 @@ const RosterManager = () => {
                 credentials: 'include',
                 body: JSON.stringify({ orders }),
             });
-            if (!res.ok) throw new Error('Reorder failed');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || errData.message || 'Reorder failed');
+            }
             toast.success('Sections order saved!', { id: t });
             fetchMembers();
         } catch (err) {
