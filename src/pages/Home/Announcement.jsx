@@ -32,11 +32,13 @@ const Announcement = () => {
           backgroundColor: '#05081134',
         }}
       >
-        {/* Blackish gradient overlay fading to solid theme color at the bottom */}
+        {/* Blackish gradient overlay fading to solid theme color at the bottom (lighter on mobile for a brighter bg.png) */}
         <div 
           className="absolute inset-0 pointer-events-none" 
           style={{ 
-            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.7) 60%, rgba(5, 8, 17, 1) 100%)'
+            background: isMobile 
+              ? 'linear-gradient(to bottom, rgba(5, 8, 17, 0.3) 0%, rgba(5, 8, 17, 0.4) 60%, rgba(5, 8, 17, 1) 100%)'
+              : 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.7) 60%, rgba(5, 8, 17, 1) 100%)'
           }} 
         />
 
