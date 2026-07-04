@@ -29,14 +29,14 @@ const Announcement = () => {
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           minHeight: isMobile ? 'auto' : '600px',
-          backgroundColor: '#050811',
+          backgroundColor: '#05081134',
         }}
       >
         {/* Blackish gradient overlay fading to solid theme color at the bottom */}
         <div 
           className="absolute inset-0 pointer-events-none" 
           style={{ 
-            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.9) 0%, rgba(5, 8, 17, 0.96) 60%, rgba(5, 8, 17, 1) 100%)'
+            background: 'linear-gradient(to bottom, rgba(5, 8, 17, 0.7) 0%, rgba(5, 8, 17, 0.7) 60%, rgba(5, 8, 17, 1) 100%)'
           }} 
         />
 

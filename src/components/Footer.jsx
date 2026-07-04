@@ -108,9 +108,7 @@ const Footer = () => {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-500 text-center sm:text-left">
             © {new Date().getFullYear()}{' '}
-            <span className="text-gray-300">Paraíso Gaming</span>
-            {' '}— Developed by{' '}
-            <span className="text-cyan-400 font-medium">Shohag</span>
+            <span className="text-gray-300">Paraiso Gaming. All Rights Reserved.</span>
           </p>
           <p className="text-[11px] font-mono text-gray-600 tracking-widest uppercase">
             SA-MP · Roleplay
