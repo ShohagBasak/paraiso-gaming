@@ -25,7 +25,7 @@ const Announcement = () => {
         className="pt-24 pb-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         style={{
           backgroundImage: `url('/bg.png')`,
-          backgroundSize: isMobile ? '550% auto' : '140% auto',
+          backgroundSize: isMobile ? '480% auto' : '140% auto',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           minHeight: isMobile ? 'auto' : '600px',
