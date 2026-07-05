@@ -339,31 +339,60 @@ const ChainOfCommand = () => {
             <div className="h-px flex-1 bg-gradient-to-l from-transparent via-cyan-500/20 to-cyan-500/50" />
           </div>
 
-          <div className="bg-[#0b0f15] border border-slate-900 rounded-3xl p-6 sm:p-8 space-y-4">
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
-              This government system is built around delegation and accountability.
-            </p>
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+          <div className="bg-[#0b0f15] border border-slate-900 rounded-3xl p-6 sm:p-8 space-y-6">
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-semibold">
               Each executive position oversees a specific area of the server:
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-[#070b10] border border-slate-900">
-                <p className="text-cyan-400 text-xs font-black uppercase tracking-wider mb-2">Secretary of Defense</p>
-                <p className="text-slate-400 text-xs">→ Government factions and emergency services.</p>
+            <div className="space-y-4">
+              {/* President */}
+              <div className="p-5 rounded-2xl bg-[#070b10] border border-slate-900/80">
+                <p className="text-[#c9a84c] text-xs sm:text-sm font-black uppercase tracking-wider mb-1">President</p>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  <span className="text-slate-500 mr-1.5 font-bold">→</span>
+                  The highest-ranking official within the Government of Paraiso. The President sets the overall vision of the community and has final authority over major decisions, appointments, and policies.
+                </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#070b10] border border-slate-900">
-                <p className="text-[#c9a84c] text-xs font-black uppercase tracking-wider mb-2">Secretary of State</p>
-                <p className="text-slate-400 text-xs">→ Gangs, civilian factions, and community organizations.</p>
+
+              {/* Vice President */}
+              <div className="p-5 rounded-2xl bg-[#070b10] border border-slate-900/80">
+                <p className="text-[#94a3b8] text-xs sm:text-sm font-black uppercase tracking-wider mb-1">Vice President</p>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  <span className="text-slate-500 mr-1.5 font-bold">→</span>
+                  The second-highest executive official. The Vice President assists the President with government operations and acts on behalf of the President when necessary.
+                </p>
               </div>
-              <div className="p-4 rounded-xl bg-[#070b10] border border-slate-900">
-                <p className="text-emerald-400 text-xs font-black uppercase tracking-wider mb-2">Governor</p>
-                <p className="text-slate-400 text-xs">→ Businesses, economy, and commercial affairs.</p>
+
+              {/* Secretary of Defense */}
+              <div className="p-5 rounded-2xl bg-[#070b10] border border-slate-900/80">
+                <p className="text-[#22d3ee] text-xs sm:text-sm font-black uppercase tracking-wider mb-1">Secretary of Defense</p>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  <span className="text-slate-500 mr-1.5 font-bold">→</span>
+                  Government factions and emergency services.
+                </p>
+              </div>
+
+              {/* Secretary of State */}
+              <div className="p-5 rounded-2xl bg-[#070b10] border border-slate-900/80">
+                <p className="text-[#fbbf24] text-xs sm:text-sm font-black uppercase tracking-wider mb-1">Secretary of State</p>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  <span className="text-slate-500 mr-1.5 font-bold">→</span>
+                  All criminal organizations.
+                </p>
+              </div>
+
+              {/* Governor */}
+              <div className="p-5 rounded-2xl bg-[#070b10] border border-slate-900/80">
+                <p className="text-[#10b981] text-xs sm:text-sm font-black uppercase tracking-wider mb-1">Governor</p>
+                <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                  <span className="text-slate-500 mr-1.5 font-bold">→</span>
+                  Businesses, economy, and commercial affairs.
+                </p>
               </div>
             </div>
 
-            <p className="text-slate-400 text-xs leading-relaxed font-medium pt-2 border-t border-slate-900">
-              This allows every faction, gang, civilian organization, and business to receive proper leadership without one person having to manage everything directly.
+            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed font-medium pt-4 border-t border-slate-900/80">
+              This allows every faction, gang, and business organizations to receive proper leadership without one person having to manage everything directly.
             </p>
           </div>
         </div>
