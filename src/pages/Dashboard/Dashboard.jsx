@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MdImage, MdCampaign, MdTrendingUp, MdPeople } from 'react-icons/md';
+import { MdImage, MdCampaign, MdTrendingUp, MdPeople, MdPeopleOutline, MdOutlineAccountBalance } from 'react-icons/md';
 import { Link } from 'react-router';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -21,19 +21,25 @@ const Dashboard = () => {
     const [bannerCount, setBannerCount] = useState(0);
     const [announcementCount, setAnnouncementCount] = useState(0);
     const [staffCount, setStaffCount] = useState(0);
+    const [helperRosterCount, setHelperRosterCount] = useState(0);
+    const [factionRosterCount, setFactionRosterCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchCounts = async () => {
             try {
-                const [b, a, s] = await Promise.all([
+                const [b, a, s, hr, fr] = await Promise.all([
                     fetch(`${BASE_URL}/banners`, { credentials: 'include' }).then(r => r.json()),
                     fetch(`${BASE_URL}/announcements`, { credentials: 'include' }).then(r => r.json()),
                     fetch(`${BASE_URL}/staff`, { credentials: 'include' }).then(r => r.json()),
+                    fetch(`${BASE_URL}/helper-roster`, { credentials: 'include' }).then(r => r.json()),
+                    fetch(`${BASE_URL}/roster`, { credentials: 'include' }).then(r => r.json()),
                 ]);
                 setBannerCount(Array.isArray(b) ? b.length : 0);
                 setAnnouncementCount(Array.isArray(a) ? a.length : 0);
                 setStaffCount(Array.isArray(s) ? s.length : 0);
+                setHelperRosterCount(Array.isArray(hr) ? hr.length : 0);
+                setFactionRosterCount(Array.isArray(fr) ? fr.length : 0);
             } catch {
                 // silent
             } finally {
@@ -58,7 +64,7 @@ const Dashboard = () => {
                     Loading stats...
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-6xl">
                     <StatCard
                         to="/dashboard/banners"
                         icon={<MdImage className="text-cyan-400" size={24} />}
@@ -79,6 +85,20 @@ const Dashboard = () => {
                         label="Staff Members"
                         value={staffCount}
                         color="bg-emerald-500/10"
+                    />
+                    <StatCard
+                        to="/dashboard/roster"
+                        icon={<MdOutlineAccountBalance className="text-amber-400" size={24} />}
+                        label="Faction Roster"
+                        value={factionRosterCount}
+                        color="bg-amber-500/10"
+                    />
+                    <StatCard
+                        to="/dashboard/helper-roster"
+                        icon={<MdPeopleOutline className="text-green-400" size={24} />}
+                        label="Helper Roster"
+                        value={helperRosterCount}
+                        color="bg-green-500/10"
                     />
                 </div>
             )}
@@ -104,6 +124,18 @@ const Dashboard = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-medium hover:bg-emerald-500/20 transition-all"
                     >
                         <MdPeople size={16} /> Manage Staff Team
+                    </Link>
+                    <Link
+                        to="/dashboard/roster"
+                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/20 transition-all"
+                    >
+                        <MdOutlineAccountBalance size={16} /> Faction Roster
+                    </Link>
+                    <Link
+                        to="/dashboard/helper-roster"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium hover:bg-green-500/20 transition-all"
+                    >
+                        <MdPeopleOutline size={16} /> Helper Roster
                     </Link>
                 </div>
             </div>

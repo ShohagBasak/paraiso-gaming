@@ -3,17 +3,20 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree
 } from 'react-icons/md';
 import { FaGamepad } from 'react-icons/fa';
 
 const navItems = [
     { to: '/dashboard', label: 'Overview', icon: <MdDashboard size={20} />, end: true },
-    { to: '/dashboard/banners', label: 'Banner Slides', icon: <MdImage size={20} /> },
-    { to: '/dashboard/announcements', label: 'Announcements', icon: <MdCampaign size={20} /> },
-    { to: '/dashboard/staff', label: 'Staff Roster', icon: <MdSupervisedUserCircle size={20} /> },
-    { to: '/dashboard/roster', label: 'Faction Roster', icon: <MdOutlineAccountBalance size={20} /> },
-    { to: '/dashboard/users', label: 'Users', icon: <MdPeople size={20} /> },
+    { to: '/dashboard/banners', label: 'Banner Slides', icon: <MdImage size={20} />, permission: 'banners' },
+    { to: '/dashboard/announcements', label: 'Announcements', icon: <MdCampaign size={20} />, permission: 'announcements' },
+    { to: '/dashboard/staff', label: 'Staff Roster', icon: <MdSupervisedUserCircle size={20} />, permission: 'staff' },
+    { to: '/dashboard/roster', label: 'Faction Roster', icon: <MdOutlineAccountBalance size={20} />, permission: 'roster' },
+    { to: '/dashboard/helper-roster', label: 'Helper Roster', icon: <MdGroup size={20} />, permission: 'helper-roster' },
+    { to: '/dashboard/faqs', label: 'FAQ Manager', icon: <MdQuestionAnswer size={20} />, permission: 'faqs' },
+    { to: '/dashboard/coc', label: 'CoC Manager', icon: <MdAccountTree size={20} />, permission: 'coc' },
+    { to: '/dashboard/users', label: 'Users', icon: <MdPeople size={20} />, permission: 'users' },
 ];
 
 const DashboardLayout = () => {
@@ -25,6 +28,13 @@ const DashboardLayout = () => {
         await logoutUser();
         navigate('/login');
     };
+
+    const filteredNavItems = navItems.filter(item => {
+        if (!item.permission) return true;
+        if (user?.role === 'master') return true;
+        if (item.permission === 'users') return false; // strictly master only
+        return user?.role === 'admin' && user?.permissions?.includes(item.permission);
+    });
 
     const Sidebar = () => (
         <aside className="w-64 h-full bg-[#0d1117] border-r border-slate-800 flex flex-col">
@@ -43,7 +53,7 @@ const DashboardLayout = () => {
 
             {/* Nav */}
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {navItems.map((item) => (
+                {filteredNavItems.map((item) => (
                     <NavLink
                         key={item.to}
                         to={item.to}
@@ -71,7 +81,7 @@ const DashboardLayout = () => {
                     </div>
                     <div className="overflow-hidden">
                         <p className="text-white text-xs font-semibold truncate">{user?.username}</p>
-                        <p className="text-cyan-400 text-xs font-mono">Admin</p>
+                        <p className="text-cyan-400 text-xs font-mono">{user?.role === 'master' ? 'Master Admin' : 'Sub Admin'}</p>
                     </div>
                 </div>
                 <button
@@ -124,7 +134,9 @@ const DashboardLayout = () => {
                             <MdHome size={16} />
                             <span className="hidden sm:inline">Home</span>
                         </Link>
-                        <span className="hidden sm:block text-slate-400 text-sm">{user?.email}</span>
+                        <span className="hidden sm:block text-slate-400 text-sm font-mono bg-slate-800/40 px-2.5 py-1 rounded-lg border border-slate-700/50">
+                            {user?.email} <span className="text-cyan-400 ml-1.5">{user?.role === 'master' ? 'Master' : 'Admin'}</span>
+                        </span>
                         <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs uppercase">
                             {user?.username?.[0] || 'A'}
                         </div>

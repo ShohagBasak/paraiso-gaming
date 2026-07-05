@@ -136,11 +136,39 @@ const RosterManager = () => {
             description: '',
             sort_order: 0,
             color: '#ffffff',
+            name_color: '#ffffff',
         }
     });
 
     const watchSection = memberForm.watch('section');
     const watchColor = memberForm.watch('color') || '#ffffff';
+    const watchNameColor = memberForm.watch('name_color', '#ffffff');
+
+    const selectedSecObj = sectionsList.find(s => s.name.toUpperCase() === (watchSection || '').toUpperCase());
+
+    const handleUpdateSelectedSecColor = async (newColor) => {
+        if (!selectedSecObj) return;
+        try {
+            const res = await fetch(`${BASE_URL}/roster/sections/${selectedSecObj.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    name: selectedSecObj.name,
+                    sort_order: selectedSecObj.sort_order,
+                    color: newColor,
+                    icon: selectedSecObj.icon || '⚙️'
+                })
+            });
+            if (res.ok) {
+                setSectionsList(prev => prev.map(s => s.id === selectedSecObj.id ? { ...s, color: newColor } : s));
+                toast.success(`Updated ${selectedSecObj.name} color!`, { duration: 1000 });
+                fetchMembers();
+            }
+        } catch (err) {
+            console.error("Failed to update section color:", err);
+        }
+    };
 
     // Close dropdowns & emoji picker on click outside
     useEffect(() => {
@@ -291,7 +319,8 @@ const RosterManager = () => {
                 name: '',
                 description: '',
                 sort_order: nextOrder,
-                color: '#ffffff'
+                color: '#ffffff',
+                name_color: '#ffffff',
             });
             setEditingMember(null);
             fetchMembers();
@@ -352,13 +381,14 @@ const RosterManager = () => {
         memberForm.setValue('description', member.description || '');
         memberForm.setValue('sort_order', member.sort_order || 0);
         memberForm.setValue('color', member.color || '#ffffff');
+        memberForm.setValue('name_color', member.name_color || '#ffffff');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleCancelEdit = () => {
         setEditingMember(null);
         setLastAutofilledSection('');
-        memberForm.reset({ section: '', section_order: 0, title: '', name: '', description: '', sort_order: 0, color: '#ffffff' });
+        memberForm.reset({ section: '', section_order: 0, title: '', name: '', description: '', sort_order: 0, color: '#ffffff', name_color: '#ffffff' });
     };
 
     // Quick shortcut to add a new role/position under a specific faction
@@ -628,22 +658,35 @@ const RosterManager = () => {
                                 <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">
                                     Section / Faction Group <span className="text-red-400">*</span>
                                 </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        {...memberForm.register('section', { required: 'Section/Faction is required' })}
-                                        placeholder="Type custom name or click arrow to choose"
-                                        className="w-full pl-4 pr-10 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600 uppercase font-semibold"
-                                        onClick={() => setShowSectionDropdown(true)}
-                                        onFocus={() => setShowSectionDropdown(true)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowSectionDropdown(!showSectionDropdown)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none text-xs"
-                                    >
-                                        ▼
-                                    </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="text"
+                                            {...memberForm.register('section', { required: 'Section/Faction is required' })}
+                                            placeholder="Type custom name or click arrow to choose"
+                                            className="w-full pl-4 pr-10 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600 uppercase font-semibold"
+                                            onClick={() => setShowSectionDropdown(true)}
+                                            onFocus={() => setShowSectionDropdown(true)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowSectionDropdown(!showSectionDropdown)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none text-xs"
+                                        >
+                                            ▼
+                                        </button>
+                                    </div>
+                                    {selectedSecObj && (
+                                        <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-2 rounded-xl flex-shrink-0" title="Selected Section Color">
+                                            <input
+                                                type="color"
+                                                value={selectedSecObj.color || '#ffffff'}
+                                                onChange={(e) => handleUpdateSelectedSecColor(e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono select-none hidden sm:inline-block">Color</span>
+                                        </div>
+                                    )}
                                 </div>
                                 {showSectionDropdown && (
                                     <div className="absolute top-[78px] left-0 w-full bg-[#0b0f15] border border-slate-800 rounded-xl shadow-2xl z-30 max-h-52 overflow-y-auto divide-y divide-slate-800/50">
@@ -675,22 +718,40 @@ const RosterManager = () => {
                                 <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">
                                     Position / Role Title <span className="text-red-400">*</span>
                                 </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        {...memberForm.register('title', { required: 'Title is required' })}
-                                        placeholder="e.g. PRESIDENT, CHIEF OF POLICE"
-                                        className="w-full pl-4 pr-10 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600 font-semibold"
-                                        onClick={() => setShowTitleDropdown(true)}
-                                        onFocus={() => setShowTitleDropdown(true)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowTitleDropdown(!showTitleDropdown)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none text-xs"
-                                    >
-                                        ▼
-                                    </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="text"
+                                            {...memberForm.register('title', { required: 'Title is required' })}
+                                            placeholder="e.g. PRESIDENT, CHIEF OF POLICE"
+                                            className="w-full pl-4 pr-10 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600 font-semibold"
+                                            onClick={() => setShowTitleDropdown(true)}
+                                            onFocus={() => setShowTitleDropdown(true)}
+                                            style={{ color: watchColor }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTitleDropdown(!showTitleDropdown)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none text-xs"
+                                        >
+                                            ▼
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-1.5 rounded-xl flex-shrink-0" title="Role/Title Custom Color">
+                                        <input
+                                            type="color"
+                                            value={watchColor}
+                                            onChange={(e) => memberForm.setValue('color', e.target.value)}
+                                            className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={watchColor}
+                                            onChange={(e) => memberForm.setValue('color', e.target.value)}
+                                            placeholder="#FFFFFF"
+                                            className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono uppercase focus:outline-none"
+                                        />
+                                    </div>
                                 </div>
                                 {showTitleDropdown && uniqueTitlesList.length > 0 && (
                                     <div className="absolute top-[78px] left-0 w-full bg-[#0b0f15] border border-slate-800 rounded-xl shadow-2xl z-30 max-h-48 overflow-y-auto divide-y divide-slate-800/50">
@@ -719,54 +780,33 @@ const RosterManager = () => {
                                 <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">
                                     Member Name <span className="text-slate-500">(leave blank for "Vacant")</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    {...memberForm.register('name')}
-                                    placeholder="e.g. Brian Gutierrez  (or leave blank = Vacant)"
-                                    className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600"
-                                />
-                            </div>
-
-                            {/* Color Palette Picker */}
-                            <div className="flex flex-col gap-2">
-                                <label className="text-slate-300 text-xs font-bold uppercase tracking-wider flex items-center justify-between">
-                                    <span>Role Title & Text Color</span>
-                                    <span className="text-[10px] text-slate-500 font-normal">Apply custom color styling to this role</span>
-                                </label>
-                                <div className="flex items-center gap-3 bg-[#080d13] border border-slate-700 p-3 rounded-xl">
-                                    <div className="flex flex-wrap gap-2 flex-1">
-                                        {PRESET_COLORS.map(c => (
-                                            <button
-                                                key={c.hex}
-                                                type="button"
-                                                onClick={() => memberForm.setValue('color', c.hex)}
-                                                className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${
-                                                    watchColor.toLowerCase() === c.hex.toLowerCase()
-                                                        ? 'border-white scale-105 shadow-md shadow-white/20'
-                                                        : 'border-slate-800'
-                                                }`}
-                                                style={{ backgroundColor: c.hex }}
-                                                title={c.name}
-                                            />
-                                        ))}
-                                    </div>
-                                    <div className="flex items-center gap-2 border-l border-slate-800 pl-3">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="text"
+                                        {...memberForm.register('name')}
+                                        placeholder="e.g. Brian Gutierrez  (or leave blank = Vacant)"
+                                        className="flex-1 px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder:text-slate-600 font-bold"
+                                        style={{ color: watchNameColor }}
+                                    />
+                                    <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-1.5 rounded-xl flex-shrink-0" title="Member Name Custom Color">
                                         <input
                                             type="color"
-                                            value={watchColor}
-                                            onChange={(e) => memberForm.setValue('color', e.target.value)}
+                                            value={watchNameColor}
+                                            onChange={(e) => memberForm.setValue('name_color', e.target.value)}
                                             className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
                                         />
                                         <input
                                             type="text"
-                                            value={watchColor}
-                                            onChange={(e) => memberForm.setValue('color', e.target.value)}
+                                            value={watchNameColor}
+                                            onChange={(e) => memberForm.setValue('name_color', e.target.value)}
                                             placeholder="#FFFFFF"
                                             className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono uppercase focus:outline-none"
                                         />
                                     </div>
                                 </div>
                             </div>
+
+
 
                             {/* Description */}
                             <div className="flex flex-col gap-2">

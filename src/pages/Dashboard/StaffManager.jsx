@@ -9,6 +9,21 @@ import { toast } from 'react-hot-toast';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const PRESET_COLORS = [
+    { hex: '#ff2d2d', name: 'Crimson Red' },
+    { hex: '#ff6b6b', name: 'Coral Red' },
+    { hex: '#F39C12', name: 'Orange' },
+    { hex: '#F1C40F', name: 'Yellow' },
+    { hex: '#7ED321', name: 'Lime Green' },
+    { hex: '#10b981', name: 'Emerald Green' },
+    { hex: '#1ABC9C', name: 'Teal' },
+    { hex: '#06b6d4', name: 'Cyan' },
+    { hex: '#3b82f6', name: 'Royal Blue' },
+    { hex: '#9B59B6', name: 'Amethyst Purple' },
+    { hex: '#ec4899', name: 'Hot Pink' },
+    { hex: '#ffffff', name: 'Pure White' },
+];
+
 const iconOptions = [
     { value: 'FaUserTie', label: 'Management Tie' },
     { value: 'FaUserCog', label: 'Gear / Assistant' },
@@ -125,11 +140,40 @@ const StaffManager = () => {
             category: '',
             role: '',
             country: 'us',
-            image_url: ''
+            image_url: '',
+            color: '#ffffff',
+            name_color: '#ffffff'
         }
     });
 
     const watchCountry = staffForm.watch('country', 'us');
+    const watchStaffColor = staffForm.watch('color', '#ffffff');
+    const watchNameColor = staffForm.watch('name_color', '#ffffff');
+    const watchCategory = staffForm.watch('category');
+
+    const selectedRoleObj = roles.find(r => r.name === watchCategory);
+
+    const handleUpdateSelectedRoleColor = async (newColor) => {
+        if (!selectedRoleObj) return;
+        try {
+            const res = await fetch(`${BASE_URL}/staff-roles/${selectedRoleObj.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    name: selectedRoleObj.name,
+                    color: newColor,
+                    icon_name: selectedRoleObj.icon_name
+                })
+            });
+            if (res.ok) {
+                setRoles(prev => prev.map(r => r.id === selectedRoleObj.id ? { ...r, color: newColor } : r));
+                toast.success(`Updated ${selectedRoleObj.name} color!`, { duration: 1000 });
+            }
+        } catch (err) {
+            console.error("Failed to update role color:", err);
+        }
+    };
 
     // Form 2: Role / Department form
     const roleForm = useForm({
@@ -235,7 +279,9 @@ const StaffManager = () => {
                 category: roles[0]?.name || '',
                 role: '',
                 country: 'us',
-                image_url: ''
+                image_url: '',
+                color: '#ffffff',
+                name_color: '#ffffff'
             });
             setUploadPreview('');
             setEditingStaff(null);
@@ -296,6 +342,8 @@ const StaffManager = () => {
         staffForm.setValue('role', member.role);
         staffForm.setValue('country', member.country || 'us');
         staffForm.setValue('image_url', member.image_url || '');
+        staffForm.setValue('color', member.color || '#ffffff');
+        staffForm.setValue('name_color', member.name_color || '#ffffff');
         setUploadPreview(member.image_url || '');
     };
 
@@ -306,7 +354,9 @@ const StaffManager = () => {
             category: roles[0]?.name || '',
             role: '',
             country: 'us',
-            image_url: ''
+            image_url: '',
+            color: '#ffffff',
+            name_color: '#ffffff'
         });
         setUploadPreview('');
         setShowCountryDropdown(false);
@@ -616,12 +666,30 @@ const StaffManager = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Staff Name <span className="text-red-400">*</span></label>
-                                    <input
-                                        type="text"
-                                        {...staffForm.register('name', { required: 'Name is required' })}
-                                        placeholder="e.g. Surreal"
-                                        className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
-                                    />
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="text"
+                                            {...staffForm.register('name', { required: 'Name is required' })}
+                                            placeholder="e.g. Surreal"
+                                            className="flex-1 px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600 font-bold"
+                                            style={{ color: watchNameColor }}
+                                        />
+                                        <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-1.5 rounded-xl flex-shrink-0" title="Staff Name Custom Color">
+                                            <input
+                                                type="color"
+                                                value={watchNameColor}
+                                                onChange={(e) => staffForm.setValue('name_color', e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={watchNameColor}
+                                                onChange={(e) => staffForm.setValue('name_color', e.target.value)}
+                                                placeholder="#FFFFFF"
+                                                className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono uppercase focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
                                     {staffForm.formState.errors.name && <p className="text-red-400 text-xs">{staffForm.formState.errors.name.message}</p>}
                                 </div>
 
@@ -632,14 +700,33 @@ const StaffManager = () => {
                                             ⚠️ Create departments under the "Departments" tab first.
                                         </div>
                                     ) : (
-                                        <select
-                                            {...staffForm.register('category')}
-                                            className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all cursor-pointer"
-                                        >
-                                            {roles.map(r => (
-                                                <option key={r.id} value={r.name}>{r.name}</option>
-                                            ))}
-                                        </select>
+                                        <div className="flex items-center gap-3">
+                                            <select
+                                                {...staffForm.register('category')}
+                                                className="flex-1 px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all cursor-pointer"
+                                            >
+                                                {roles.map(r => (
+                                                    <option key={r.id} value={r.name}>{r.name}</option>
+                                                ))}
+                                            </select>
+                                            {selectedRoleObj && (
+                                                <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-1.5 rounded-xl flex-shrink-0" title="Selected Department/Category Color">
+                                                    <input
+                                                        type="color"
+                                                        value={selectedRoleObj.color || '#ffffff'}
+                                                        onChange={(e) => handleUpdateSelectedRoleColor(e.target.value)}
+                                                        className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={selectedRoleObj.color || '#ffffff'}
+                                                        onChange={(e) => handleUpdateSelectedRoleColor(e.target.value)}
+                                                        placeholder="#FFFFFF"
+                                                        className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono uppercase focus:outline-none"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -647,12 +734,30 @@ const StaffManager = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Subtitle Role <span className="text-slate-500">(Optional)</span></label>
-                                    <input
-                                        type="text"
-                                        {...staffForm.register('role')}
-                                        placeholder="e.g. Lead Scripter"
-                                        className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
-                                    />
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="text"
+                                            {...staffForm.register('role')}
+                                            placeholder="e.g. Lead Scripter"
+                                            className="flex-1 px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600 font-bold"
+                                            style={{ color: watchStaffColor }}
+                                        />
+                                        <div className="flex items-center gap-2 bg-[#080d13] border border-slate-700 px-3 py-1.5 rounded-xl flex-shrink-0" title="Subrole / Position Custom Color">
+                                            <input
+                                                type="color"
+                                                value={watchStaffColor}
+                                                onChange={(e) => staffForm.setValue('color', e.target.value)}
+                                                className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={watchStaffColor}
+                                                onChange={(e) => staffForm.setValue('color', e.target.value)}
+                                                placeholder="#FFFFFF"
+                                                className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white text-xs font-mono uppercase focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Dynamic Searchable Country Flag dropdown list */}
@@ -759,6 +864,8 @@ const StaffManager = () => {
                                     )}
                                 </div>
                             </div>
+ 
+
 
                             {/* Drag & Drop Avatar */}
                             <div className="flex flex-col gap-2">
@@ -897,7 +1004,7 @@ const StaffManager = () => {
                                                 <p className="text-slate-400 text-xs truncate mt-0.5">{member.role || <span className="text-slate-600 italic">No subtitle role</span>}</p>
                                                 <div className="mt-1.5 flex items-center gap-2">
                                                     <span 
-                                                        style={{ color: roleColor, borderColor: `${roleColor}25`, backgroundColor: `${roleColor}10` }}
+                                                        style={{ color: member.color || roleColor, borderColor: `${member.color || roleColor}25`, backgroundColor: `${member.color || roleColor}10` }}
                                                         className="text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded"
                                                     >
                                                         {member.category || 'No Department'}

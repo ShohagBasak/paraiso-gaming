@@ -21,8 +21,12 @@ import AdminRoute from '../components/AdminRoute';
 import GovernmentRoster from '../pages/Roster/GovernmentRoster';
 import RosterManager from '../pages/Dashboard/RosterManager';
 import ChainOfCommand from '../pages/Roster/ChainOfCommand';
+import HelperRoster from '../pages/Roster/HelperRoster';
+import HelperRosterManager from '../pages/Dashboard/HelperRosterManager';
+import FaqManager from '../pages/Dashboard/FaqManager';
+import ChainOfCommandManager from '../pages/Dashboard/ChainOfCommandManager';
 
-
+import PermissionGuard from '../components/PermissionGuard';
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +57,10 @@ export const router = createBrowserRouter([
       {
         path: '/roster/chain-of-command',
         element: <ChainOfCommand />,
+      },
+      {
+        path: '/roster/helper',
+        element: <HelperRoster />,
       },
       {
         path: '/roster/government',
@@ -89,11 +97,14 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Dashboard /> },
-      { path: 'banners', element: <BannerManager /> },
-      { path: 'announcements', element: <AnnouncementManager /> },
-      { path: 'users', element: <UserManager /> },
-      { path: 'staff', element: <StaffManager /> },
-      { path: 'roster', element: <RosterManager /> },
+      { path: 'banners', element: <PermissionGuard permission="banners"><BannerManager /></PermissionGuard> },
+      { path: 'announcements', element: <PermissionGuard permission="announcements"><AnnouncementManager /></PermissionGuard> },
+      { path: 'users', element: <PermissionGuard permission="users"><UserManager /></PermissionGuard> },
+      { path: 'staff', element: <PermissionGuard permission="staff"><StaffManager /></PermissionGuard> },
+      { path: 'roster', element: <PermissionGuard permission="roster"><RosterManager /></PermissionGuard> },
+      { path: 'helper-roster', element: <PermissionGuard permission="helper-roster"><HelperRosterManager /></PermissionGuard> },
+      { path: 'faqs', element: <PermissionGuard permission="faqs"><FaqManager /></PermissionGuard> },
+      { path: 'coc', element: <PermissionGuard permission="coc"><ChainOfCommandManager /></PermissionGuard> },
     ]
   }
 ]);

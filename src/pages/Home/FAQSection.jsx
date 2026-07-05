@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const FAQSection = () => {
   const [openFaq, setOpenFaq] = useState(null);
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const faqData = [
+  const defaultFaqData = [
     {
       id: 1,
       question: "When is Paraiso Gaming launching?",
@@ -31,12 +35,33 @@ const FAQSection = () => {
     }
   ];
 
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/faqs`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setFaqs(data);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching FAQs, falling back to static list:", err);
+      } finally {
+        setLoading(false);
+      }
+      setFaqs(defaultFaqData);
+    };
+    fetchFaqs();
+  }, []);
+
   return (
     <section className="pt-12 pb-16 px-8">
       <div className="max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-cyan-400 mb-12 text-center">Frequently Asked Questions</h2>
         <div className="bg-slate-800/80 backdrop-blur border border-cyan-500 rounded-lg overflow-hidden">
-          {faqData.map((faq) => (
+          {faqs.map((faq) => (
             <div key={faq.id} className="border-b border-cyan-500/20 last:border-b-0">
               <button
                 onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)}

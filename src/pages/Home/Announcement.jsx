@@ -24,8 +24,8 @@ const Announcement = () => {
       <section
         className="pt-24 pb-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         style={{
-          backgroundImage: `url('/bg.png')`,
-          backgroundSize: isMobile ? '480% auto' : '140% auto',
+          backgroundImage: `url('/bg.jpg')`,
+          backgroundSize: isMobile ? '390% auto' : '140% auto',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           minHeight: isMobile ? 'auto' : '600px',
@@ -49,7 +49,7 @@ const Announcement = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl md:text-2xl text-center text-gray-300 mb-6 sm:mb-8 font-light px-2 animate-fade-up animation-delay-1-4s">
+          <p className="text-lg sm:text-2xl md:text-2xl text-center text-gray-300 mb-6 sm:mb-8 font-light px-2 animate-fade-up animation-delay-1-4s">
             This is not just a game server—it is a <span className="text-cyan-400 font-semibold">living, breathing nation</span>.
           </p>
 

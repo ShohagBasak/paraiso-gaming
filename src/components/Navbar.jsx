@@ -88,14 +88,22 @@ const Navbar = () => {
     if (!user) {
       applySubLinks.push({ name: 'Webmaster Login', path: '/login' });
     } else {
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'master') {
         applySubLinks.push({ name: 'Dashboard', path: '/dashboard' });
       }
       applySubLinks.push({ name: 'Logout', path: '#logout', isLogout: true });
     }
 
     return [
-      { name: 'Staff', path: '/staff' },
+      {
+        name: 'Staff',
+        isDropdown: true,
+        align: 'left',
+        subLinks: [
+          { name: 'Admin Roster', path: '/staff' },
+          { name: 'Helper Roster', path: '/roster/helper' }
+        ]
+      },
       {
         name: 'Apply',
         isDropdown: true,
