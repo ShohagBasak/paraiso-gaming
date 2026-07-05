@@ -19,7 +19,8 @@ const AnnouncementManager = () => {
             title_color: '#ffffff',
             description_color: '#cbd5e1',
             title_size: 'text-xl md:text-2xl',
-            description_size: 'text-sm'
+            description_size: 'text-sm',
+            image_shape: 'rectangle'
         }
     });
 
@@ -83,7 +84,8 @@ const AnnouncementManager = () => {
                 title_color: '#ffffff',
                 description_color: '#cbd5e1',
                 title_size: 'text-xl md:text-2xl',
-                description_size: 'text-sm'
+                description_size: 'text-sm',
+                image_shape: 'rectangle'
             });
             setUploadPreview('');
             setEditingItem(null);
@@ -147,6 +149,7 @@ const AnnouncementManager = () => {
         setValue('description_color', ann.description_color || '#cbd5e1');
         setValue('title_size', ann.title_size || 'text-xl md:text-2xl');
         setValue('description_size', ann.description_size || 'text-sm');
+        setValue('image_shape', ann.image_shape || 'rectangle');
         setUploadPreview(ann.image_url);
     };
 
@@ -160,7 +163,8 @@ const AnnouncementManager = () => {
             title_color: '#ffffff',
             description_color: '#cbd5e1',
             title_size: 'text-xl md:text-2xl',
-            description_size: 'text-sm'
+            description_size: 'text-sm',
+            image_shape: 'rectangle'
         });
         setUploadPreview('');
     };
@@ -447,7 +451,7 @@ const AnnouncementManager = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Image URL</label>
                             <input
@@ -456,6 +460,17 @@ const AnnouncementManager = () => {
                                 placeholder="https://example.com/image.png"
                                 className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-slate-600"
                             />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Image Display Shape</label>
+                            <select
+                                {...register('image_shape')}
+                                className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-bold"
+                            >
+                                <option value="rectangle">Rectangle / Wide (16:9)</option>
+                                <option value="square">Square (1:1)</option>
+                                <option value="natural">Natural (Original Height)</option>
+                            </select>
                         </div>
                         <div className="flex flex-col gap-2">
                             <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Forum Link</label>
@@ -553,6 +568,7 @@ const AnnouncementManager = () => {
                                     <div className="flex items-center gap-3 mt-2 flex-wrap">
                                         <span className="text-[10px] font-mono text-purple-400/80 bg-purple-950/40 border border-purple-800/30 px-1.5 py-0.5 rounded">Title: {ann.title_color || '#fff'}</span>
                                         <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-950/40 border border-cyan-800/30 px-1.5 py-0.5 rounded">Text: {ann.description_color || '#cbd5e1'}</span>
+                                        <span className="text-[10px] font-mono text-amber-400/80 bg-amber-950/40 border border-amber-800/30 px-1.5 py-0.5 rounded uppercase">Shape: {ann.image_shape || 'rectangle'}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">

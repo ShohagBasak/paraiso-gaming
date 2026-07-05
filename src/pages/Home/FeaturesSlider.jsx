@@ -63,21 +63,49 @@ const FeaturesSlider = () => {
             <SwiperSlide key={feature.id}>
               <div className="bg-[#0f151d] rounded-2xl border border-[#1e293b] overflow-hidden group h-full flex flex-col">
                 {feature.image_url && (
-                  <div className="h-48 w-full overflow-hidden bg-black">
-                    <img src={feature.image_url} alt={feature.title} className="w-full h-full object-contain opacity-80 bg-[#0f151d] p-2" />
+                  <div 
+                    className="w-full bg-[#0d121a]/85 flex items-center justify-center overflow-hidden"
+                    style={{
+                      height: feature.image_shape === 'square' 
+                        ? '280px' 
+                        : feature.image_shape === 'natural' 
+                        ? 'auto' 
+                        : '192px',
+                      maxHeight: feature.image_shape === 'natural' ? '384px' : 'none',
+                      padding: feature.image_shape === 'square' ? '16px' : '0px'
+                    }}
+                  >
+                    <img 
+                      src={feature.image_url} 
+                      alt={feature.title} 
+                      className="opacity-90 transition-all duration-300" 
+                      style={{
+                        width: feature.image_shape === 'square' || feature.image_shape === 'natural'
+                          ? 'auto'
+                          : '100%',
+                        height: feature.image_shape === 'square' || feature.image_shape === 'natural'
+                          ? 'auto'
+                          : '100%',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: feature.image_shape === 'square' || feature.image_shape === 'natural'
+                          ? 'contain'
+                          : 'cover'
+                      }}
+                    />
                   </div>
                 )}
-                <div className="p-6 flex-grow flex flex-col justify-between">
+                <div className="p-5 sm:p-6 flex-grow flex flex-col justify-between">
                   <div>
                     <h3 
                       style={{ color: feature.title_color || '#22d3ee' }} 
-                      className={`font-bold uppercase mb-3 ${feature.title_size || 'text-lg md:text-xl'}`}
+                      className={`font-bold uppercase mb-2 ${feature.title_size || 'text-lg md:text-xl'}`}
                     >
                       {feature.title}
                     </h3>
                     <p 
                       style={{ color: feature.description_color || '#94a3b8' }} 
-                      className={`leading-relaxed ${feature.description_size || 'text-sm'}`}
+                      className={`leading-snug ${feature.description_size || 'text-xs sm:text-sm'}`}
                     >
                       {feature.description}
                     </p>
@@ -87,7 +115,7 @@ const FeaturesSlider = () => {
                       href={feature.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block mt-6 text-cyan-500 text-xs font-bold uppercase hover:text-white transition-colors"
+                      className="inline-block mt-4 text-cyan-500 text-xs font-bold uppercase hover:text-white transition-colors"
                     >
                       See More →
                     </a>
