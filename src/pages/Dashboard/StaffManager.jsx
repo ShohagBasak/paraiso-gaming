@@ -114,7 +114,12 @@ const countriesList = [
     { code: 'jp', name: 'Japan', emoji: '🇯🇵' },
     { code: 'kr', name: 'South Korea', emoji: '🇰🇷' },
     { code: 'vn', name: 'Vietnam', emoji: '🇻🇳' },
-    { code: 'th', name: 'Thailand', emoji: '🇹🇭' }
+    { code: 'th', name: 'Thailand', emoji: '🇹🇭' },
+    { code: 'eg', name: 'Egypt', emoji: '🇪🇬' },
+    { code: 'lb', name: 'Lebanon', emoji: '🇱🇧' },
+    { code: 'bg', name: 'Bulgaria', emoji: '🇧🇬' },
+    { code: 'pt', name: 'Portugal', emoji: '🇵🇹' },
+    { code: 'cn', name: 'China', emoji: '🇨🇳' }
 ];
 
 const StaffManager = () => {
