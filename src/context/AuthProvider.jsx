@@ -5,26 +5,72 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Global fetch interceptor to append JWT token in headers
 const originalFetch = window.fetch;
-window.fetch = async (url, options = {}) => {
+window.fetch = async (input, options = {}) => {
     const token = localStorage.getItem('token');
-    const urlStr = url.toString();
-    // Only attach token to requests intended for our API, not third-party APIs (like imgbb)
-    const isApiRequest = urlStr.startsWith(BASE_URL) || urlStr.startsWith('/') || !urlStr.startsWith('http');
+    
+    // Determine the URL string depending on whether input is a string, URL, or Request object
+    let urlStr = '';
+    if (typeof input === 'string') {
+        urlStr = input;
+    } else if (input instanceof URL) {
+        urlStr = input.toString();
+    } else if (input && typeof input === 'object' && 'url' in input) {
+        urlStr = input.url;
+    }
+
+    const apiHostname = (() => {
+        try {
+            return new URL(BASE_URL, window.location.origin).hostname;
+        } catch (_) {
+            return '';
+        }
+    })();
+
+    const requestHostname = (() => {
+        try {
+            return new URL(urlStr, window.location.origin).hostname;
+        } catch (_) {
+            return '';
+        }
+    })();
+
+    // Check if the request is to our API (same hostname, relative path, or non-http relative URL)
+    const isApiRequest = requestHostname === apiHostname || urlStr.startsWith('/') || !urlStr.startsWith('http');
     
     if (token && isApiRequest) {
-        if (!options.headers) {
-            options.headers = {};
-        }
-        if (options.headers instanceof Headers) {
-            options.headers.set('Authorization', `Bearer ${token}`);
+        if (input instanceof Request) {
+            // If the input is a Request object, we must clone it and set the headers
+            // to avoid mutating the original read-only headers.
+            const headers = new Headers(input.headers);
+            headers.set('Authorization', `Bearer ${token}`);
+            
+            // If options.headers exists, merge them as well
+            if (options.headers) {
+                if (options.headers instanceof Headers) {
+                    options.headers.forEach((val, key) => headers.set(key, val));
+                } else {
+                    Object.entries(options.headers).forEach(([key, val]) => headers.set(key, val));
+                }
+            }
+            
+            const newRequest = new Request(input, { ...options, headers });
+            return originalFetch(newRequest);
         } else {
-            options.headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${token}`
-            };
+            // If the input is a string or URL object, modify options.headers
+            if (!options.headers) {
+                options.headers = {};
+            }
+            if (options.headers instanceof Headers) {
+                options.headers.set('Authorization', `Bearer ${token}`);
+            } else {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`
+                };
+            }
         }
     }
-    return originalFetch(url, options);
+    return originalFetch(input, options);
 };
 
 const AuthProvider = ({ children }) => {
@@ -97,11 +143,13 @@ const AuthProvider = ({ children }) => {
                     const data = await res.json();
                     setUser(data.user || data);
                 } else {
-                    localStorage.removeItem('token');
+                    if (res.status === 401 || res.status === 403) {
+                        localStorage.removeItem('token');
+                    }
                     setUser(null);
                 }
-            } catch (_) {
-                localStorage.removeItem('token');
+            } catch (err) {
+                console.error("Auth check failed due to network error:", err);
                 setUser(null);
             } finally {
                 setLoading(false);
