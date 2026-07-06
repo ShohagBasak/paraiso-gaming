@@ -32,6 +32,17 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isHomePage]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const isLarge = isHomePage && !isScrolled;
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -202,59 +213,69 @@ const Navbar = () => {
   };
 
   return (
-    <nav
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-in-out`}
-      style={{
-        backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: isScrolled ? 'blur(10px)' : 'none',
-        borderBottom: isScrolled ? '1px solid rgba(6,182,212,0.15)' : 'none',
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-4">
-        <div
-          className="flex justify-between items-center transition-all duration-500 ease-in-out"
-          style={{ height: isLarge ? '120px' : '80px' }}
-        >
-
-          <Link
-            to="/"
-            className="flex items-center gap-2 flex-shrink-0 transition-all duration-500 ease-in-out origin-left"
-            style={{ transform: isLarge ? 'scale(1.6)' : 'scale(1)' }}
+    <>
+      <nav
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-in-out`}
+        style={{
+          backgroundColor: isLarge ? 'transparent' : 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: isScrolled ? 'blur(10px)' : 'none',
+          borderBottom: isScrolled ? '1px solid rgba(6,182,212,0.15)' : 'none',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <div
+            className="flex justify-between items-center transition-all duration-500 ease-in-out"
+            style={{ height: isLarge ? '120px' : '80px' }}
           >
-            <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
-              <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
-            </div>
-          </Link>
 
-          {/* Desktop Navigation & Actions aligned to the right */}
-          <div className="hidden lg:flex items-center gap-4 xl:gap-8">
-            {renderLinks(navLinks, false)}
-            {renderLinks(actionLinks, false)}
-          </div>
-
-          <button className="lg:hidden text-cyan-400 bg-transparent border-none cursor-pointer" onClick={toggleMenu}>
-            {isOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Menu — always mounted, animated via max-height + opacity */}
-        <div
-          className={`lg:hidden transition-all duration-300 ease-in-out ${isOpen
-              ? 'max-h-[80vh] opacity-100 overflow-y-auto'
-              : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
-            }`}
-        >
-          <div className="bg-slate-800 border-t border-cyan-500">
-            <div className="px-4 pt-4 pb-12 space-y-3">
-              {renderLinks(navLinks, true)}
-              <div className="border-t border-cyan-500/30 pt-3 mt-3">
-                {renderLinks(actionLinks, true)}
+            <Link
+              to="/"
+              className="flex items-center gap-2 flex-shrink-0 transition-all duration-500 ease-in-out origin-left"
+              style={{ transform: isLarge ? 'scale(1.6)' : 'scale(1)' }}
+            >
+              <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
+                <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
               </div>
+            </Link>
+
+            {/* Desktop Navigation & Actions aligned to the right */}
+            <div className="hidden lg:flex items-center gap-4 xl:gap-8">
+              {renderLinks(navLinks, false)}
+              {renderLinks(actionLinks, false)}
             </div>
+
+            {!isOpen && (
+              <button className="lg:hidden text-cyan-400 bg-transparent border-none cursor-pointer" onClick={toggleMenu}>
+                <HiMenu size={24} />
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu — Full screen overlay (moved outside <nav> to prevent backdrop-filter containing block bounds bug) */}
+      <div
+        className={`lg:hidden fixed inset-0 bg-[#050811] z-50 transition-all duration-300 ease-in-out ${isOpen
+            ? 'opacity-100 translate-x-0'
+            : 'opacity-0 translate-x-full pointer-events-none'
+          } overflow-y-auto`}
+      >
+        {/* Close button inside full screen menu */}
+        <button 
+          className="absolute top-[28px] right-4 text-cyan-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+          onClick={() => setIsOpen(false)}
+        >
+          <HiX size={28} />
+        </button>
+
+        <div className="px-6 pt-28 pb-16 space-y-4">
+          {renderLinks(navLinks, true)}
+          <div className="border-t border-cyan-500/30 pt-4 mt-4">
+            {renderLinks(actionLinks, true)}
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 
