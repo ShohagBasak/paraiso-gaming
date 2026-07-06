@@ -269,6 +269,14 @@ const ChainOfCommandManager = () => {
     const startEditing = (block) => {
         setEditingBlock(block);
         setEditContent(JSON.parse(JSON.stringify(block.content))); // deep copy
+
+        // Smooth scroll to editor panel (highly useful for mobile screens)
+        setTimeout(() => {
+            const panel = document.getElementById('block-editor-panel');
+            if (panel) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
     };
 
     // Handle local image file upload
@@ -487,7 +495,7 @@ const ChainOfCommandManager = () => {
                     </div>
 
                     {/* Right Pane: Active Block Settings Form */}
-                    <div className="lg:col-span-6">
+                    <div id="block-editor-panel" className="lg:col-span-6 scroll-mt-24">
                         {editingBlock ? (
                             <div className="bg-[#0d1117] border border-cyan-500/20 rounded-3xl p-6 relative overflow-hidden animate-in fade-in slide-in-from-right-3 duration-250">
                                 <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-cyan-500 to-blue-500"></div>
