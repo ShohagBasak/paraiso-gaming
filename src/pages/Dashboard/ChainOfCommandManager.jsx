@@ -43,12 +43,24 @@ const ChainOfCommandManager = () => {
 
     // Save Block updates to backend
     const handleSaveBlock = async (id, updatedBlock) => {
+        // Clean sub_boxes items: filter out empty bullet points before saving
+        const cleanedBlock = { ...updatedBlock };
+        if (cleanedBlock.content && Array.isArray(cleanedBlock.content.sub_boxes)) {
+            cleanedBlock.content = {
+                ...cleanedBlock.content,
+                sub_boxes: cleanedBlock.content.sub_boxes.map(box => ({
+                    ...box,
+                    items: (box.items || []).map(item => item.trim()).filter(Boolean)
+                }))
+            };
+        }
+
         try {
             const res = await fetch(`${BASE_URL}/chain-of-command/blocks/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify(updatedBlock)
+                body: JSON.stringify(cleanedBlock)
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to update block');
@@ -948,7 +960,7 @@ const ChainOfCommandManager = () => {
                                                                 value={(col.items || []).join('\n')}
                                                                 onChange={e => {
                                                                     const updated = [...(editContent.sub_boxes || [])];
-                                                                    updated[idx].items = e.target.value.split('\n').filter(Boolean);
+                                                                    updated[idx].items = e.target.value.split('\n');
                                                                     setEditContent(prev => ({ ...prev, sub_boxes: updated }));
                                                                 }}
                                                                 className="w-full px-2 py-1.5 bg-[#0d1117] border border-slate-800 rounded text-xs text-white"
