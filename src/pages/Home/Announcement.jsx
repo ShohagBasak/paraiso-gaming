@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSun } from 'react-icons/fa';
+import bgImage from '../../assets/bg.jpg';
 
 const Announcement = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -24,7 +25,7 @@ const Announcement = () => {
       <section
         className="pt-24 pb-6 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         style={{
-          backgroundImage: `url('/bg.jpg')`,
+          backgroundImage: `url(${bgImage})`,
           backgroundSize: isMobile ? '390% auto' : '140% auto',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
