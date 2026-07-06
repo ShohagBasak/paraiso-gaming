@@ -81,7 +81,7 @@ const DashboardLayout = () => {
                     </div>
                     <div className="overflow-hidden">
                         <p className="text-white text-xs font-semibold truncate">{user?.username}</p>
-                        <p className="text-cyan-400 text-xs font-mono">{user?.role === 'master' ? 'Master Admin' : 'Sub Admin'}</p>
+                        <p className="text-cyan-400 text-xs font-mono">{user?.role === 'master' ? 'Master Admin' : 'Admin'}</p>
                     </div>
                 </div>
                 <button

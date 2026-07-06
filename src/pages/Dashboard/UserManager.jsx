@@ -35,6 +35,8 @@ const UserManager = () => {
     const [updating, setUpdating] = useState(null); // id of user being updated
     const [deleting, setDeleting] = useState(null); // id of user being deleted
     const [search, setSearch] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all'); // 'all' | 'master' | 'admin' | 'user'
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [expandedUserId, setExpandedUserId] = useState(null);
     const [userPermissions, setUserPermissions] = useState({}); // userId -> array of permission keys
     const [confirmModal, setConfirmModal] = useState({
@@ -69,6 +71,7 @@ const UserManager = () => {
                           throw new Error(data.message || 'Failed to delete user');
                       }
                       setUsers(prev => prev.filter(u => u.id !== userId));
+                      setSelectedUserIds(prev => prev.filter(id => id !== userId));
                       toast.success(`User "${username}" deleted successfully!`);
                   } catch (err) {
                       toast.error(err.message || 'Failed to delete user');
@@ -78,6 +81,36 @@ const UserManager = () => {
               }
           });
       };
+
+    const handleBulkDelete = () => {
+        if (selectedUserIds.length === 0) return;
+
+        setConfirmModal({
+            isOpen: true,
+            title: 'Bulk Delete Users',
+            message: `Are you sure you want to permanently delete these ${selectedUserIds.length} users? This action cannot be undone.`,
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                try {
+                    const res = await fetch(`${BASE_URL}/users/bulk`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ userIds: selectedUserIds })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.message || 'Failed to delete users');
+                    }
+                    setUsers(prev => prev.filter(u => !selectedUserIds.includes(u.id)));
+                    setSelectedUserIds([]);
+                    toast.success(`Selected users deleted successfully!`);
+                } catch (err) {
+                    toast.error(err.message || 'Failed to delete users');
+                }
+            }
+        });
+    };
 
     const fetchUsers = async () => {
         try {
@@ -198,10 +231,12 @@ const UserManager = () => {
         }
     };
 
-    const filteredUsers = users.filter(u =>
-        u.username?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const matchesSearch = u.username?.toLowerCase().includes(search.toLowerCase()) ||
+                              u.email?.toLowerCase().includes(search.toLowerCase());
+        const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+        return matchesSearch && matchesRole;
+    });
 
     return (
         <div className="max-w-4xl">
@@ -223,7 +258,7 @@ const UserManager = () => {
                 </div>
                 <div className="bg-[#0d1117] border border-slate-800 rounded-2xl p-4 text-center">
                     <p className="text-2xl font-black text-cyan-400">{users.filter(u => u.role === 'admin').length}</p>
-                    <p className="text-slate-400 text-xs uppercase tracking-wider mt-1">Sub Admins</p>
+                    <p className="text-slate-400 text-xs uppercase tracking-wider mt-1">Admins</p>
                 </div>
                 <div className="bg-[#0d1117] border border-slate-800 rounded-2xl p-4 text-center">
                     <p className="text-2xl font-black text-slate-400">{users.filter(u => u.role === 'user').length}</p>
@@ -231,17 +266,63 @@ const UserManager = () => {
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="relative mb-5">
-                <MdSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-                <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 transition-all placeholder:text-slate-600"
-                />
+            {/* Search & Filter */}
+            <div className="flex flex-col gap-4 mb-6">
+                <div className="relative">
+                    <MdSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 transition-all placeholder:text-slate-600"
+                    />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-slate-500 text-xs font-bold uppercase tracking-wider mr-2">Filter:</span>
+                    {[
+                        { key: 'all', label: 'All' },
+                        { key: 'user', label: 'Regular Users' },
+                        { key: 'admin', label: 'Admins' },
+                        { key: 'master', label: 'Master Admins' }
+                    ].map(tab => {
+                        const isActive = roleFilter === tab.key;
+                        return (
+                            <button
+                                key={tab.key}
+                                type="button"
+                                onClick={() => {
+                                    setRoleFilter(tab.key);
+                                    setSelectedUserIds([]); // reset selection when filter changes
+                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all select-none border ${
+                                    isActive
+                                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                                        : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800/50'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
+
+            {/* Bulk Action Bar */}
+            {selectedUserIds.length > 0 && (
+                <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
+                        <span>Selected {selectedUserIds.length} users</span>
+                    </div>
+                    <button
+                        onClick={handleBulkDelete}
+                        className="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                    >
+                        Delete Selected
+                    </button>
+                </div>
+            )}
 
             {error && (
                 <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
@@ -258,13 +339,28 @@ const UserManager = () => {
             ) : filteredUsers.length === 0 ? (
                 <div className="bg-[#0d1117] border border-dashed border-slate-700 rounded-2xl p-10 text-center">
                     <MdPeople className="text-slate-600 mx-auto mb-3" size={40} />
-                    <p className="text-slate-500 text-sm">{search ? 'No users match your search.' : 'No users found.'}</p>
+                    <p className="text-slate-500 text-sm">{(search || roleFilter !== 'all') ? 'No users match your criteria.' : 'No users found.'}</p>
                 </div>
             ) : (
                 <div className="bg-[#0d1117] border border-slate-800 rounded-2xl overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-slate-800/30 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-800">
-                        <div className="col-span-1">#</div>
+                    <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-slate-800/30 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-800 items-center">
+                        <div className="col-span-1 flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                checked={filteredUsers.length > 0 && filteredUsers.every(u => u.id === currentAdmin?.id || selectedUserIds.includes(u.id))}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        const selectable = filteredUsers.filter(u => u.id !== currentAdmin?.id).map(u => u.id);
+                                        setSelectedUserIds(selectable);
+                                    } else {
+                                        setSelectedUserIds([]);
+                                    }
+                                }}
+                                className="w-4 h-4 rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 bg-slate-900 cursor-pointer"
+                            />
+                            <span>#</span>
+                        </div>
                         <div className="col-span-3">Name</div>
                         <div className="col-span-3">Email</div>
                         <div className="col-span-2">Role</div>
@@ -276,13 +372,29 @@ const UserManager = () => {
                         const isExpanded = expandedUserId === u.id;
                         return (
                             <div key={u.id} className="border-b border-slate-800/50 last:border-0">
+                                {/* Desktop Row */}
                                 <div
-                                    className={`grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-slate-800/10 transition-colors ${
+                                    className={`hidden md:grid grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-slate-800/10 transition-colors ${
                                         u.id === currentAdmin?.id ? 'bg-cyan-500/5' : ''
                                     }`}
                                 >
-                                    {/* Index */}
-                                    <div className="col-span-1 text-slate-600 text-xs font-mono">{index + 1}</div>
+                                    {/* Index & Checkbox */}
+                                    <div className="col-span-1 text-slate-600 text-xs font-mono flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUserIds.includes(u.id)}
+                                            disabled={u.id === currentAdmin?.id}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedUserIds(prev => [...prev, u.id]);
+                                                } else {
+                                                    setSelectedUserIds(prev => prev.filter(id => id !== u.id));
+                                                }
+                                            }}
+                                            className="w-4 h-4 rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 bg-slate-900 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                                        />
+                                        <span>{index + 1}</span>
+                                    </div>
 
                                     {/* Name */}
                                     <div className="col-span-3 flex items-center gap-3 min-w-0">
@@ -361,9 +473,92 @@ const UserManager = () => {
                                     </div>
                                 </div>
 
+                                {/* Mobile Card */}
+                                <div className={`block md:hidden p-4 space-y-3 hover:bg-slate-800/5 transition-colors ${u.id === currentAdmin?.id ? 'bg-cyan-500/5' : ''}`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            {u.id !== currentAdmin?.id && (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedUserIds.includes(u.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedUserIds(prev => [...prev, u.id]);
+                                                        } else {
+                                                            setSelectedUserIds(prev => prev.filter(id => id !== u.id));
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 bg-slate-900 cursor-pointer mr-1"
+                                                />
+                                            )}
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs uppercase flex-shrink-0">
+                                                {u.username?.[0] || '?'}
+                                            </div>
+                                            <div>
+                                                <p className="text-white text-sm font-semibold">
+                                                    {u.username}
+                                                    {u.id === currentAdmin?.id && (
+                                                        <span className="ml-1 text-cyan-400 text-xs">(You)</span>
+                                                    )}
+                                                </p>
+                                                <p className="text-slate-600 text-[10px] font-mono">ID: {u.id}</p>
+                                            </div>
+                                        </div>
+                                        <RoleBadge role={u.role} />
+                                    </div>
+
+                                    <div className="text-xs text-slate-400 flex flex-col gap-1 border-t border-slate-800/40 pt-2">
+                                        <p className="truncate"><span className="text-slate-500 font-bold uppercase tracking-wider text-[10px] mr-1">Email:</span>{u.email}</p>
+                                    </div>
+
+                                    {u.id !== currentAdmin?.id && (
+                                        <div className="flex items-center justify-between border-t border-slate-800/40 pt-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Role:</span>
+                                                <select
+                                                    value={u.role}
+                                                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                                                    disabled={updating === u.id || deleting === u.id}
+                                                    className="bg-[#080d13] border border-slate-700 rounded-xl px-2 py-1 text-white text-xs font-semibold focus:outline-none"
+                                                >
+                                                    <option value="user">User</option>
+                                                    <option value="admin">Admin</option>
+                                                    <option value="master">Master</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {u.role === 'admin' && (
+                                                    <button
+                                                        onClick={() => toggleExpand(u.id)}
+                                                        className={`px-2.5 py-1 text-xs rounded-lg border flex items-center gap-1 font-bold transition-all ${
+                                                            isExpanded
+                                                                ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                                                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                                                        }`}
+                                                    >
+                                                        <MdShield size={12} /> Perms
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteUser(u.id, u.username)}
+                                                    disabled={updating === u.id || deleting === u.id}
+                                                    className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 disabled:opacity-50"
+                                                >
+                                                    {deleting === u.id ? (
+                                                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                    ) : (
+                                                        <MdDelete size={14} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Expandable Permissions Panel */}
                                 {isExpanded && u.role === 'admin' && (
-                                    <div className="px-14 py-4 bg-slate-900/30 border-t border-b border-slate-800/40">
+                                    <div className="px-4 md:px-14 py-4 bg-slate-900/30 border-t border-b border-slate-800/40">
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                                                 <span>🔧 Section Permissions for {u.username}</span>
