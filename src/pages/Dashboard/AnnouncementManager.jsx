@@ -1,9 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { MdAdd, MdDelete, MdCampaign, MdEdit, MdClose, MdHelpOutline, MdDragIndicator, MdPalette } from 'react-icons/md';
+import { MdAdd, MdDelete, MdCampaign, MdEdit, MdClose, MdHelpOutline, MdDragIndicator, MdPalette, MdFormatAlignLeft, MdFormatAlignCenter, MdFormatAlignRight } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const sanitizeHTML = (htmlString) => {
+    if (!htmlString) return '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    const allowedTags = ['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DIV', 'P', 'SPAN', 'BR', 'UL', 'OL', 'LI'];
+    
+    const sanitizeNode = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) return;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName;
+            if (['SCRIPT', 'IFRAME', 'STYLE', 'OBJECT', 'EMBED'].includes(tagName)) {
+                node.remove();
+                return;
+            }
+            if (!allowedTags.includes(tagName)) {
+                while (node.firstChild) {
+                    node.parentNode.insertBefore(node.firstChild, node);
+                }
+                node.remove();
+                return;
+            }
+            const attrs = Array.from(node.attributes);
+            for (const attr of attrs) {
+                const name = attr.name.toLowerCase();
+                if (name === 'style') {
+                    const styleValue = attr.value.toLowerCase();
+                    const isSafeStyle = styleValue.split(';').every(part => {
+                        const cleanPart = part.trim();
+                        if (!cleanPart) return true;
+                        return cleanPart.startsWith('text-align') || cleanPart.startsWith('text-decoration') || cleanPart.startsWith('display');
+                    });
+                    if (!isSafeStyle) {
+                        node.removeAttribute(attr.name);
+                    }
+                } else if (name === 'align') {
+                    const alignVal = attr.value.toLowerCase();
+                    if (!['left', 'center', 'right', 'justify'].includes(alignVal)) {
+                        node.removeAttribute(attr.name);
+                    }
+                } else {
+                    node.removeAttribute(attr.name);
+                }
+            }
+            const children = Array.from(node.childNodes);
+            children.forEach(sanitizeNode);
+        }
+    };
+    
+    Array.from(doc.body.childNodes).forEach(sanitizeNode);
+    return doc.body.innerHTML;
+};
+
+const stripHTML = (htmlString) => {
+    if (!htmlString) return '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.body.textContent || '';
+};
 
 const AnnouncementManager = () => {
     const [announcements, setAnnouncements] = useState([]);
@@ -23,6 +82,79 @@ const AnnouncementManager = () => {
             image_shape: 'rectangle'
         }
     });
+
+    const titleEditorRef = useRef(null);
+    const descEditorRef = useRef(null);
+
+    const [titleEditorStates, setTitleEditorStates] = useState({
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeThrough: false,
+        justifyLeft: false,
+        justifyCenter: false,
+        justifyRight: false
+    });
+
+    const [descEditorStates, setDescEditorStates] = useState({
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeThrough: false,
+        justifyLeft: false,
+        justifyCenter: false,
+        justifyRight: false
+    });
+
+    const updateEditorStates = (editorName) => {
+        const ref = editorName === 'title' ? titleEditorRef : descEditorRef;
+        if (!ref.current) return;
+        
+        const setter = editorName === 'title' ? setTitleEditorStates : setDescEditorStates;
+        setter({
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            strikeThrough: document.queryCommandState('strikeThrough'),
+            justifyLeft: document.queryCommandState('justifyLeft'),
+            justifyCenter: document.queryCommandState('justifyCenter'),
+            justifyRight: document.queryCommandState('justifyRight')
+        });
+    };
+
+    const handleFormat = (command, editorName, value = null) => {
+        const ref = editorName === 'title' ? titleEditorRef : descEditorRef;
+        if (!ref.current) return;
+        
+        ref.current.focus();
+        document.execCommand(command, false, value);
+        setValue(editorName, ref.current.innerHTML, { shouldValidate: true, shouldDirty: true });
+        updateEditorStates(editorName);
+    };
+
+    const handleKeyDown = (e, editorName) => {
+        const isMeta = e.ctrlKey || e.metaKey;
+        if (isMeta) {
+            const key = e.key.toLowerCase();
+            if (key === 'b') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFormat('bold', editorName);
+            } else if (key === 'i') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFormat('italic', editorName);
+            } else if (key === 'u') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFormat('underline', editorName);
+            } else if (key === 's' && e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFormat('strikeThrough', editorName);
+            }
+        }
+    };
 
     const watchTitleColor = watch('title_color', '#ffffff');
     const watchDescriptionColor = watch('description_color', '#cbd5e1');
@@ -89,6 +221,30 @@ const AnnouncementManager = () => {
             });
             setUploadPreview('');
             setEditingItem(null);
+            if (titleEditorRef.current) {
+                titleEditorRef.current.innerHTML = '';
+            }
+            if (descEditorRef.current) {
+                descEditorRef.current.innerHTML = '';
+            }
+            setTitleEditorStates({
+                bold: false,
+                italic: false,
+                underline: false,
+                strikeThrough: false,
+                justifyLeft: false,
+                justifyCenter: false,
+                justifyRight: false
+            });
+            setDescEditorStates({
+                bold: false,
+                italic: false,
+                underline: false,
+                strikeThrough: false,
+                justifyLeft: false,
+                justifyCenter: false,
+                justifyRight: false
+            });
             fetchAnnouncements();
         } catch (err) {
             toast.error(err.message || 'Failed to process request', { id: loadingToast });
@@ -151,6 +307,16 @@ const AnnouncementManager = () => {
         setValue('description_size', ann.description_size || 'text-sm');
         setValue('image_shape', ann.image_shape || 'rectangle');
         setUploadPreview(ann.image_url);
+        if (titleEditorRef.current) {
+            titleEditorRef.current.innerHTML = ann.title || '';
+        }
+        if (descEditorRef.current) {
+            descEditorRef.current.innerHTML = ann.description || '';
+        }
+        setTimeout(() => {
+            updateEditorStates('title');
+            updateEditorStates('description');
+        }, 50);
     };
 
     const handleCancelEdit = () => {
@@ -167,6 +333,30 @@ const AnnouncementManager = () => {
             image_shape: 'rectangle'
         });
         setUploadPreview('');
+        if (titleEditorRef.current) {
+            titleEditorRef.current.innerHTML = '';
+        }
+        if (descEditorRef.current) {
+            descEditorRef.current.innerHTML = '';
+        }
+        setTitleEditorStates({
+            bold: false,
+            italic: false,
+            underline: false,
+            strikeThrough: false,
+            justifyLeft: false,
+            justifyCenter: false,
+            justifyRight: false
+        });
+        setDescEditorStates({
+            bold: false,
+            italic: false,
+            underline: false,
+            strikeThrough: false,
+            justifyLeft: false,
+            justifyCenter: false,
+            justifyRight: false
+        });
     };
 
     const handleFileUpload = async (file) => {
@@ -314,23 +504,294 @@ const AnnouncementManager = () => {
                 <form onSubmit={handleSubmit(handleAdd)} className="space-y-4">
                     <div className="flex flex-col gap-2">
                         <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Title <span className="text-red-400">*</span></label>
-                        <input
-                            type="text"
-                            {...register('title', { required: 'Title is required' })}
-                            placeholder="e.g. Server Update v2.0"
-                            className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-slate-600"
-                        />
+                        <div className="w-full bg-[#080d13] border border-slate-700 rounded-xl overflow-hidden focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500 transition-all">
+                            {/* Editor Toolbar for Title */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-[#0d1219] border-b border-slate-800/80 select-none">
+                                {/* Alignment Group */}
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyLeft', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            titleEditorStates.justifyLeft 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Left"
+                                    >
+                                        <MdFormatAlignLeft size={16} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyCenter', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            titleEditorStates.justifyCenter 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Center"
+                                    >
+                                        <MdFormatAlignCenter size={16} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyRight', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            titleEditorStates.justifyRight 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Right"
+                                    >
+                                        <MdFormatAlignRight size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Text Formatting Group */}
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('bold', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold active:scale-95 transition-all text-xs ${
+                                            titleEditorStates.bold 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Bold"
+                                    >
+                                        B
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('italic', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center italic font-serif active:scale-95 transition-all text-xs ${
+                                            titleEditorStates.italic 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Italic"
+                                    >
+                                        I
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('underline', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center underline active:scale-95 transition-all text-xs ${
+                                            titleEditorStates.underline 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Underline"
+                                    >
+                                        U
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('strikeThrough', 'title');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center line-through active:scale-95 transition-all text-xs ${
+                                            titleEditorStates.strikeThrough 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Strikethrough"
+                                    >
+                                        S
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Hidden Input for react-hook-form */}
+                            <input type="hidden" {...register('title', { required: 'Title is required' })} />
+
+                            {/* ContentEditable Editor */}
+                            <div
+                                ref={titleEditorRef}
+                                contentEditable
+                                onInput={(e) => {
+                                    setValue('title', e.currentTarget.innerHTML, { shouldValidate: true, shouldDirty: true });
+                                    updateEditorStates('title');
+                                }}
+                                onKeyDown={(e) => handleKeyDown(e, 'title')}
+                                onKeyUp={() => updateEditorStates('title')}
+                                onMouseUp={() => updateEditorStates('title')}
+                                onFocus={() => updateEditorStates('title')}
+                                placeholder="e.g. Server Update v2.0"
+                                className="w-full px-4 py-3 bg-transparent text-white text-sm focus:outline-none placeholder:text-slate-600 announcement-editor animate-none"
+                                style={{ outline: 'none' }}
+                            />
+                        </div>
                         {errors.title && <p className="text-red-400 text-xs">{errors.title.message}</p>}
                     </div>
 
                     <div className="flex flex-col gap-2">
+                        <style>{`
+                            .announcement-editor:empty:before {
+                                content: attr(placeholder);
+                                color: #475569;
+                                pointer-events: none;
+                                display: block;
+                            }
+                        `}</style>
                         <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Description</label>
-                        <textarea
-                            {...register('description')}
-                            placeholder="Describe the announcement..."
-                            rows={3}
-                            className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-slate-600 resize-none"
-                        />
+                        <div className="w-full bg-[#080d13] border border-slate-700 rounded-xl overflow-hidden focus-within:border-purple-500 focus-within:ring-1 focus-within:ring-purple-500 transition-all">
+                            {/* Editor Toolbar */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-[#0d1219] border-b border-slate-800/80 select-none">
+                                {/* Alignment Group */}
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyLeft', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            descEditorStates.justifyLeft 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Left"
+                                    >
+                                        <MdFormatAlignLeft size={16} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyCenter', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            descEditorStates.justifyCenter 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Center"
+                                    >
+                                        <MdFormatAlignCenter size={16} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('justifyRight', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            descEditorStates.justifyRight 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 active:scale-95'
+                                        }`}
+                                        title="Align Right"
+                                    >
+                                        <MdFormatAlignRight size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Text Formatting Group */}
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('bold', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold active:scale-95 transition-all text-xs ${
+                                            descEditorStates.bold 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Bold"
+                                    >
+                                        B
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('italic', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center italic font-serif active:scale-95 transition-all text-xs ${
+                                            descEditorStates.italic 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Italic"
+                                    >
+                                        I
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('underline', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center underline active:scale-95 transition-all text-xs ${
+                                            descEditorStates.underline 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Underline"
+                                    >
+                                        U
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            handleFormat('strikeThrough', 'description');
+                                        }}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center line-through active:scale-95 transition-all text-xs ${
+                                            descEditorStates.strikeThrough 
+                                                ? 'bg-cyan-950/20 border border-cyan-500/50 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                                : 'bg-slate-900/40 border border-slate-800/80 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40'
+                                        }`}
+                                        title="Strikethrough"
+                                    >
+                                        S
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Hidden Input for react-hook-form */}
+                            <input type="hidden" {...register('description')} />
+
+                            {/* ContentEditable Editor */}
+                            <div
+                                ref={descEditorRef}
+                                contentEditable
+                                onInput={(e) => {
+                                    setValue('description', e.currentTarget.innerHTML);
+                                    updateEditorStates('description');
+                                }}
+                                onKeyDown={(e) => handleKeyDown(e, 'description')}
+                                onKeyUp={() => updateEditorStates('description')}
+                                onMouseUp={() => updateEditorStates('description')}
+                                onFocus={() => updateEditorStates('description')}
+                                placeholder="Describe the announcement..."
+                                className="w-full min-h-[150px] px-4 py-3 bg-transparent text-white text-sm focus:outline-none placeholder:text-slate-600 overflow-y-auto announcement-editor"
+                                style={{ outline: 'none' }}
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1">💡 Select text and click the buttons above to format: Bold, Italic, Underline, Strikethrough, or Alignment.</p>
                     </div>
 
                     {/* Font Styling Options */}
@@ -552,13 +1013,19 @@ const AnnouncementManager = () => {
 
                                 {ann.image_url && (
                                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-800 flex-shrink-0">
-                                        <img src={ann.image_url} alt={ann.title} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                        <img src={ann.image_url} alt={stripHTML(ann.title)} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                                     </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-white font-bold text-sm">{ann.title}</p>
+                                    <div 
+                                        className="text-white font-bold text-sm"
+                                        dangerouslySetInnerHTML={{ __html: sanitizeHTML(ann.title) }}
+                                    />
                                     {ann.description && (
-                                        <p className="text-slate-400 text-xs mt-1 leading-relaxed line-clamp-2">{ann.description}</p>
+                                        <div 
+                                            className="text-slate-400 text-xs mt-1 leading-relaxed line-clamp-2"
+                                            dangerouslySetInnerHTML={{ __html: sanitizeHTML(ann.description) }}
+                                        />
                                     )}
                                     {ann.link && (
                                         <a href={ann.link} target="_blank" rel="noreferrer" className="text-purple-400 text-xs mt-1 inline-block hover:text-white truncate max-w-xs">

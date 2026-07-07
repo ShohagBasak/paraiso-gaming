@@ -7,6 +7,65 @@ import "swiper/css";
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const sanitizeHTML = (htmlString) => {
+  if (!htmlString) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  const allowedTags = ['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DIV', 'P', 'SPAN', 'BR', 'UL', 'OL', 'LI'];
+  
+  const sanitizeNode = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) return;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tagName = node.tagName;
+      if (['SCRIPT', 'IFRAME', 'STYLE', 'OBJECT', 'EMBED'].includes(tagName)) {
+        node.remove();
+        return;
+      }
+      if (!allowedTags.includes(tagName)) {
+        while (node.firstChild) {
+          node.parentNode.insertBefore(node.firstChild, node);
+        }
+        node.remove();
+        return;
+      }
+      const attrs = Array.from(node.attributes);
+      for (const attr of attrs) {
+        const name = attr.name.toLowerCase();
+        if (name === 'style') {
+          const styleValue = attr.value.toLowerCase();
+          const isSafeStyle = styleValue.split(';').every(part => {
+            const cleanPart = part.trim();
+            if (!cleanPart) return true;
+            return cleanPart.startsWith('text-align') || cleanPart.startsWith('text-decoration') || cleanPart.startsWith('display');
+          });
+          if (!isSafeStyle) {
+            node.removeAttribute(attr.name);
+          }
+        } else if (name === 'align') {
+          const alignVal = attr.value.toLowerCase();
+          if (!['left', 'center', 'right', 'justify'].includes(alignVal)) {
+            node.removeAttribute(attr.name);
+          }
+        } else {
+          node.removeAttribute(attr.name);
+        }
+      }
+      const children = Array.from(node.childNodes);
+      children.forEach(sanitizeNode);
+    }
+  };
+  
+  Array.from(doc.body.childNodes).forEach(sanitizeNode);
+  return doc.body.innerHTML;
+};
+
+const stripHTML = (htmlString) => {
+  if (!htmlString) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, 'text/html');
+  return doc.body.textContent || '';
+};
+
 const FeaturesSlider = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [featuresData, setFeaturesData] = useState([]);
@@ -28,14 +87,16 @@ const FeaturesSlider = () => {
             Server <span className="text-cyan-500">Announcement</span>
           </h2>
         </div>
-        <div className="hidden lg:flex items-center gap-3">
-          <div onClick={() => swiperInstance?.slidePrev()} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 border border-cyan-500/30 text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all">
-            <FaChevronLeft />
+        {featuresData.length > 1 && (
+          <div className="hidden lg:flex items-center gap-3">
+            <div onClick={() => swiperInstance?.slidePrev()} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 border border-cyan-500/30 text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all">
+              <FaChevronLeft />
+            </div>
+            <div onClick={() => swiperInstance?.slideNext()} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 border border-cyan-500/30 text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all">
+              <FaChevronRight />
+            </div>
           </div>
-          <div onClick={() => swiperInstance?.slideNext()} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/30 border border-cyan-500/30 text-cyan-400 cursor-pointer hover:bg-cyan-500 hover:text-black transition-all">
-            <FaChevronRight />
-          </div>
-        </div>
+        )}
       </div>
 
       {loading ? (
@@ -51,12 +112,15 @@ const FeaturesSlider = () => {
       ) : (
         <Swiper
           onSwiper={(swiper) => setSwiperInstance(swiper)}
-          slidesPerView={1.2}
+          slidesPerView={1}
           spaceBetween={24}
           loop={featuresData.length > 1}
           autoplay={{ delay: 4000, disableOnInteraction: false }}
           modules={[Autoplay]}
-          breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 2 } }}
+          breakpoints={{ 
+            640: { slidesPerView: 1 }, 
+            1024: { slidesPerView: 1 } 
+          }}
           className="max-w-6xl mx-auto"
         >
           {featuresData.map((feature) => (
@@ -64,34 +128,22 @@ const FeaturesSlider = () => {
               <div className="bg-[#0f151d] rounded-2xl border border-[#1e293b] overflow-hidden group h-full flex flex-col">
                 {feature.image_url && (
                   <div 
-                    className="w-full bg-[#0d121a]/85 flex items-center justify-center overflow-hidden"
-                    style={{
-                      height: feature.image_shape === 'square' 
-                        ? '280px' 
+                    className={`w-full bg-[#0d121a]/85 flex items-center justify-center overflow-hidden ${
+                      feature.image_shape === 'square' 
+                        ? 'h-[280px] p-4' 
                         : feature.image_shape === 'natural' 
-                        ? 'auto' 
-                        : '192px',
-                      maxHeight: feature.image_shape === 'natural' ? '384px' : 'none',
-                      padding: feature.image_shape === 'square' ? '16px' : '0px'
-                    }}
+                        ? 'h-auto max-h-[384px]' 
+                        : 'h-48 sm:h-64 md:h-72 lg:h-80'
+                    }`}
                   >
                     <img 
                       src={feature.image_url} 
-                      alt={feature.title} 
-                      className="opacity-90 transition-all duration-300" 
-                      style={{
-                        width: feature.image_shape === 'square' || feature.image_shape === 'natural'
-                          ? 'auto'
-                          : '100%',
-                        height: feature.image_shape === 'square' || feature.image_shape === 'natural'
-                          ? 'auto'
-                          : '100%',
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: feature.image_shape === 'square' || feature.image_shape === 'natural'
-                          ? 'contain'
-                          : 'cover'
-                      }}
+                      alt={stripHTML(feature.title)} 
+                      className={`opacity-90 transition-all duration-300 ${
+                        feature.image_shape === 'square' || feature.image_shape === 'natural'
+                          ? 'w-auto h-auto max-w-full max-h-full object-contain'
+                          : 'w-full h-full max-w-full max-h-full object-cover'
+                      }`}
                     />
                   </div>
                 )}
@@ -100,15 +152,13 @@ const FeaturesSlider = () => {
                     <h3 
                       style={{ color: feature.title_color || '#22d3ee' }} 
                       className={`font-bold uppercase mb-2 ${feature.title_size || 'text-lg md:text-xl'}`}
-                    >
-                      {feature.title}
-                    </h3>
-                    <p 
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(feature.title) }}
+                    />
+                    <div 
                       style={{ color: feature.description_color || '#94a3b8' }} 
-                      className={`leading-snug ${feature.description_size || 'text-xs sm:text-sm'}`}
-                    >
-                      {feature.description}
-                    </p>
+                      className={`leading-relaxed ${feature.description_size || 'text-xs sm:text-sm'}`}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(feature.description) }}
+                    />
                   </div>
                   {feature.link && (
                     <a
