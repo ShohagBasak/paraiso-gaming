@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import {
     MdAdd, MdDelete, MdEdit, MdClose, MdHelpOutline,
-    MdDragIndicator, MdPeople, MdFolder, MdSave, MdChevronRight, MdExpandMore
+    MdDragIndicator, MdPeople, MdFolder, MdSave, MdChevronRight, MdExpandMore,
+    MdImage, MdPalette, MdCloudUpload
 } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 
@@ -79,7 +80,7 @@ const getSectionIcon = (sectionName) => {
 };
 
 const RosterManager = () => {
-    const [activeTab, setActiveTab] = useState('members'); // 'members' | 'sections'
+    const [activeTab, setActiveTab] = useState('members'); // 'members' | 'sections' | 'header'
     const [members, setMembers] = useState([]);
     const [sectionsList, setSectionsList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -112,6 +113,79 @@ const RosterManager = () => {
 
     // Confirm modal
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+    // ── Govt Header state ──
+    const [headerData, setHeaderData] = useState({
+        image_url: 'https://i.imgur.com/YfVF1d0.png',
+        title: 'THE UNITED STATES OF PARAISO',
+        subtitle: 'Official Government Directory',
+        title_color: '#c9a84c',
+        subtitle_color: '#b9bbbe',
+        footer_quote: 'One Nation. One Government. One Paraiso.'
+    });
+    const [headerSaving, setHeaderSaving] = useState(false);
+    const [headerUploading, setHeaderUploading] = useState(false);
+    const [headerDragging, setHeaderDragging] = useState(false);
+    const [headerPreview, setHeaderPreview] = useState('');
+
+    const fetchHeader = useCallback(async () => {
+        try {
+            const res = await fetch(`${BASE_URL}/roster/govt-header`);
+            const data = await res.json();
+            if (data && data.title) {
+                setHeaderData(data);
+                setHeaderPreview(data.image_url || '');
+            }
+        } catch { /* silent */ }
+    }, []);
+
+    const handleHeaderImageUpload = async (file) => {
+        if (!file || !file.type.startsWith('image/')) {
+            toast.error('Please select a valid image file.');
+            return;
+        }
+        setHeaderUploading(true);
+        const uploadToast = toast.loading('Uploading image to ImgBB...');
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+            const apiKey = import.meta.env.VITE_IMGBB_API_KEY || '60d09e5b34467e4012981e00e008a68a';
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
+            const result = await res.json();
+            if (result.success) {
+                const url = result.data.url;
+                setHeaderData(prev => ({ ...prev, image_url: url }));
+                setHeaderPreview(url);
+                toast.success('Image uploaded!', { id: uploadToast });
+            } else {
+                throw new Error(result.error?.message || 'Upload failed');
+            }
+        } catch (err) {
+            toast.error('Upload failed: ' + err.message, { id: uploadToast });
+        } finally {
+            setHeaderUploading(false);
+        }
+    };
+
+    const handleSaveHeader = async () => {
+        setHeaderSaving(true);
+        const t = toast.loading('Saving header settings...');
+        try {
+            const res = await fetch(`${BASE_URL}/roster/govt-header`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(headerData)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to save');
+            toast.success('Header settings saved!', { id: t });
+        } catch (err) {
+            toast.error(err.message, { id: t });
+        } finally {
+            setHeaderSaving(false);
+        }
+    };
 
     // Collapsible Factions State
     const [expandedFactions, setExpandedFactions] = useState({});
@@ -229,6 +303,7 @@ const RosterManager = () => {
     useEffect(() => {
         fetchMembers();
         fetchSections();
+        fetchHeader();
 
         // Auto-refresh when switching back to the admin manager tab
         const handleFocus = () => {
@@ -237,7 +312,7 @@ const RosterManager = () => {
         };
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
-    }, []);
+    }, [fetchHeader]);
 
     // Group members by section
     const grouped = members.reduce((acc, m) => {
@@ -575,7 +650,7 @@ const RosterManager = () => {
                     <p className="text-slate-400 text-sm mt-1">Manage government roster members, sections, and ordering.</p>
                 </div>
                 {/* Tabs */}
-                <div className="flex bg-[#0d1117] border border-slate-800 rounded-xl p-1 self-start sm:self-center">
+                <div className="flex flex-wrap gap-1 bg-[#0d1117] border border-slate-800 rounded-xl p-1 self-start sm:self-center">
                     <button
                         onClick={() => { setActiveTab('members'); handleCancelEdit(); }}
                         className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
@@ -595,6 +670,16 @@ const RosterManager = () => {
                         }`}
                     >
                         <MdFolder size={16} /> Factions & Sections ({sectionsList.length})
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('header'); handleCancelEdit(); fetchHeader(); }}
+                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+                            activeTab === 'header'
+                                ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                                : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                    >
+                        <MdImage size={16} /> Page Header
                     </button>
                 </div>
             </div>
@@ -1237,6 +1322,144 @@ const RosterManager = () => {
                                 })}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* TAB: PAGE HEADER SETTINGS */}
+            {activeTab === 'header' && (
+                <div className="space-y-6">
+                    <div className="bg-[#0d1117] border border-slate-800 rounded-2xl p-6">
+                        <h3 className="text-white font-bold uppercase tracking-wider text-sm mb-1 flex items-center gap-2">
+                            <MdPalette className="text-cyan-400" size={18} /> Government Roster — Page Header
+                        </h3>
+                        <p className="text-slate-500 text-xs mb-6">Edit the top section of the Government Roster public page: seal image, title, subtitle, and footer quote.</p>
+
+                        {/* Seal Image Upload */}
+                        <div className="mb-6">
+                            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider block mb-2">Seal / Header Image</label>
+                            <div
+                                onDragOver={(e) => { e.preventDefault(); setHeaderDragging(true); }}
+                                onDragLeave={() => setHeaderDragging(false)}
+                                onDrop={(e) => { e.preventDefault(); setHeaderDragging(false); const file = e.dataTransfer.files[0]; if (file) handleHeaderImageUpload(file); }}
+                                onClick={() => document.getElementById('header-img-input').click()}
+                                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                                    headerDragging ? 'border-cyan-400 bg-cyan-500/5'
+                                    : headerPreview ? 'border-green-500/40 bg-green-500/5'
+                                    : 'border-slate-700 hover:border-cyan-500 bg-[#080d13]'
+                                }`}
+                            >
+                                <input type="file" accept="image/*" id="header-img-input" className="hidden" onChange={(e) => { const f = e.target.files[0]; if (f) handleHeaderImageUpload(f); }} />
+                                {headerUploading ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                                        <p className="text-cyan-400 text-xs font-bold uppercase">Uploading to ImgBB...</p>
+                                    </div>
+                                ) : headerPreview ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <img src={headerPreview} alt="Preview" className="h-24 w-24 object-contain rounded-xl border border-slate-700 drop-shadow-lg" />
+                                        <p className="text-green-400 text-xs font-bold uppercase">✓ Image ready — click to change</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <MdCloudUpload className="text-slate-500" size={32} />
+                                        <p className="text-slate-300 text-sm font-semibold">Drag & drop image here, or <span className="text-cyan-400">browse</span></p>
+                                        <p className="text-slate-500 text-xs">Hosts on ImgBB. Or paste URL below.</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-3">
+                                <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-1.5">Or Paste Image URL</label>
+                                <input
+                                    type="url"
+                                    value={headerData.image_url || ''}
+                                    onChange={(e) => { setHeaderData(prev => ({ ...prev, image_url: e.target.value })); setHeaderPreview(e.target.value); }}
+                                    placeholder="https://i.imgur.com/..."
+                                    className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Title & Subtitle */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Page Title</label>
+                                <input
+                                    type="text"
+                                    value={headerData.title || ''}
+                                    onChange={(e) => setHeaderData(prev => ({ ...prev, title: e.target.value }))}
+                                    placeholder="THE UNITED STATES OF PARAISO"
+                                    className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Subtitle</label>
+                                <input
+                                    type="text"
+                                    value={headerData.subtitle || ''}
+                                    onChange={(e) => setHeaderData(prev => ({ ...prev, subtitle: e.target.value }))}
+                                    placeholder="Official Government Directory"
+                                    className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Color Pickers */}
+                        <div className="border border-slate-800/80 bg-slate-900/30 rounded-2xl p-4 mb-4">
+                            <p className="text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                                <MdPalette size={16} /> Color Settings
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Title Color</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="color" value={headerData.title_color || '#c9a84c'} onChange={(e) => setHeaderData(prev => ({ ...prev, title_color: e.target.value }))} className="w-10 h-10 border-0 bg-transparent rounded cursor-pointer flex-shrink-0" />
+                                        <input type="text" value={headerData.title_color || '#c9a84c'} onChange={(e) => setHeaderData(prev => ({ ...prev, title_color: e.target.value }))} placeholder="#c9a84c" className="w-full px-3 py-2 bg-[#080d13] border border-slate-700 rounded-lg text-white text-xs font-mono focus:outline-none" />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Subtitle Color</label>
+                                    <div className="flex items-center gap-2">
+                                        <input type="color" value={headerData.subtitle_color || '#b9bbbe'} onChange={(e) => setHeaderData(prev => ({ ...prev, subtitle_color: e.target.value }))} className="w-10 h-10 border-0 bg-transparent rounded cursor-pointer flex-shrink-0" />
+                                        <input type="text" value={headerData.subtitle_color || '#b9bbbe'} onChange={(e) => setHeaderData(prev => ({ ...prev, subtitle_color: e.target.value }))} placeholder="#b9bbbe" className="w-full px-3 py-2 bg-[#080d13] border border-slate-700 rounded-lg text-white text-xs font-mono focus:outline-none" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Quote */}
+                        <div className="flex flex-col gap-2 mb-6">
+                            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Footer Quote</label>
+                            <input
+                                type="text"
+                                value={headerData.footer_quote || ''}
+                                onChange={(e) => setHeaderData(prev => ({ ...prev, footer_quote: e.target.value }))}
+                                placeholder="One Nation. One Government. One Paraiso."
+                                className="w-full px-4 py-3 bg-[#080d13] border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-slate-600"
+                            />
+                        </div>
+
+                        {/* Live Preview */}
+                        <div className="border border-cyan-500/20 bg-[#0a0f1e] rounded-2xl p-6 mb-6 flex flex-col items-center">
+                            <p className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-4">Live Preview</p>
+                            {headerData.image_url && (
+                                <img src={headerData.image_url} alt="Seal preview" className="w-24 h-24 object-contain mb-3 drop-shadow-lg" onError={(e) => { e.target.style.display = 'none'; }} />
+                            )}
+                            <p className="text-xl font-black tracking-widest uppercase text-center mb-1" style={{ color: headerData.title_color || '#c9a84c' }}>{headerData.title || 'PAGE TITLE'}</p>
+                            <p className="text-sm" style={{ color: headerData.subtitle_color || '#b9bbbe' }}>{headerData.subtitle || 'Subtitle'}</p>
+                            {headerData.footer_quote && (
+                                <p className="mt-3 text-xs font-bold uppercase tracking-wider" style={{ color: headerData.title_color || '#c9a84c', opacity: 0.7 }}>&quot;{headerData.footer_quote}&quot;</p>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={handleSaveHeader}
+                            disabled={headerSaving}
+                            className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-black font-bold uppercase tracking-widest text-sm rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/20 active:scale-95"
+                        >
+                            <MdSave size={18} />
+                            {headerSaving ? 'Saving...' : 'Save Header Settings'}
+                        </button>
                     </div>
                 </div>
             )}

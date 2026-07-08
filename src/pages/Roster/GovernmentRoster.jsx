@@ -28,6 +28,14 @@ const GovernmentRoster = () => {
   const [sectionsList, setSectionsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [header, setHeader] = useState({
+    image_url: 'https://i.imgur.com/YfVF1d0.png',
+    title: 'THE UNITED STATES OF PARAISO',
+    subtitle: 'Official Government Directory',
+    title_color: '#c9a84c',
+    subtitle_color: '#b9bbbe',
+    footer_quote: 'One Nation. One Government. One Paraiso.'
+  });
 
   const loadRosterData = () => {
     Promise.all([
@@ -43,12 +51,20 @@ const GovernmentRoster = () => {
   };
 
   useEffect(() => {
+    // Fetch header settings
+    fetch(`${BASE_URL}/roster/govt-header`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.title) setHeader(data);
+      })
+      .catch(() => {});
+
     loadRosterData();
 
-    // Poll for new data every 8 seconds for a real-time feel
+    
     const interval = setInterval(loadRosterData, 8000);
 
-    // Refresh when the user switches tabs back to the roster page
+    
     const handleFocus = () => {
       loadRosterData();
     };
@@ -60,16 +76,15 @@ const GovernmentRoster = () => {
     };
   }, []);
 
-  // Get all unique section names from members
+
   const memberSections = Array.from(new Set(members.map(m => m.section).filter(Boolean)));
   
-  // Combine sectionsList names and member sections names to avoid hiding any data
+  
   const allSectionNames = Array.from(new Set([
     ...sectionsList.map(s => s.name),
     ...memberSections
   ]));
 
-  // Build unified sections configuration with order, color & icon
   const unifiedSections = allSectionNames.map(name => {
     const matchedSection = sectionsList.find(s => s.name.toUpperCase() === name.toUpperCase());
     const matchedMember = members.find(m => m.section.toUpperCase() === name.toUpperCase());
@@ -90,7 +105,7 @@ const GovernmentRoster = () => {
         fontFamily: "'Rajdhani', 'Orbitron', sans-serif",
       }}
     >
-      {/* ── HERO HEADER (unchanged, kept as is) ── */}
+      {/*  HERO HEADER */}
       <div
         className="w-full flex flex-col items-center justify-center pt-20 pb-8 px-4 relative overflow-hidden"
         style={{
@@ -98,21 +113,24 @@ const GovernmentRoster = () => {
           borderBottom: '1px solid rgba(34,211,238,0.12)',
         }}
       >
-        <img
-          src="https://i.imgur.com/YfVF1d0.png"
-          alt="The Great Seal of the United States of Paraiso"
-          className="w-40 h-40 sm:w-52 sm:h-52 object-contain mb-6 drop-shadow-2xl"
-        />
+        {header.image_url && (
+          <img
+            src={header.image_url}
+            alt={header.title || 'Government Seal'}
+            className="w-40 h-40 sm:w-52 sm:h-52 object-contain mb-6 drop-shadow-2xl"
+          />
+        )}
         <h1
           className="text-2xl sm:text-3xl md:text-4xl font-black tracking-widest uppercase text-center mb-2"
-          style={{ color: '#c9a84c', letterSpacing: '0.15em' }}
+          style={{ color: header.title_color || '#c9a84c', letterSpacing: '0.15em' }}
         >
-          THE UNITED STATES OF PARAISO
+          {header.title || 'THE UNITED STATES OF PARAISO'}
         </h1>
-        <p className="text-sm sm:text-base tracking-wide" style={{ color: '#b9bbbe' }}>
-          Official Government Directory
+        <p className="text-sm sm:text-base tracking-wide" style={{ color: header.subtitle_color || '#b9bbbe' }}>
+          {header.subtitle || 'Official Government Directory'}
         </p>
       </div>
+
 
       {/* ── GAMING CONTENT ── */}
       <div className="relative">
@@ -344,7 +362,7 @@ const GovernmentRoster = () => {
                   letterSpacing: '0.2em',
                 }}
               >
-                "One Nation. One Government. One Paraiso."
+                &quot;{header.footer_quote || 'One Nation. One Government. One Paraiso.'}&quot;
               </p>
 
               <div className="flex items-center gap-4 mt-8">
