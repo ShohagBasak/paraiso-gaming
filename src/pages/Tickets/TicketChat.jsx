@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { io } from 'socket.io-client';
-import { MdSend, MdArrowBack, MdConfirmationNumber, MdStore, MdClose } from 'react-icons/md';
+import { MdSend, MdArrowBack, MdConfirmationNumber, MdStore, MdClose, MdRefresh } from 'react-icons/md';
 import { HiShoppingCart } from 'react-icons/hi';
 import useAuth from '../../hooks/useAuth';
 import { toast } from 'react-hot-toast';
@@ -114,16 +114,18 @@ const TicketChat = () => {
     setSending(false);
   };
 
-  const handleCloseTicket = async () => {
+  const handleReopenTicket = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/tickets/${id}/close`, {
+      const res = await fetch(`${BASE_URL}/tickets/${id}/reopen`, {
         method: 'PUT', credentials: 'include'
       });
       if (res.ok) {
-        toast.success('Ticket closed');
+        toast.success('Ticket reopened');
         fetchTicket();
+      } else {
+        toast.error('Failed to reopen ticket');
       }
-    } catch { toast.error('Failed'); }
+    } catch { toast.error('Network error'); }
   };
 
   const formatTime = (date) => {
@@ -194,11 +196,6 @@ const TicketChat = () => {
                 <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`}></span>
                 {sc.label}
               </span>
-              {ticket.status !== 'closed' && (
-                <button onClick={handleCloseTicket} className="p-1 text-slate-500 hover:text-amber-400 transition-colors" title="Close ticket">
-                  <MdClose size={16} />
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -266,8 +263,14 @@ const TicketChat = () => {
               </button>
             </form>
           ) : (
-            <div className="text-center py-2">
-              <p className="text-slate-500 text-xs">This ticket has been completed</p>
+            <div className="text-center py-2 flex items-center justify-center gap-3">
+              <p className="text-slate-500 text-xs">This ticket has been completed.</p>
+              <button
+                onClick={handleReopenTicket}
+                className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer transition-all"
+              >
+                <MdRefresh size={14} /> Re-open Ticket
+              </button>
             </div>
           )}
         </div>

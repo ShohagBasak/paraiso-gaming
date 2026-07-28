@@ -231,6 +231,22 @@ const TicketManager = () => {
     } catch { toast.error('Network error'); }
   };
 
+  const handleReopen = async (ticketId) => {
+    try {
+      const res = await fetch(`${BASE_URL}/tickets/${ticketId}/reopen`, {
+        method: 'PUT', credentials: 'include'
+      });
+      if (res.ok) {
+        toast.success('Ticket reopened!');
+        fetchTickets();
+        if (selectedTicket === ticketId) fetchTicketDetail(ticketId);
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to reopen ticket');
+      }
+    } catch { toast.error('Network error'); }
+  };
+
   const handleDeleteTicket = async (ticketId) => {
     try {
       const res = await fetch(`${BASE_URL}/tickets/${ticketId}`, {
@@ -417,9 +433,13 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                       </button>
                     </>
                   )}
-                  {ticketDetail.status !== 'closed' && (
+                  {ticketDetail.status !== 'closed' ? (
                     <button onClick={() => handleClose(ticketDetail.id)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500/20 transition-all">
                       Close
+                    </button>
+                  ) : (
+                    <button onClick={() => handleReopen(ticketDetail.id)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-500/20 transition-all flex items-center gap-1">
+                      <MdRefresh size={12} /> Re-open
                     </button>
                   )}
                   <button onClick={downloadTranscript} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-blue-500/20 transition-all flex items-center gap-1">
@@ -496,8 +516,14 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                   </div>
                 </form>
               ) : (
-                <div className="px-5 py-3.5 border-t border-slate-800 text-center">
-                  <p className="text-slate-500 text-xs">This ticket is closed</p>
+                <div className="px-5 py-3.5 border-t border-slate-800 text-center flex items-center justify-center gap-3">
+                  <p className="text-slate-500 text-xs">This ticket is closed.</p>
+                  <button
+                    onClick={() => handleReopen(ticketDetail.id)}
+                    className="text-emerald-400 hover:text-emerald-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                  >
+                    <MdRefresh size={14} /> Re-open Ticket
+                  </button>
                 </div>
               )}
             </>
