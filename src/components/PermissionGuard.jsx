@@ -10,6 +10,7 @@ const PermissionGuard = ({ permission, children }) => {
         if (!loading && user) {
             const hasPerm = 
                 user.role === 'master' || 
+                permission === 'tickets' ||
                 (permission === 'users' ? false : (user.role === 'admin' && user.permissions?.includes(permission)));
             
             if (!hasPerm) {
@@ -32,6 +33,7 @@ const PermissionGuard = ({ permission, children }) => {
 
     const hasPerm = 
         user.role === 'master' || 
+        permission === 'tickets' ||
         (permission === 'users' ? false : (user.role === 'admin' && user.permissions?.includes(permission)));
 
     if (!hasPerm) {

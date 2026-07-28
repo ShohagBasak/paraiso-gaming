@@ -121,7 +121,7 @@ const Dashboard = () => {
     const isMaster = user?.role === 'master';
     const visibleSections = isMaster
         ? ALL_SECTIONS
-        : ALL_SECTIONS.filter(s => user?.permissions?.includes(s.key));
+        : ALL_SECTIONS.filter(s => s.key === 'tickets' || user?.permissions?.includes(s.key));
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -140,7 +140,7 @@ const Dashboard = () => {
             // Only fetch for sections this user can see
             const keysToFetch = isMaster
                 ? Object.keys(endpoints)
-                : Object.keys(endpoints).filter(k => user?.permissions?.includes(k));
+                : Object.keys(endpoints).filter(k => k === 'tickets' || user?.permissions?.includes(k));
 
             try {
                 const results = await Promise.all(

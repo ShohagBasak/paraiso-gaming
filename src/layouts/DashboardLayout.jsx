@@ -75,6 +75,7 @@ const DashboardLayout = () => {
         if (!item.permission) return true;
         if (user?.role === 'master') return true;
         if (item.permission === 'users') return false; // strictly master only
+        if (item.permission === 'tickets') return true; // Show Tickets menu for assigned admins & staff
         return user?.role === 'admin' && user?.permissions?.includes(item.permission);
     });
 
