@@ -77,12 +77,29 @@ const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Register — POST /register
+    // Register — POST /register (admin-managed, master only)
     const registerUser = async (username, email, password) => {
         const res = await fetch(`${BASE_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // fallback httpOnly cookie
+            credentials: 'include',
+            body: JSON.stringify({ username, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Registration failed');
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+        }
+        setUser(data.user || data);
+        return data;
+    };
+
+    // Public Register — POST /public-register (community users)
+    const publicRegister = async (username, email, password) => {
+        const res = await fetch(`${BASE_URL}/public-register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ username, email, password }),
         });
         const data = await res.json();
@@ -99,7 +116,7 @@ const AuthProvider = ({ children }) => {
         const res = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // fallback httpOnly cookie
+            credentials: 'include',
             body: JSON.stringify({ email, password }),
         });
         const data = await res.json();
@@ -162,6 +179,7 @@ const AuthProvider = ({ children }) => {
         user,
         loading,
         registerUser,
+        publicRegister,
         signInUser,
         logoutUser,
     };

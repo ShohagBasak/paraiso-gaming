@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import useAuth from "../../../hooks/useAuth";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 
@@ -12,6 +12,9 @@ const Login = () => {
     const [serverError, setServerError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleLogin = async (data) => {
         setServerError('');
@@ -22,7 +25,7 @@ const Login = () => {
             if (user?.role === 'admin' || user?.role === 'master') {
                 navigate('/dashboard');
             } else {
-                navigate('/');
+                navigate(from, { replace: true });
             }
         } catch (error) {
             setServerError(error.message || 'Login failed. Please check your credentials.');
@@ -91,11 +94,14 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full mb-5 py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold uppercase tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] mt-4 active:scale-95"
+                        className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold uppercase tracking-widest rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] mt-4 active:scale-95"
                     >
                         {submitting ? 'Logging in...' : 'Login'}
                     </button>
                 </fieldset>
+                <p className="text-slate-400 text-sm mt-4 text-center">
+                    Don't have an account yet? <Link to="/register" state={{ from: location.state?.from }} className="text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">Register here</Link>
+                </p>
             </form>
         </div>
     );

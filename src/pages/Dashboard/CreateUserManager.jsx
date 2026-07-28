@@ -18,6 +18,8 @@ const permissionOptions = [
     { key: 'helper-roster', label: '🤝 Helper Roster' },
     { key: 'faqs',          label: '❓ FAQ Manager' },
     { key: 'coc',           label: '📜 CoC Manager' },
+    { key: 'donate',        label: '🛒 Donate Shop' },
+    { key: 'tickets',       label: '🎫 Tickets' },
 ];
 
 // ─── Confirm Modal ─────────────────────────────────────────────────

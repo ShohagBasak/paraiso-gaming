@@ -49,7 +49,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Donate', path: 'https://forums.pgaming.net/index.php?dbtech-ecommerce/', isExternal: true, blank: true },
+    { name: 'Donate', path: '/donate' },
     {
       name: 'Rules',
       isDropdown: true,
@@ -97,11 +97,13 @@ const Navbar = () => {
     ];
 
     if (!user) {
-      applySubLinks.push({ name: 'Webmaster Login', path: '/login' });
+      applySubLinks.push({ name: 'Login', path: '/login' });
+      applySubLinks.push({ name: 'Register', path: '/register' });
     } else {
       if (user.role === 'admin' || user.role === 'master') {
         applySubLinks.push({ name: 'Dashboard', path: '/dashboard' });
       }
+      applySubLinks.push({ name: 'My Tickets', path: '/my-tickets' });
       applySubLinks.push({ name: 'Logout', path: '#logout', isLogout: true });
     }
 
@@ -116,7 +118,7 @@ const Navbar = () => {
         ]
       },
       {
-        name: 'Apply',
+        name: user ? (user.username || 'Account') : 'Apply',
         isDropdown: true,
         align: 'right',
         subLinks: applySubLinks

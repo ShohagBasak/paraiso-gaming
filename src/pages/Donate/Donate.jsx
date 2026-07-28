@@ -1,9 +1,460 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
+import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle } from 'react-icons/hi';
+import { MdStorefront, MdCategory } from 'react-icons/md';
+import useAuth from '../../hooks/useAuth';
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Donate = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [purchaseModal, setPurchaseModal] = useState(null);
+  const [ingameName, setIngameName] = useState('');
+  const [discordUsername, setDiscordUsername] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [purchasing, setPurchasing] = useState(false);
+  const [successModal, setSuccessModal] = useState(null);
+  const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+
+  useEffect(() => {
+    fetchCategories();
+    fetchItems();
+  }, []);
+
+  useEffect(() => {
+    fetchItems(selectedCategory);
+  }, [selectedCategory]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/donate-categories`);
+      const data = await res.json();
+      setCategories(data);
+    } catch { /* silent */ }
+  };
+
+  const fetchItems = async (categoryId = null) => {
+    setLoading(true);
+    try {
+      let url = `${BASE_URL}/donate-items`;
+      if (categoryId) url += `?category_id=${categoryId}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setItems(data);
+    } catch { /* silent */ }
+    setLoading(false);
+  };
+
+  const handlePurchase = (item) => {
+    if (!user) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
+    setPurchaseModal(item);
+    setIngameName('');
+    setDiscordUsername('');
+    setQuantity(1);
+  };
+
+  const confirmPurchase = async (e) => {
+    if (e) e.preventDefault();
+    if (!purchaseModal) return;
+    if (!ingameName.trim()) return alert('Please enter your Ingame Name.');
+    if (!discordUsername.trim()) return alert('Please enter your Discord Username.');
+
+    setPurchasing(true);
+    try {
+      const res = await fetch(`${BASE_URL}/tickets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          item_id: purchaseModal.id,
+          ingame_name: ingameName.trim(),
+          discord_username: discordUsername.trim(),
+          quantity: Math.max(1, parseInt(quantity) || 1),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessModal({ ticketId: data.id, item: purchaseModal, quantity: Math.max(1, parseInt(quantity) || 1) });
+        setPurchaseModal(null);
+      } else {
+        alert(data.message || 'Failed to create ticket');
+      }
+    } catch {
+      alert('Network error. Please try again.');
+    }
+    setPurchasing(false);
+  };
+
+  const totalItemCount = categories.reduce((sum, c) => sum + (parseInt(c.item_count) || 0), 0);
+
+  const sortedItems = [...items].sort((a, b) => {
+    if (sortBy === 'price-low') return parseFloat(a.price) - parseFloat(b.price);
+    if (sortBy === 'price-high') return parseFloat(b.price) - parseFloat(a.price);
+    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    return a.sort_order - b.sort_order;
+  });
+
   return (
-    <div className='flex items-center justify-center text-5xl font-bold min-h-screen text-base-200'>
-      Donate will be coming soon....
+    <div className="min-h-screen bg-[#080d13] pt-28 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <MdStorefront className="text-cyan-400" size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
+                Store
+              </h1>
+              <p className="text-slate-500 text-xs uppercase tracking-widest font-medium">
+                Support the server • Get exclusive items
+              </p>
+            </div>
+          </div>
+          <div className="h-[2px] bg-gradient-to-r from-cyan-500/60 via-cyan-500/20 to-transparent mt-4"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* ── CATEGORIES SIDEBAR ── */}
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setMobileCatOpen(!mobileCatOpen)}
+            className="lg:hidden flex items-center gap-2 px-4 py-3 bg-[#0d1117] border border-slate-800 rounded-xl text-white text-sm font-bold uppercase tracking-wider"
+          >
+            <MdCategory className="text-cyan-400" size={18} />
+            Categories
+            <span className="ml-auto bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-md text-xs font-mono">
+              {categories.length}
+            </span>
+          </button>
+
+          {/* Sidebar */}
+          <aside className={`lg:col-span-3 ${mobileCatOpen ? 'block' : 'hidden'} lg:block`}>
+            <div className="bg-[#0d1117] border border-slate-800 rounded-2xl overflow-hidden sticky top-24">
+              {/* Sidebar header */}
+              <div className="px-5 py-4 border-b border-slate-800 flex items-center gap-2">
+                <MdCategory className="text-cyan-400" size={18} />
+                <h2 className="text-white font-black uppercase tracking-wider text-sm">Categories</h2>
+              </div>
+
+              {/* Category list */}
+              <div className="p-2">
+                {/* All items */}
+                <button
+                  onClick={() => { setSelectedCategory(null); setMobileCatOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
+                    selectedCategory === null
+                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+                  }`}
+                >
+                  <span>All Items</span>
+                  <span className={`text-xs font-mono px-2 py-0.5 rounded-md ${
+                    selectedCategory === null ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'
+                  }`}>
+                    {totalItemCount}
+                  </span>
+                </button>
+
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setMobileCatOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
+                      selectedCategory === cat.id
+                        ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded-md ${
+                      selectedCategory === cat.id ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'
+                    }`}>
+                      {cat.item_count || 0}
+                    </span>
+                  </button>
+                ))}
+
+                {categories.length === 0 && (
+                  <p className="text-slate-600 text-xs text-center py-6">No categories yet</p>
+                )}
+              </div>
+            </div>
+          </aside>
+
+          {/* ── ITEMS GRID ── */}
+          <main className="lg:col-span-9">
+            {/* Filter bar */}
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-slate-400 text-sm">
+                Showing <span className="text-white font-bold">{sortedItems.length}</span> items
+                {selectedCategory && categories.find(c => c.id === selectedCategory) && (
+                  <span className="text-cyan-400"> in {categories.find(c => c.id === selectedCategory)?.name}</span>
+                )}
+              </p>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  className="appearance-none bg-[#0d1117] border border-slate-800 text-slate-300 text-sm rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:border-cyan-500/50 cursor-pointer hover:border-slate-700 transition-colors"
+                >
+                  <option value="default" className="bg-[#0b0f15] text-slate-200">Default</option>
+                  <option value="price-low" className="bg-[#0b0f15] text-slate-200">Price: Low to High</option>
+                  <option value="price-high" className="bg-[#0b0f15] text-slate-200">Price: High to Low</option>
+                  <option value="name" className="bg-[#0b0f15] text-slate-200">Name: A-Z</option>
+                  <option value="newest" className="bg-[#0b0f15] text-slate-200">Newest First</option>
+                </select>
+                <HiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" size={16} />
+              </div>
+            </div>
+
+            {/* Items */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-3 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-slate-500 text-sm uppercase tracking-widest">Loading items...</p>
+                </div>
+              </div>
+            ) : sortedItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-[#0d1117] border border-dashed border-slate-800 rounded-2xl">
+                <MdStorefront className="text-slate-700 mb-4" size={48} />
+                <p className="text-slate-500 font-medium">No items available</p>
+                <p className="text-slate-600 text-sm mt-1">Check back later for new items!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {sortedItems.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="group bg-[#131a22] border border-slate-700/60 rounded-xl p-4 hover:border-cyan-500/40 transition-all duration-300 flex flex-col shadow-xl"
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    {/* Inner Image Container matching reference */}
+                    <div className="relative w-full max-w-[210px] aspect-square mx-auto rounded-lg overflow-hidden bg-[#080d13] mb-4 flex items-center justify-center border border-slate-800">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <MdStorefront className="text-slate-700" size={60} />
+                        </div>
+                      )}
+                      {/* Category badge */}
+                      {item.category_name && (
+                        <span className="absolute top-2 left-2 inline-flex items-center gap-1 bg-cyan-500/20 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                          <HiTag size={10} />
+                          {item.category_name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Title & Description */}
+                    <div className="mb-3">
+                      <h3 className="text-white font-bold text-base line-clamp-1">{item.name}</h3>
+                      {item.description && (
+                        <p className="text-slate-400 text-xs mt-0.5 line-clamp-2">{item.description}</p>
+                      )}
+                    </div>
+
+                    {/* Price & Purchase Button Row */}
+                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-700/60 mb-3">
+                      <span className="text-emerald-400 font-black text-lg">
+                        ${parseFloat(item.price).toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => handlePurchase(item)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all duration-200 cursor-pointer active:scale-95"
+                      >
+                        <HiShoppingCart size={14} />
+                        Purchase
+                      </button>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-500 font-medium">
+                      Released: {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* ── PURCHASE CONFIRMATION MODAL ── */}
+      {purchaseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <HiShoppingCart className="text-emerald-400" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold uppercase tracking-wider text-sm">Confirm Purchase</h3>
+                    <p className="text-slate-500 text-xs mt-0.5">A support ticket will be created</p>
+                  </div>
+                </div>
+                <button onClick={() => setPurchaseModal(null)} className="text-slate-500 hover:text-white transition-colors">
+                  <HiX size={20} />
+                </button>
+              </div>
+
+              {/* Item preview */}
+              <div className="bg-[#080d13] border border-slate-800 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-4">
+                  {purchaseModal.image_url ? (
+                    <img src={purchaseModal.image_url} alt={purchaseModal.name} className="w-16 h-16 rounded-lg object-contain p-1 border border-slate-700 bg-[#0b0f15]" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-slate-800 flex items-center justify-center">
+                      <MdStorefront className="text-slate-600" size={24} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-bold text-sm truncate">{purchaseModal.name}</h4>
+                    {purchaseModal.category_name && (
+                      <p className="text-cyan-400 text-xs mt-0.5">{purchaseModal.category_name}</p>
+                    )}
+                    <p className="text-slate-400 text-xs mt-0.5">Unit Price: <span className="text-emerald-400 font-bold">${parseFloat(purchaseModal.price).toFixed(2)}</span></p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Purchase Details Form */}
+              <form onSubmit={confirmPurchase} className="space-y-3.5 mb-5">
+                <div className="flex flex-col gap-1">
+                  <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Ingame Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={ingameName}
+                    onChange={e => setIngameName(e.target.value)}
+                    placeholder="e.g. John_Doe"
+                    className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Discord Username *</label>
+                  <input
+                    type="text"
+                    required
+                    value={discordUsername}
+                    onChange={e => setDiscordUsername(e.target.value)}
+                    placeholder="e.g. username#0000"
+                    className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 items-center">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Quantity *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={quantity}
+                      onChange={e => setQuantity(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all font-bold"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-end text-right">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Amount</span>
+                    <span className="text-emerald-400 font-black text-xl">
+                      ${(parseFloat(purchaseModal.price) * Math.max(1, parseInt(quantity) || 1)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60">
+                  <button
+                    type="button"
+                    onClick={() => setPurchaseModal(null)}
+                    className="px-4 py-2.5 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 text-xs font-bold uppercase tracking-wider transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={purchasing || !ingameName.trim() || !discordUsername.trim()}
+                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {purchasing ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <HiShoppingCart size={14} />
+                        Submit Request
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SUCCESS MODAL ── */}
+      {successModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                <HiCheckCircle className="text-emerald-400" size={32} />
+              </div>
+              <h3 className="text-white font-bold uppercase tracking-wider text-lg mb-2">Ticket Created!</h3>
+              <p className="text-slate-400 text-sm mb-1">
+                Your purchase ticket for <strong className="text-emerald-400">{successModal.item?.name}</strong> has been created.
+              </p>
+              <p className="text-slate-500 text-xs mb-6">
+                Ticket #{successModal.ticketId} • An admin will contact you shortly
+              </p>
+              <div className="flex items-center gap-3 justify-center">
+                <button
+                  onClick={() => setSuccessModal(null)}
+                  className="px-4 py-2.5 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 text-xs font-bold uppercase tracking-wider transition-all"
+                >
+                  Continue Shopping
+                </button>
+                <button
+                  onClick={() => { setSuccessModal(null); navigate('/my-tickets'); }}
+                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                >
+                  View My Tickets
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router';
 import { Toaster, toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree, MdPersonAdd, MdVpnKey
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree, MdPersonAdd, MdVpnKey, MdStore, MdConfirmationNumber
 } from 'react-icons/md';
 import { FaGamepad } from 'react-icons/fa';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -19,6 +19,8 @@ const navItems = [
     { to: '/dashboard/helper-roster', label: 'Helper Roster', icon: <MdGroup size={20} />, permission: 'helper-roster' },
     { to: '/dashboard/faqs', label: 'FAQ Manager', icon: <MdQuestionAnswer size={20} />, permission: 'faqs' },
     { to: '/dashboard/coc', label: 'CoC Manager', icon: <MdAccountTree size={20} />, permission: 'coc' },
+    { to: '/dashboard/donate', label: 'Donate Shop', icon: <MdStore size={20} />, permission: 'donate' },
+    { to: '/dashboard/tickets', label: 'Tickets', icon: <MdConfirmationNumber size={20} />, permission: 'tickets' },
     { to: '/dashboard/users', label: 'Users', icon: <MdPeople size={20} />, permission: 'users' },
     { to: '/dashboard/create-user', label: 'Create User', icon: <MdPersonAdd size={20} />, masterOnly: true },
 ];

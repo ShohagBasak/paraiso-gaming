@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// Sliders individual file theke import kora holo (path check kore niben)
 import SwiperBanner from './SwiperBanner';
 import FeaturesSlider from './FeaturesSlider';
 import { FaServer, FaDiscord } from 'react-icons/fa';

@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import { MdImage, MdCampaign, MdTrendingUp, MdPeople, MdPeopleOutline, MdOutlineAccountBalance, MdPersonAdd, MdSupervisedUserCircle, MdQuestionAnswer, MdAccountTree } from 'react-icons/md';
+import { MdImage, MdCampaign, MdTrendingUp, MdPeople, MdPeopleOutline, MdOutlineAccountBalance, MdPersonAdd, MdSupervisedUserCircle, MdQuestionAnswer, MdAccountTree, MdStore, MdConfirmationNumber } from 'react-icons/md';
 import { Link } from 'react-router';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -90,6 +90,26 @@ const ALL_SECTIONS = [
         color: 'bg-rose-500/10',
         actionClass: 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20',
     },
+    {
+        key: 'donate',
+        to: '/dashboard/donate',
+        label: 'Donate Items',
+        actionLabel: 'Donate Shop',
+        icon: <MdStore className="text-indigo-400" size={24} />,
+        actionIcon: <MdStore size={16} />,
+        color: 'bg-indigo-500/10',
+        actionClass: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20',
+    },
+    {
+        key: 'tickets',
+        to: '/dashboard/tickets',
+        label: 'Tickets',
+        actionLabel: 'View Tickets',
+        icon: <MdConfirmationNumber className="text-orange-400" size={24} />,
+        actionIcon: <MdConfirmationNumber size={16} />,
+        color: 'bg-orange-500/10',
+        actionClass: 'bg-orange-500/10 border-orange-500/30 text-orange-400 hover:bg-orange-500/20',
+    },
 ];
 
 const Dashboard = () => {
@@ -113,6 +133,8 @@ const Dashboard = () => {
                 roster: '/roster',
                 faqs: '/faqs',
                 coc: '/chain-of-command',
+                donate: '/donate-items',
+                tickets: '/tickets',
             };
 
             // Only fetch for sections this user can see

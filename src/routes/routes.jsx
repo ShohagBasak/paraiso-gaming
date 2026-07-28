@@ -10,6 +10,7 @@ import ServerOffenses from '../pages/Home/ServerOffenses';
 import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/Auth/Login/Login';
+import Register from '../pages/Auth/Register/Register';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import BannerManager from '../pages/Dashboard/BannerManager';
 import AnnouncementManager from '../pages/Dashboard/AnnouncementManager';
@@ -25,8 +26,13 @@ import HelperRosterManager from '../pages/Dashboard/HelperRosterManager';
 import FaqManager from '../pages/Dashboard/FaqManager';
 import ChainOfCommandManager from '../pages/Dashboard/ChainOfCommandManager';
 import CreateUserManager from '../pages/Dashboard/CreateUserManager';
+import DonateManager from '../pages/Dashboard/DonateManager';
+import TicketManager from '../pages/Dashboard/TicketManager';
+import MyTickets from '../pages/Tickets/MyTickets';
+import TicketChat from '../pages/Tickets/TicketChat';
 
 import PermissionGuard from '../components/PermissionGuard';
+import PrivateRoute from '../components/PrivateRoute';
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +73,14 @@ export const router = createBrowserRouter([
         element: <GovernmentRoster />,
       },
       {
+        path: '/my-tickets',
+        element: <PrivateRoute><MyTickets /></PrivateRoute>,
+      },
+      {
+        path: '/my-tickets/:id',
+        element: <PrivateRoute><TicketChat /></PrivateRoute>,
+      },
+      {
         path: '/discord',
         loader: () => {
           window.location.href = "https://discord.gg/sbBnrCMcGD"; 
@@ -83,7 +97,8 @@ export const router = createBrowserRouter([
     path: "/",
     Component: AuthLayout,
     children: [
-      { path: 'login', Component: Login }
+      { path: 'login', Component: Login },
+      { path: 'register', Component: Register },
     ]
   },
   {
@@ -103,6 +118,8 @@ export const router = createBrowserRouter([
       { path: 'helper-roster', element: <PermissionGuard permission="helper-roster"><HelperRosterManager /></PermissionGuard> },
       { path: 'faqs', element: <PermissionGuard permission="faqs"><FaqManager /></PermissionGuard> },
       { path: 'coc', element: <PermissionGuard permission="coc"><ChainOfCommandManager /></PermissionGuard> },
+      { path: 'donate', element: <PermissionGuard permission="donate"><DonateManager /></PermissionGuard> },
+      { path: 'tickets', element: <PermissionGuard permission="tickets"><TicketManager /></PermissionGuard> },
       { path: 'create-user', element: <MasterRoute><CreateUserManager /></MasterRoute> },
     ]
   }

@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import useAuth from '../../../hooks/useAuth';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Register = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const { registerUser } = useAuth();
+    const { publicRegister } = useAuth();
     const [submitting, setSubmitting] = useState(false);
     const [serverError, setServerError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleRegistration = async (data) => {
         setServerError('');
         setSubmitting(true);
         try {
-            await registerUser(data.username, data.email, data.password);
-            navigate('/');
+            await publicRegister(data.username, data.email, data.password);
+            navigate(from, { replace: true });
         } catch (error) {
             setServerError(error.message || 'Registration failed. Please try again.');
         } finally {
