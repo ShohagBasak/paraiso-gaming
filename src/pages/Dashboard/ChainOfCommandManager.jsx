@@ -291,32 +291,36 @@ const ChainOfCommandManager = () => {
         }, 100);
     };
 
-    // Handle local image file upload
+    // Handle image file upload to ImgBB
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select a valid image file.');
+            return;
+        }
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64String = reader.result;
-            try {
-                toast.loading('Uploading image...', { id: 'uploading' });
-                const res = await fetch(`${BASE_URL}/upload`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ image: base64String })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Upload failed');
-                
-                setEditContent(prev => ({ ...prev, url: data.url }));
+        const uploadToast = toast.loading('Uploading image to ImgBB...', { id: 'uploading' });
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const apiKey = import.meta.env.VITE_IMGBB_API_KEY || '60d09e5b34467e4012981e00e008a68a';
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) {
+                const url = result.data.url;
+                setEditContent(prev => ({ ...prev, url: url }));
                 toast.success('Image uploaded successfully!', { id: 'uploading' });
-            } catch (err) {
-                toast.error(err.message || 'Failed to upload image', { id: 'uploading' });
+            } else {
+                throw new Error(result.error?.message || 'ImgBB upload failed');
             }
-        };
-        reader.readAsDataURL(file);
+        } catch (err) {
+            toast.error('Upload failed: ' + err.message, { id: 'uploading' });
+        }
     };
 
     // Renders short preview text of block content in list view

@@ -1,6 +1,6 @@
 /* ─── Paraíso Gaming — City Dispatch Design System ──────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 @plugin "daisyui" {
@@ -202,4 +202,9 @@
 .premium-swiper .swiper-pagination-bullet-active {
   opacity: 1;
   box-shadow: 0 0 8px var(--pg-amber);
+}
+
+/* Ensure strong and b elements are actually bold */
+strong, b {
+  font-weight: 700 !important;
 }

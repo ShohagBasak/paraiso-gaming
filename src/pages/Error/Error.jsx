@@ -4,7 +4,7 @@ import { FaHome, FaExclamationTriangle } from 'react-icons/fa';
 
 const Error = () => {
   return (
-    <section className="min-h-screen flex items-center justify-center bg-[#0a0f14] px-4 relative overflow-hidden">
+    <section className="min-h-screen mt-20 flex items-center justify-center bg-[#0a0f14] px-4 relative overflow-hidden">
       
       {/* Background Neon Glow Effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 blur-[150px] rounded-full pointer-events-none"></div>

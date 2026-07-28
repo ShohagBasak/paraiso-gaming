@@ -79,12 +79,6 @@ const Login = () => {
                         )}
                     </div>
 
-                    {/* Forgot Password */}
-                    <div className="text-right">
-                        <Link to="/forgot-password" className="text-cyan-400 text-xs font-medium hover:text-white transition-colors cursor-pointer">
-                            Forgot password?
-                        </Link>
-                    </div>
 
                     {/* Server Error */}
                     {serverError && (
@@ -102,7 +96,6 @@ const Login = () => {
                         {submitting ? 'Logging in...' : 'Login'}
                     </button>
                 </fieldset>
-                <p className='text-base-100'>New at Paraiso Gaming? Please <Link to="/register" className='text-cyan-400 underline'>Register</Link></p>
             </form>
         </div>
     );

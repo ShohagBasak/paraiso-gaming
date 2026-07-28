@@ -49,7 +49,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Donate', path: '/donate' },
+    { name: 'Donate', path: 'https://forums.pgaming.net/index.php?dbtech-ecommerce/', isExternal: true, blank: true },
     {
       name: 'Rules',
       isDropdown: true,

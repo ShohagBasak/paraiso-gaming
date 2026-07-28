@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
-import { MdPeople, MdShield, MdPerson, MdSearch, MdDelete, MdHelpOutline } from 'react-icons/md';
+import { MdPeople, MdShield, MdPerson, MdSearch, MdDelete, MdHelpOutline, MdVpnKey } from 'react-icons/md';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { AuthContext } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -45,6 +46,11 @@ const UserManager = () => {
         message: '',
         onConfirm: null
     });
+
+    const [resetPasswordUser, setResetPasswordUser] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [resettingPassword, setResettingPassword] = useState(false);
 
     const [error, setError] = useState('');
 
@@ -425,7 +431,17 @@ const UserManager = () => {
                                     {/* Actions */}
                                     <div className="col-span-3 flex items-center gap-2 justify-end">
                                         {u.id === currentAdmin?.id ? (
-                                            <span className="text-slate-600 text-xs">—</span>
+                                            currentAdmin?.role === 'master' ? (
+                                                <button
+                                                    onClick={() => setResetPasswordUser(u)}
+                                                    title="Reset Password"
+                                                    className="w-9 h-9 flex items-center justify-center rounded-xl transition-all text-sm font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/20"
+                                                >
+                                                    <MdVpnKey size={16} />
+                                                </button>
+                                            ) : (
+                                                <span className="text-slate-600 text-xs">—</span>
+                                            )
                                         ) : (
                                             <>
                                                 {/* Role Dropdown */}
@@ -452,6 +468,17 @@ const UserManager = () => {
                                                         }`}
                                                     >
                                                         <MdShield size={16} />
+                                                    </button>
+                                                )}
+
+                                                {/* Reset Password (Master Admin only) */}
+                                                {currentAdmin?.role === 'master' && (
+                                                    <button
+                                                        onClick={() => setResetPasswordUser(u)}
+                                                        title="Reset Password"
+                                                        className="w-9 h-9 flex items-center justify-center rounded-xl transition-all text-sm font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/20"
+                                                    >
+                                                        <MdVpnKey size={16} />
                                                     </button>
                                                 )}
 
@@ -511,7 +538,19 @@ const UserManager = () => {
                                         <p className="truncate"><span className="text-slate-500 font-bold uppercase tracking-wider text-[10px] mr-1">Email:</span>{u.email}</p>
                                     </div>
 
-                                    {u.id !== currentAdmin?.id && (
+                                    {u.id === currentAdmin?.id ? (
+                                        currentAdmin?.role === 'master' && (
+                                            <div className="flex items-center justify-end border-t border-slate-800/40 pt-2">
+                                                <button
+                                                    onClick={() => setResetPasswordUser(u)}
+                                                    title="Reset Password"
+                                                    className="px-2.5 py-1 flex items-center gap-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/20"
+                                                >
+                                                    <MdVpnKey size={12} /> Reset Password
+                                                </button>
+                                            </div>
+                                        )
+                                    ) : (
                                         <div className="flex items-center justify-between border-t border-slate-800/40 pt-2">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Role:</span>
@@ -538,6 +577,16 @@ const UserManager = () => {
                                                         }`}
                                                     >
                                                         <MdShield size={12} /> Perms
+                                                    </button>
+                                                )}
+                                                {/* Reset Password Button for Mobile (Master Admin only) */}
+                                                {currentAdmin?.role === 'master' && (
+                                                    <button
+                                                        onClick={() => setResetPasswordUser(u)}
+                                                        title="Reset Password"
+                                                        className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/20"
+                                                    >
+                                                        <MdVpnKey size={14} />
                                                     </button>
                                                 )}
                                                 <button
@@ -603,8 +652,11 @@ const UserManager = () => {
             )}
 
             {/* Legend */}
-            <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+            <div className="mt-4 flex items-center gap-4 text-xs text-slate-500 flex-wrap">
                 <span className="flex items-center gap-1.5"><MdShield size={12} className="text-cyan-400" /> = Manage Permissions</span>
+                {currentAdmin?.role === 'master' && (
+                    <span className="flex items-center gap-1.5"><MdVpnKey size={12} className="text-amber-500" /> = Reset Password</span>
+                )}
                 <span className="flex items-center gap-1.5"><MdDelete size={12} className="text-red-500" /> = Delete User</span>
             </div>
 
@@ -640,6 +692,102 @@ const UserManager = () => {
                                 Yes, Confirm
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Password Modal (Master Admin only) */}
+            {resetPasswordUser && currentAdmin?.role === 'master' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md px-4">
+                    <div className="bg-[#0b0f15] border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                        
+                        <div className="flex items-start gap-4 mb-4 mt-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
+                                <MdVpnKey size={24} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-white font-bold uppercase tracking-wider text-base">Reset Password</h4>
+                                <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                                    Set a new password for <span className="text-amber-400 font-semibold">{resetPasswordUser.username}</span> ({resetPasswordUser.email})
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!newPassword || newPassword.length < 6) {
+                                toast.error("Password must be at least 6 characters.");
+                                return;
+                            }
+                            setResettingPassword(true);
+                            try {
+                                const res = await fetch(`${BASE_URL}/reset-password`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                        email: resetPasswordUser.email,
+                                        newPassword: newPassword
+                                    })
+                                });
+                                const data = await res.json();
+                                if (!res.ok) {
+                                    throw new Error(data.message || "Failed to reset password");
+                                }
+                                toast.success(`Password for "${resetPasswordUser.username}" updated successfully!`);
+                                setResetPasswordUser(null);
+                                setNewPassword('');
+                            } catch (err) {
+                                toast.error(err.message || "Failed to reset password");
+                            } finally {
+                                setResettingPassword(false);
+                            }
+                        }}>
+                            <div className="space-y-4 mt-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">New Password</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            required
+                                            minLength={6}
+                                            className="w-full px-4 py-2.5 pr-10 bg-[#060a0f] border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-500 transition-all placeholder:text-slate-600"
+                                            placeholder="Enter new password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-400 transition-colors"
+                                        >
+                                            {showNewPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-end gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setResetPasswordUser(null);
+                                        setNewPassword('');
+                                    }}
+                                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={resettingPassword}
+                                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-bold rounded-xl text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] disabled:opacity-50"
+                                >
+                                    {resettingPassword ? 'Resetting...' : 'Reset Password'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

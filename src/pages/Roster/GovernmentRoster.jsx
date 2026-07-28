@@ -52,7 +52,7 @@ const GovernmentRoster = () => {
 
   useEffect(() => {
     // Fetch header settings
-    fetch(`${BASE_URL}/roster/govt-header`)
+    fetch(`${BASE_URL}/page-settings/govt-header`)
       .then(r => r.json())
       .then(data => {
         if (data && data.title) setHeader(data);
@@ -99,19 +99,22 @@ const GovernmentRoster = () => {
 
   return (
     <div
-      className="min-h-screen text-white"
+      className="min-h-screen text-white pb-24"
       style={{
-        background: 'linear-gradient(160deg, #050811 0%, #0a0f1e 40%, #080d18 100%)',
+        backgroundColor: '#050811',
+        backgroundImage: `
+          linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+          radial-gradient(circle at 50% 30%, rgba(6, 182, 212, 0.02) 0%, transparent 70%),
+          linear-gradient(160deg, #050811 0%, #070c18 40%, #04070d 100%)
+        `,
+        backgroundSize: '36px 36px, 36px 36px, 100% 100%, 100% 100%',
         fontFamily: "'Rajdhani', 'Orbitron', sans-serif",
       }}
     >
       {/*  HERO HEADER */}
       <div
-        className="w-full flex flex-col items-center justify-center pt-20 pb-8 px-4 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, #0a0f1e 0%, #0d1526 60%, #080d18 100%)',
-          borderBottom: '1px solid rgba(34,211,238,0.12)',
-        }}
+        className="w-full flex flex-col items-center justify-center pt-28 pb-8 px-4 relative overflow-hidden"
       >
         {header.image_url && (
           <img
@@ -134,15 +137,6 @@ const GovernmentRoster = () => {
 
       {/* ── GAMING CONTENT ── */}
       <div className="relative">
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(34,211,238,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.03) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
 
         <div className="relative max-w-4xl mx-auto px-4 py-8 space-y-10">
 

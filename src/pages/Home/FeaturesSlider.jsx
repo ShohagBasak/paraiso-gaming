@@ -36,7 +36,10 @@ const sanitizeHTML = (htmlString) => {
           const isSafeStyle = styleValue.split(';').every(part => {
             const cleanPart = part.trim();
             if (!cleanPart) return true;
-            return cleanPart.startsWith('text-align') || cleanPart.startsWith('text-decoration') || cleanPart.startsWith('display');
+            return cleanPart.startsWith('text-align') || 
+                   cleanPart.startsWith('text-decoration') || 
+                   cleanPart.startsWith('display') || 
+                   cleanPart.startsWith('font-weight');
           });
           if (!isSafeStyle) {
             node.removeAttribute(attr.name);
@@ -115,7 +118,8 @@ const FeaturesSlider = () => {
           slidesPerView={1}
           spaceBetween={24}
           loop={featuresData.length > 1}
-          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          autoHeight={true}
+          autoplay={{ delay: 10000, disableOnInteraction: false }}
           modules={[Autoplay]}
           breakpoints={{ 
             640: { slidesPerView: 1 }, 

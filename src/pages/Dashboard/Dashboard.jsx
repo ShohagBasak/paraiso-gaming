@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { MdImage, MdCampaign, MdTrendingUp, MdPeople, MdPeopleOutline, MdOutlineAccountBalance } from 'react-icons/md';
+import { useEffect, useState, useContext } from 'react';
+import { MdImage, MdCampaign, MdTrendingUp, MdPeople, MdPeopleOutline, MdOutlineAccountBalance, MdPersonAdd, MdSupervisedUserCircle, MdQuestionAnswer, MdAccountTree } from 'react-icons/md';
 import { Link } from 'react-router';
+import { AuthContext } from '../../context/AuthContext';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -17,29 +18,120 @@ const StatCard = ({ icon, label, value, color, to }) => (
     </Link>
 );
 
+// All possible sections with their metadata
+const ALL_SECTIONS = [
+    {
+        key: 'banners',
+        to: '/dashboard/banners',
+        label: 'Banner Slides',
+        actionLabel: 'Add Banner Slide',
+        icon: <MdImage className="text-cyan-400" size={24} />,
+        actionIcon: <MdImage size={16} />,
+        color: 'bg-cyan-500/10',
+        actionClass: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20',
+    },
+    {
+        key: 'announcements',
+        to: '/dashboard/announcements',
+        label: 'Announcements',
+        actionLabel: 'Add Announcement',
+        icon: <MdCampaign className="text-purple-400" size={24} />,
+        actionIcon: <MdCampaign size={16} />,
+        color: 'bg-purple-500/10',
+        actionClass: 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20',
+    },
+    {
+        key: 'staff',
+        to: '/dashboard/staff',
+        label: 'Staff Members',
+        actionLabel: 'Manage Staff Team',
+        icon: <MdSupervisedUserCircle className="text-emerald-400" size={24} />,
+        actionIcon: <MdPeople size={16} />,
+        color: 'bg-emerald-500/10',
+        actionClass: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20',
+    },
+    {
+        key: 'roster',
+        to: '/dashboard/roster',
+        label: 'Faction Roster',
+        actionLabel: 'Faction Roster',
+        icon: <MdOutlineAccountBalance className="text-amber-400" size={24} />,
+        actionIcon: <MdOutlineAccountBalance size={16} />,
+        color: 'bg-amber-500/10',
+        actionClass: 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20',
+    },
+    {
+        key: 'helper-roster',
+        to: '/dashboard/helper-roster',
+        label: 'Helper Roster',
+        actionLabel: 'Helper Roster',
+        icon: <MdPeopleOutline className="text-green-400" size={24} />,
+        actionIcon: <MdPeopleOutline size={16} />,
+        color: 'bg-green-500/10',
+        actionClass: 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20',
+    },
+    {
+        key: 'faqs',
+        to: '/dashboard/faqs',
+        label: 'FAQ Manager',
+        actionLabel: 'FAQ Manager',
+        icon: <MdQuestionAnswer className="text-sky-400" size={24} />,
+        actionIcon: <MdQuestionAnswer size={16} />,
+        color: 'bg-sky-500/10',
+        actionClass: 'bg-sky-500/10 border-sky-500/30 text-sky-400 hover:bg-sky-500/20',
+    },
+    {
+        key: 'coc',
+        to: '/dashboard/coc',
+        label: 'CoC Manager',
+        actionLabel: 'CoC Manager',
+        icon: <MdAccountTree className="text-rose-400" size={24} />,
+        actionIcon: <MdAccountTree size={16} />,
+        color: 'bg-rose-500/10',
+        actionClass: 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20',
+    },
+];
+
 const Dashboard = () => {
-    const [bannerCount, setBannerCount] = useState(0);
-    const [announcementCount, setAnnouncementCount] = useState(0);
-    const [staffCount, setStaffCount] = useState(0);
-    const [helperRosterCount, setHelperRosterCount] = useState(0);
-    const [factionRosterCount, setFactionRosterCount] = useState(0);
+    const { user } = useContext(AuthContext);
+    const [counts, setCounts] = useState({});
     const [loading, setLoading] = useState(true);
+
+    // Determine which sections this user can access
+    const isMaster = user?.role === 'master';
+    const visibleSections = isMaster
+        ? ALL_SECTIONS
+        : ALL_SECTIONS.filter(s => user?.permissions?.includes(s.key));
 
     useEffect(() => {
         const fetchCounts = async () => {
+            const endpoints = {
+                banners: '/banners',
+                announcements: '/announcements',
+                staff: '/staff',
+                'helper-roster': '/helper-roster',
+                roster: '/roster',
+                faqs: '/faqs',
+                coc: '/chain-of-command',
+            };
+
+            // Only fetch for sections this user can see
+            const keysToFetch = isMaster
+                ? Object.keys(endpoints)
+                : Object.keys(endpoints).filter(k => user?.permissions?.includes(k));
+
             try {
-                const [b, a, s, hr, fr] = await Promise.all([
-                    fetch(`${BASE_URL}/banners`, { credentials: 'include' }).then(r => r.json()),
-                    fetch(`${BASE_URL}/announcements`, { credentials: 'include' }).then(r => r.json()),
-                    fetch(`${BASE_URL}/staff`, { credentials: 'include' }).then(r => r.json()),
-                    fetch(`${BASE_URL}/helper-roster`, { credentials: 'include' }).then(r => r.json()),
-                    fetch(`${BASE_URL}/roster`, { credentials: 'include' }).then(r => r.json()),
-                ]);
-                setBannerCount(Array.isArray(b) ? b.length : 0);
-                setAnnouncementCount(Array.isArray(a) ? a.length : 0);
-                setStaffCount(Array.isArray(s) ? s.length : 0);
-                setHelperRosterCount(Array.isArray(hr) ? hr.length : 0);
-                setFactionRosterCount(Array.isArray(fr) ? fr.length : 0);
+                const results = await Promise.all(
+                    keysToFetch.map(key =>
+                        fetch(`${BASE_URL}${endpoints[key]}`, { credentials: 'include' })
+                            .then(r => r.json())
+                            .then(data => ({ key, count: Array.isArray(data) ? data.length : 0 }))
+                            .catch(() => ({ key, count: 0 }))
+                    )
+                );
+                const newCounts = {};
+                results.forEach(({ key, count }) => { newCounts[key] = count; });
+                setCounts(newCounts);
             } catch {
                 // silent
             } finally {
@@ -47,7 +139,7 @@ const Dashboard = () => {
             }
         };
         fetchCounts();
-    }, []);
+    }, [user]);
 
     return (
         <div>
@@ -63,82 +155,51 @@ const Dashboard = () => {
                     <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
                     Loading stats...
                 </div>
+            ) : visibleSections.length === 0 ? (
+                <div className="bg-[#0d1117] border border-dashed border-slate-700 rounded-2xl p-10 text-center max-w-md">
+                    <p className="text-slate-500 text-sm">No sections assigned yet.</p>
+                    <p className="text-slate-600 text-xs mt-1">Contact Master Admin to get access.</p>
+                </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-6xl">
-                    <StatCard
-                        to="/dashboard/banners"
-                        icon={<MdImage className="text-cyan-400" size={24} />}
-                        label="Banner Slides"
-                        value={bannerCount}
-                        color="bg-cyan-500/10"
-                    />
-                    <StatCard
-                        to="/dashboard/announcements"
-                        icon={<MdCampaign className="text-purple-400" size={24} />}
-                        label="Announcements"
-                        value={announcementCount}
-                        color="bg-purple-500/10"
-                    />
-                    <StatCard
-                        to="/dashboard/staff"
-                        icon={<MdPeople className="text-emerald-400" size={24} />}
-                        label="Staff Members"
-                        value={staffCount}
-                        color="bg-emerald-500/10"
-                    />
-                    <StatCard
-                        to="/dashboard/roster"
-                        icon={<MdOutlineAccountBalance className="text-amber-400" size={24} />}
-                        label="Faction Roster"
-                        value={factionRosterCount}
-                        color="bg-amber-500/10"
-                    />
-                    <StatCard
-                        to="/dashboard/helper-roster"
-                        icon={<MdPeopleOutline className="text-green-400" size={24} />}
-                        label="Helper Roster"
-                        value={helperRosterCount}
-                        color="bg-green-500/10"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl">
+                    {visibleSections.map(sec => (
+                        <StatCard
+                            key={sec.key}
+                            to={sec.to}
+                            icon={sec.icon}
+                            label={sec.label}
+                            value={counts[sec.key] ?? 0}
+                            color={sec.color}
+                        />
+                    ))}
                 </div>
             )}
 
-            {/* Quick Links */}
-            <div className="mt-10">
-                <h3 className="text-white font-bold uppercase tracking-wider text-sm mb-4">Quick Actions</h3>
-                <div className="flex flex-wrap gap-3">
-                    <Link
-                        to="/dashboard/banners"
-                        className="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl text-sm font-medium hover:bg-cyan-500/20 transition-all"
-                    >
-                        <MdImage size={16} /> Add Banner Slide
-                    </Link>
-                    <Link
-                        to="/dashboard/announcements"
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl text-sm font-medium hover:bg-purple-500/20 transition-all"
-                    >
-                        <MdCampaign size={16} /> Add Announcement
-                    </Link>
-                    <Link
-                        to="/dashboard/staff"
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-medium hover:bg-emerald-500/20 transition-all"
-                    >
-                        <MdPeople size={16} /> Manage Staff Team
-                    </Link>
-                    <Link
-                        to="/dashboard/roster"
-                        className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/20 transition-all"
-                    >
-                        <MdOutlineAccountBalance size={16} /> Faction Roster
-                    </Link>
-                    <Link
-                        to="/dashboard/helper-roster"
-                        className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium hover:bg-green-500/20 transition-all"
-                    >
-                        <MdPeopleOutline size={16} /> Helper Roster
-                    </Link>
+            {/* Quick Actions */}
+            {visibleSections.length > 0 && (
+                <div className="mt-10">
+                    <h3 className="text-white font-bold uppercase tracking-wider text-sm mb-4">Quick Actions</h3>
+                    <div className="flex flex-wrap gap-3">
+                        {visibleSections.map(sec => (
+                            <Link
+                                key={sec.key}
+                                to={sec.to}
+                                className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-medium transition-all ${sec.actionClass}`}
+                            >
+                                {sec.actionIcon} {sec.actionLabel}
+                            </Link>
+                        ))}
+                        {isMaster && (
+                            <Link
+                                to="/dashboard/create-user"
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-medium hover:bg-amber-500/20 transition-all"
+                            >
+                                <MdPersonAdd size={16} /> Create User
+                            </Link>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

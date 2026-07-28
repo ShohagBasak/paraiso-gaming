@@ -130,7 +130,7 @@ const RosterManager = () => {
 
     const fetchHeader = useCallback(async () => {
         try {
-            const res = await fetch(`${BASE_URL}/roster/govt-header`);
+            const res = await fetch(`${BASE_URL}/page-settings/govt-header`);
             const data = await res.json();
             if (data && data.title) {
                 setHeaderData(data);
@@ -171,7 +171,7 @@ const RosterManager = () => {
         setHeaderSaving(true);
         const t = toast.loading('Saving header settings...');
         try {
-            const res = await fetch(`${BASE_URL}/roster/govt-header`, {
+            const res = await fetch(`${BASE_URL}/page-settings/govt-header`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -1364,7 +1364,7 @@ const RosterManager = () => {
                                     <div className="flex flex-col items-center gap-2">
                                         <MdCloudUpload className="text-slate-500" size={32} />
                                         <p className="text-slate-300 text-sm font-semibold">Drag & drop image here, or <span className="text-cyan-400">browse</span></p>
-                                        <p className="text-slate-500 text-xs">Hosts on ImgBB. Or paste URL below.</p>
+                                        <p className="text-slate-500 text-xs">Hosts automatically on ImgBB. Or paste URL below.</p>
                                     </div>
                                 )}
                             </div>

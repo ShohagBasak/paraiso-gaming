@@ -1,11 +1,14 @@
 import { useState, useContext } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree, MdPersonAdd, MdVpnKey
 } from 'react-icons/md';
 import { FaGamepad } from 'react-icons/fa';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const navItems = [
     { to: '/dashboard', label: 'Overview', icon: <MdDashboard size={20} />, end: true },
@@ -17,11 +20,16 @@ const navItems = [
     { to: '/dashboard/faqs', label: 'FAQ Manager', icon: <MdQuestionAnswer size={20} />, permission: 'faqs' },
     { to: '/dashboard/coc', label: 'CoC Manager', icon: <MdAccountTree size={20} />, permission: 'coc' },
     { to: '/dashboard/users', label: 'Users', icon: <MdPeople size={20} />, permission: 'users' },
+    { to: '/dashboard/create-user', label: 'Create User', icon: <MdPersonAdd size={20} />, masterOnly: true },
 ];
 
 const DashboardLayout = () => {
     const { user, logoutUser } = useContext(AuthContext);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [resetting, setResetting] = useState(false);
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -29,7 +37,39 @@ const DashboardLayout = () => {
         navigate('/login');
     };
 
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+        if (!newPassword || newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters.");
+            return;
+        }
+        setResetting(true);
+        try {
+            const res = await fetch(`${BASE_URL}/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: user.email,
+                    newPassword: newPassword
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to reset password");
+            }
+            toast.success("Password reset successfully!");
+            setShowResetModal(false);
+            setNewPassword('');
+        } catch (err) {
+            toast.error(err.message || "Failed to reset password");
+        } finally {
+            setResetting(false);
+        }
+    };
+
     const filteredNavItems = navItems.filter(item => {
+        if (item.masterOnly) return user?.role === 'master';
         if (!item.permission) return true;
         if (user?.role === 'master') return true;
         if (item.permission === 'users') return false; // strictly master only
@@ -84,6 +124,18 @@ const DashboardLayout = () => {
                         <p className="text-cyan-400 text-xs font-mono">{user?.role === 'master' ? 'Master Admin' : 'Admin'}</p>
                     </div>
                 </div>
+                {user?.role === 'master' && (
+                    <button
+                        onClick={() => {
+                            setSidebarOpen(false);
+                            setShowResetModal(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 mb-2 rounded-xl text-sm text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 transition-all duration-200"
+                    >
+                        <MdVpnKey size={18} />
+                        Reset Password
+                    </button>
+                )}
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
@@ -148,6 +200,88 @@ const DashboardLayout = () => {
                     <Outlet />
                 </main>
             </div>
+
+            {/* Reset Password Modal */}
+            {showResetModal && user?.role === 'master' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-[#0b0f15] border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in duration-200">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                        
+                        <div className="flex items-start gap-4 mb-4 mt-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 flex-shrink-0">
+                                <MdVpnKey size={24} />
+                            </div>
+                            <div className="flex-grow min-w-0">
+                                <h4 className="text-white font-bold uppercase tracking-wider text-base">Reset Own Password</h4>
+                                <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                                    Set a new password for <span className="text-amber-400 font-semibold">{user?.username}</span> ({user?.email})
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setShowResetModal(false);
+                                    setNewPassword('');
+                                }} 
+                                className="text-slate-400 hover:text-white transition-colors"
+                            >
+                                <MdClose size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleResetPassword}>
+                            <div className="space-y-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">New Password</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all pr-10"
+                                            placeholder="Enter new password"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                                        >
+                                            {showNewPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 mt-6 border-t border-slate-800/60 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowResetModal(false);
+                                        setNewPassword('');
+                                    }}
+                                    className="px-4 py-2 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 text-xs font-bold uppercase tracking-wider transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={resetting}
+                                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {resetting ? (
+                                        <>
+                                            <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                            Resetting...
+                                        </>
+                                    ) : (
+                                        'Reset Password'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

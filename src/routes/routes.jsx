@@ -10,14 +10,13 @@ import ServerOffenses from '../pages/Home/ServerOffenses';
 import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/Auth/Login/Login';
-import Register from '../pages/Auth/Register/Register';
-import ForgotPassword from '../pages/Auth/ForgotPassword/ForgotPassword';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import BannerManager from '../pages/Dashboard/BannerManager';
 import AnnouncementManager from '../pages/Dashboard/AnnouncementManager';
 import UserManager from '../pages/Dashboard/UserManager';
 import StaffManager from '../pages/Dashboard/StaffManager';
 import AdminRoute from '../components/AdminRoute';
+import MasterRoute from '../components/MasterRoute';
 import GovernmentRoster from '../pages/Roster/GovernmentRoster';
 import RosterManager from '../pages/Dashboard/RosterManager';
 import ChainOfCommand from '../pages/Roster/ChainOfCommand';
@@ -25,6 +24,7 @@ import HelperRoster from '../pages/Roster/HelperRoster';
 import HelperRosterManager from '../pages/Dashboard/HelperRosterManager';
 import FaqManager from '../pages/Dashboard/FaqManager';
 import ChainOfCommandManager from '../pages/Dashboard/ChainOfCommandManager';
+import CreateUserManager from '../pages/Dashboard/CreateUserManager';
 
 import PermissionGuard from '../components/PermissionGuard';
 
@@ -83,9 +83,7 @@ export const router = createBrowserRouter([
     path: "/",
     Component: AuthLayout,
     children: [
-      { path: 'login', Component: Login },
-      { path: 'register', Component: Register },
-      { path: 'forgot-password', Component: ForgotPassword }
+      { path: 'login', Component: Login }
     ]
   },
   {
@@ -105,6 +103,7 @@ export const router = createBrowserRouter([
       { path: 'helper-roster', element: <PermissionGuard permission="helper-roster"><HelperRosterManager /></PermissionGuard> },
       { path: 'faqs', element: <PermissionGuard permission="faqs"><FaqManager /></PermissionGuard> },
       { path: 'coc', element: <PermissionGuard permission="coc"><ChainOfCommandManager /></PermissionGuard> },
+      { path: 'create-user', element: <MasterRoute><CreateUserManager /></MasterRoute> },
     ]
   }
 ]);
