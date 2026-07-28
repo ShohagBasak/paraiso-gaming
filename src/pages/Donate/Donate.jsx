@@ -70,8 +70,12 @@ const Donate = () => {
   const confirmPurchase = async (e) => {
     if (e) e.preventDefault();
     if (!purchaseModal) return;
-    if (!ingameName.trim()) return alert('Please enter your Ingame Name.');
-    if (!discordUsername.trim()) return alert('Please enter your Discord Username.');
+    const nameTrimmed = ingameName.trim();
+    if (!nameTrimmed) return toast.error('Please enter your Ingame Name.');
+    if (!nameTrimmed.includes('_') || nameTrimmed.startsWith('_') || nameTrimmed.endsWith('_')) {
+      return toast.error('Ingame Name must be in Firstname_Lastname format (e.g. Joe_Doe)');
+    }
+    if (!discordUsername.trim()) return toast.error('Please enter your Discord Username.');
 
     setPurchasing(true);
     try {
@@ -280,7 +284,7 @@ const Donate = () => {
                     </div>
 
                     {/* Price & Purchase Button Row */}
-                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-700/60 mb-3">
+                    <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-700/60">
                       <span className="text-emerald-400 font-black text-lg">
                         ${parseFloat(item.price).toFixed(2)}
                       </span>
@@ -291,11 +295,6 @@ const Donate = () => {
                         <HiShoppingCart size={14} />
                         Purchase
                       </button>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-500 font-medium">
-                      Released: {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
                 ))}
@@ -356,9 +355,18 @@ const Donate = () => {
                     required
                     value={ingameName}
                     onChange={e => setIngameName(e.target.value)}
-                    placeholder="e.g. John_Doe"
-                    className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all"
+                    placeholder="e.g. Joe_Doe"
+                    className={`w-full px-3.5 py-2 bg-[#080d13] border rounded-xl text-white text-xs focus:outline-none transition-all ${
+                      ingameName.length > 0 && !ingameName.includes('_')
+                        ? 'border-amber-500/60 focus:border-amber-400'
+                        : 'border-slate-800 focus:border-cyan-500'
+                    }`}
                   />
+                  {ingameName.length > 0 && !ingameName.includes('_') && (
+                    <p className="text-amber-400 text-[11px] font-medium mt-0.5 flex items-center gap-1 animate-fadeIn">
+                      ⚠️ Must include an underscore '_' (e.g. Joe_Doe)
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -368,7 +376,7 @@ const Donate = () => {
                     required
                     value={discordUsername}
                     onChange={e => setDiscordUsername(e.target.value)}
-                    placeholder="e.g. username#0000"
+                    placeholder="e.g. username"
                     className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all"
                   />
                 </div>
@@ -404,7 +412,7 @@ const Donate = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={purchasing || !ingameName.trim() || !discordUsername.trim()}
+                    disabled={purchasing || !ingameName.trim() || !ingameName.includes('_') || !discordUsername.trim()}
                     className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {purchasing ? (

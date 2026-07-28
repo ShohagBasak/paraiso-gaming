@@ -25,6 +25,7 @@ const TicketChat = () => {
   const [sending, setSending] = useState(false);
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     fetchTicket();
@@ -66,7 +67,9 @@ const TicketChat = () => {
   }, [id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const fetchTicket = async () => {
@@ -154,45 +157,45 @@ const TicketChat = () => {
   const sc = statusConfig[ticket.status] || statusConfig.open;
 
   return (
-    <div className="min-h-screen bg-[#080d13] pt-24 pb-4">
-      <div className="max-w-3xl mx-auto px-4 h-[calc(100vh-7rem)] flex flex-col">
+    <div className="min-h-screen bg-[#080d13] pt-28 mb-10 sm:pt-28 pb-4 flex flex-col">
+      <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 h-[calc(100vh-8rem)] min-h-[500px] flex flex-col">
 
         {/* Header */}
-        <div className="bg-[#0d1117] border border-slate-800 rounded-t-2xl px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/my-tickets" className="text-slate-500 hover:text-cyan-400 transition-colors">
+        <div className="bg-[#0d1117] border border-slate-800 rounded-t-2xl p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <Link to="/my-tickets" className="text-slate-500 hover:text-cyan-400 transition-colors flex-shrink-0">
                 <MdArrowBack size={20} />
               </Link>
-              <div className="flex items-center gap-3">
-                {ticket.item_image ? (
-                  <img src={ticket.item_image} alt={ticket.item_name} className="w-10 h-10 rounded-lg object-cover border border-slate-700" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                    <MdStore className="text-slate-600" size={18} />
-                  </div>
-                )}
-                <div>
-                  <h2 className="text-white font-bold text-sm flex items-center gap-2">
-                    {ticket.item_name} <span className="text-slate-400 font-normal text-xs">(x{ticket.quantity || 1})</span>
-                    <span className="text-emerald-400 text-xs font-mono font-bold">${(parseFloat(ticket.item_price) * (ticket.quantity || 1)).toFixed(2)}</span>
-                  </h2>
-                  <p className="text-slate-400 text-[11px] flex items-center gap-2 mt-0.5">
-                    <span>Ticket #{ticket.id}</span>
-                    {ticket.ingame_name && <span className="text-cyan-400 font-mono">• IGN: {ticket.ingame_name}</span>}
-                    {ticket.discord_username && <span className="text-purple-400 font-mono">• Discord: {ticket.discord_username}</span>}
-                    {ticket.admin_name && <span className="text-slate-500">• Assigned: {ticket.admin_name}</span>}
-                  </p>
+
+              {ticket.item_image ? (
+                <img src={ticket.item_image} alt={ticket.item_name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg object-contain p-0.5 border border-slate-700 bg-[#080d13] flex-shrink-0" />
+              ) : (
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
+                  <MdStore className="text-slate-600" size={18} />
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h2 className="text-white font-bold text-xs sm:text-sm truncate">{ticket.item_name}</h2>
+                  <span className="text-slate-400 font-normal text-xs">(x{ticket.quantity || 1})</span>
+                  <span className="text-emerald-400 text-xs font-mono font-bold">${(parseFloat(ticket.item_price) * (ticket.quantity || 1)).toFixed(2)}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-slate-400 text-[10px] sm:text-[11px] mt-0.5">
+                  {ticket.ingame_name && <span className="text-cyan-400 font-mono">IGN: {ticket.ingame_name}</span>}
+                  {ticket.discord_username && <span className="text-purple-400 font-mono">• Discord: {ticket.discord_username}</span>}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${sc.bg} ${sc.color}`}>
+
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+              <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border ${sc.bg} ${sc.color}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`}></span>
                 {sc.label}
               </span>
               {ticket.status !== 'closed' && (
-                <button onClick={handleCloseTicket} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors" title="Close ticket">
+                <button onClick={handleCloseTicket} className="p-1 text-slate-500 hover:text-amber-400 transition-colors" title="Close ticket">
                   <MdClose size={16} />
                 </button>
               )}
@@ -201,7 +204,7 @@ const TicketChat = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 bg-[#080d13] border-x border-slate-800 overflow-y-auto px-5 py-5 space-y-3">
+        <div ref={chatContainerRef} className="flex-1 bg-[#080d13] border-x border-slate-800 overflow-y-auto p-3 sm:p-5 space-y-3">
           {messages.length === 0 && (
             <div className="text-center py-12">
               <HiShoppingCart className="text-slate-800 mx-auto mb-3" size={40} />
@@ -213,7 +216,7 @@ const TicketChat = () => {
             const isMe = msg.sender_id === user?.id;
             return (
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className="max-w-[75%]">
+                <div className="max-w-[85%] sm:max-w-[75%]">
                   <div className={`flex items-center gap-2 mb-1 ${isMe ? 'justify-end' : ''}`}>
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${isAdmin ? 'text-cyan-400' : 'text-amber-400'}`}>
                       {msg.sender_name}
@@ -223,11 +226,10 @@ const TicketChat = () => {
                     )}
                     <span className="text-slate-600 text-[10px]">{formatTime(msg.created_at)}</span>
                   </div>
-                  <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
-                    isMe
+                  <div className={`px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words ${isMe
                       ? 'bg-cyan-500/15 border border-cyan-500/20 text-slate-200 rounded-tr-md'
                       : 'bg-[#0d1117] border border-slate-800 text-slate-300 rounded-tl-md'
-                  }`}>
+                    }`}>
                     {msg.message}
                   </div>
                 </div>
@@ -238,7 +240,7 @@ const TicketChat = () => {
         </div>
 
         {/* Input */}
-        <div className="bg-[#0d1117] border border-slate-800 rounded-b-2xl px-5 py-3.5">
+        <div className="bg-[#0d1117] border border-slate-800 rounded-b-2xl p-3 sm:px-5 sm:py-3.5">
           {ticket.status !== 'closed' ? (
             <form onSubmit={handleSendMessage} className="flex items-center gap-3">
               <textarea

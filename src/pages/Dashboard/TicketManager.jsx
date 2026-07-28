@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
 import {
   MdConfirmationNumber, MdPerson, MdClose, MdSend, MdAssignment,
-  MdCheckCircle, MdAccessTime, MdFilterList, MdRefresh, MdStore, MdDelete, MdHelpOutline
+  MdCheckCircle, MdAccessTime, MdFilterList, MdRefresh, MdStore, MdDelete, MdHelpOutline, MdDownload, MdArrowBack
 } from 'react-icons/md';
 import { HiShoppingCart } from 'react-icons/hi';
 
@@ -16,7 +16,7 @@ const statusConfig = {
   closed: { label: 'Closed', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/30', dot: 'bg-slate-500' },
 };
 
-// ─── Delete Confirm Modal ──────────────────────────────────────────
+// ─── Delete Confirm Modal 
 const DeleteConfirmModal = ({ isOpen, ticketId, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   return (
@@ -120,7 +120,9 @@ const TicketManager = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   const fetchTickets = async () => {
@@ -250,29 +252,68 @@ const TicketManager = () => {
     } catch { toast.error('Network error'); }
   };
 
+  const downloadTranscript = () => {
+    if (!ticketDetail) return;
+    const header = `====================================================
+PARAISO GAMING — TICKET TRANSCRIPT (Ticket #${ticketDetail.id})
+====================================================
+Item Name: ${ticketDetail.item_name} (x${ticketDetail.quantity || 1})
+Total Price: $${(parseFloat(ticketDetail.item_price) * (ticketDetail.quantity || 1)).toFixed(2)}
+Purchaser: ${ticketDetail.user_name} (${ticketDetail.user_email})
+Ingame Name: ${ticketDetail.ingame_name || 'N/A'}
+Discord Username: ${ticketDetail.discord_username || 'N/A'}
+Ticket Status: ${ticketDetail.status?.toUpperCase()}
+Assigned Staff: ${ticketDetail.admin_name || 'Unassigned'}
+Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
+====================================================
+
+--- CHAT MESSAGES LOG ---
+`;
+
+    const body = messages.map(m => {
+      const time = new Date(m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const sender = (m.sender_role === 'master' || m.sender_role === 'admin') ? `${m.sender_name} [STAFF]` : m.sender_name;
+      return `[${time}] ${sender}:\n${m.message}`;
+    }).join('\n\n');
+
+    const footer = `\n\n====================================================\nEnd of Transcript for Ticket #${ticketDetail.id}\n====================================================`;
+
+    const fullContent = header + body + footer;
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ticket_${ticketDetail.id}_transcript.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Transcript downloaded!');
+  };
+
   const formatTime = (date) => {
     const d = new Date(date);
     return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="h-[calc(100vh-6rem)] flex flex-col overflow-hidden">
+      {/* Header (Hidden on mobile when chat is selected to save screen space) */}
+      <div className={`items-center justify-between mb-3 flex-shrink-0 ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-wider">Tickets</h2>
-          <p className="text-slate-400 text-sm mt-1">Manage purchase requests & chat with users</p>
+          <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">Tickets</h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">Manage purchase requests & chat with users</p>
         </div>
         <button onClick={fetchTickets} className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all">
           <MdRefresh size={20} />
         </button>
       </div>
 
-      <div className="flex gap-4 h-[calc(100%-4rem)]">
+      <div className="flex gap-4 h-full min-h-0 flex-1 relative overflow-hidden">
         {/* ── TICKET LIST (Left Panel) ── */}
-        <div className="w-80 flex-shrink-0 bg-[#0d1117] border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+        <div className={`w-full md:w-80 flex-shrink-0 bg-[#0d1117] border border-slate-800 rounded-2xl flex flex-col overflow-hidden ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
           {/* Filter */}
-          <div className="p-3 border-b border-slate-800 flex items-center gap-2">
+          <div className="p-3 border-b border-slate-800 flex items-center gap-2 flex-shrink-0">
             <MdFilterList className="text-slate-500" size={16} />
             <select
               value={filterStatus}
@@ -288,7 +329,7 @@ const TicketManager = () => {
           </div>
 
           {/* Ticket list */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
@@ -334,62 +375,79 @@ const TicketManager = () => {
         </div>
 
         {/* ── CHAT PANEL (Right) ── */}
-        <div className="flex-1 bg-[#0d1117] border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+        <div className={`w-full md:flex-1 bg-[#0d1117] border border-slate-800 rounded-2xl flex flex-col overflow-hidden ${selectedTicket ? 'flex' : 'hidden md:flex'}`}>
           {selectedTicket && ticketDetail ? (
             <>
               {/* Ticket header */}
-              <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <MdConfirmationNumber className="text-cyan-400" size={18} />
+              <div className="p-2.5 sm:p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 flex-shrink-0 relative">
+                <div className="flex items-center gap-2 sm:gap-3 pr-6 sm:pr-0">
+                  <button 
+                    onClick={() => setSelectedTicket(null)}
+                    className="md:hidden p-1 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all flex-shrink-0"
+                    title="Back to ticket list"
+                  >
+                    <MdArrowBack size={18} />
+                  </button>
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                    <MdConfirmationNumber className="text-cyan-400" size={16} />
                   </div>
-                  <div>
-                    <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-white font-bold text-xs sm:text-sm flex flex-wrap items-center gap-1.5 sm:gap-2">
                       Ticket #{ticketDetail.id}
-                      <span className={`text-[10px] px-2 py-0.5 rounded-md border ${statusConfig[ticketDetail.status]?.bg} ${statusConfig[ticketDetail.status]?.color}`}>
+                      <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md border ${statusConfig[ticketDetail.status]?.bg} ${statusConfig[ticketDetail.status]?.color}`}>
                         {statusConfig[ticketDetail.status]?.label}
                       </span>
                     </h3>
-                    <p className="text-slate-400 text-xs mt-0.5">
-                      Item: <span className="text-white font-semibold">{ticketDetail.item_name}</span> (x{ticketDetail.quantity || 1})
-                      {ticketDetail.ingame_name && <span className="text-cyan-400 font-mono ml-2">• IGN: {ticketDetail.ingame_name}</span>}
-                      {ticketDetail.discord_username && <span className="text-purple-400 font-mono ml-2">• Discord: {ticketDetail.discord_username}</span>}
+                    <p className="text-slate-400 text-[10px] sm:text-xs mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                      <span>Item: <strong className="text-white">{ticketDetail.item_name}</strong> (x{ticketDetail.quantity || 1})</span>
+                      {ticketDetail.ingame_name && <span className="text-cyan-400 font-mono">• IGN: {ticketDetail.ingame_name}</span>}
+                      {ticketDetail.discord_username && <span className="text-purple-400 font-mono">• Discord: {ticketDetail.discord_username}</span>}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pr-6 md:pr-10">
                   {ticketDetail.status === 'open' && (
                     <>
-                      <button onClick={() => handleClaim(ticketDetail.id)} className="px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all">
+                      <button onClick={() => handleClaim(ticketDetail.id)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all">
                         Claim
                       </button>
-                      <button onClick={() => setShowAssignModal(true)} className="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-purple-500/20 transition-all">
+                      <button onClick={() => setShowAssignModal(true)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-purple-500/20 transition-all">
                         Assign
                       </button>
                     </>
                   )}
                   {ticketDetail.status !== 'closed' && (
-                    <button onClick={() => handleClose(ticketDetail.id)} className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500/20 transition-all">
+                    <button onClick={() => handleClose(ticketDetail.id)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500/20 transition-all">
                       Close
                     </button>
                   )}
-                  <button onClick={() => setShowDeleteModal(true)} className="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/20 transition-all flex items-center gap-1">
-                    <MdDelete size={12} /> Delete
+                  <button onClick={downloadTranscript} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-blue-500/20 transition-all flex items-center gap-1">
+                    <MdDownload size={12} /> Export Chat
                   </button>
-                  <button onClick={() => { setSelectedTicket(null); setTicketDetail(null); setMessages([]); }} className="p-1.5 text-slate-500 hover:text-white transition-colors ml-1">
-                    <MdClose size={18} />
+                  <button onClick={() => setShowDeleteModal(true)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/20 transition-all flex items-center gap-1">
+                    <MdDelete size={11} /> Delete
                   </button>
                 </div>
+
+                {/* Top right close panel button */}
+                <button 
+                  onClick={() => { setSelectedTicket(null); setTicketDetail(null); setMessages([]); }} 
+                  className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 p-1 text-slate-500 hover:text-white hover:bg-slate-800/80 rounded-lg transition-all"
+                  title="Close panel"
+                >
+                  <MdClose size={18} />
+                </button>
               </div>
 
               {/* Messages */}
-              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-5 space-y-3">
+              <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
                 {messages.map(msg => {
                   const isAdmin = msg.sender_role === 'admin' || msg.sender_role === 'master';
                   const isMe = msg.sender_id === user?.id;
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] ${isMe ? 'order-2' : 'order-1'}`}>
+                      <div className={`max-w-[85%] sm:max-w-[70%] ${isMe ? 'order-2' : 'order-1'}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${isAdmin ? 'text-cyan-400' : 'text-amber-400'}`}>
                             {msg.sender_name}
@@ -397,7 +455,7 @@ const TicketManager = () => {
                           {isAdmin && <span className="text-[8px] bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded font-mono">STAFF</span>}
                           <span className="text-slate-600 text-[10px]">{formatTime(msg.created_at)}</span>
                         </div>
-                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                        <div className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words ${
                           isMe
                             ? 'bg-cyan-500/15 border border-cyan-500/20 text-slate-200 rounded-tr-md'
                             : 'bg-[#080d13] border border-slate-800 text-slate-300 rounded-tl-md'
@@ -413,7 +471,7 @@ const TicketManager = () => {
 
               {/* Message input */}
               {ticketDetail.status !== 'closed' ? (
-                <form onSubmit={handleSendMessage} className="px-5 py-3.5 border-t border-slate-800">
+                <form onSubmit={handleSendMessage} className="p-3 sm:px-5 sm:py-3.5 border-t border-slate-800">
                   <div className="flex items-center gap-3">
                     <textarea
                       rows={1}
