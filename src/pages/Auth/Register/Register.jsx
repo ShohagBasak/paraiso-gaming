@@ -5,6 +5,8 @@ import { Link, useNavigate, useLocation } from 'react-router';
 import { FiEye, FiEyeOff, FiMail, FiCheckCircle, FiArrowLeft, FiRefreshCw } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
 const Register = () => {
     const { register, handleSubmit, formState: { errors }, watch } = useForm();
     const { publicRegister, sendOtp } = useAuth();
@@ -13,6 +15,7 @@ const Register = () => {
     const [serverError, setServerError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [otpCode, setOtpCode] = useState('');
+    const [turnstileToken, setTurnstileToken] = useState('');
     const [registeredData, setRegisteredData] = useState(null);
     const [countdown, setCountdown] = useState(60);
     const [canResend, setCanResend] = useState(false);
@@ -21,6 +24,40 @@ const Register = () => {
     const location = useLocation();
 
     const from = location.state?.from?.pathname || '/';
+
+    // Load Turnstile Script
+    useEffect(() => {
+        if (!document.getElementById('turnstile-script')) {
+            const script = document.createElement('script');
+            script.id = 'turnstile-script';
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+    }, []);
+
+    // Render Turnstile widget
+    useEffect(() => {
+        let checkAndRender;
+        if (step === 1) {
+            checkAndRender = setInterval(() => {
+                const el = document.getElementById('turnstile-widget');
+                if (window.turnstile && el && el.children.length === 0) {
+                    try {
+                        window.turnstile.render('#turnstile-widget', {
+                            sitekey: TURNSTILE_SITE_KEY,
+                            theme: 'dark',
+                            callback: (token) => setTurnstileToken(token),
+                            'expired-callback': () => setTurnstileToken(''),
+                        });
+                        clearInterval(checkAndRender);
+                    } catch (_) { /* silent */ }
+                }
+            }, 300);
+        }
+        return () => clearInterval(checkAndRender);
+    }, [step]);
 
     // Resend countdown timer
     useEffect(() => {
@@ -69,7 +106,8 @@ const Register = () => {
                 registeredData.username,
                 registeredData.email,
                 registeredData.password,
-                otpCode.trim()
+                otpCode.trim(),
+                turnstileToken
             );
             toast.success('Registration successful! Welcome to Paraiso Gaming.');
             navigate(from, { replace: true });
@@ -173,6 +211,9 @@ const Register = () => {
                                 <p role="alert" className='text-red-400 text-xs'>Password must be at least 6 characters.</p>
                             )}
                         </div>
+
+                        {/* Turnstile Bot Protection Widget */}
+                        <div id="turnstile-widget" className="flex justify-center my-2 min-h-[65px]" />
 
                         {/* Server Error */}
                         {serverError && (
