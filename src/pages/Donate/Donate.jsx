@@ -36,8 +36,10 @@ const Donate = () => {
     try {
       const res = await fetch(`${BASE_URL}/donate-categories`);
       const data = await res.json();
-      setCategories(data);
-    } catch { /* silent */ }
+      setCategories(Array.isArray(data) ? data : []);
+    } catch {
+      setCategories([]);
+    }
   };
 
   const fetchItems = async (categoryId = null) => {
@@ -47,8 +49,10 @@ const Donate = () => {
       if (categoryId) url += `?category_id=${categoryId}`;
       const res = await fetch(url);
       const data = await res.json();
-      setItems(data);
-    } catch { /* silent */ }
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
+    }
     setLoading(false);
   };
 
@@ -95,9 +99,10 @@ const Donate = () => {
     setPurchasing(false);
   };
 
-  const totalItemCount = categories.reduce((sum, c) => sum + (parseInt(c.item_count) || 0), 0);
+  const totalItemCount = Array.isArray(categories) ? categories.reduce((sum, c) => sum + (parseInt(c.item_count) || 0), 0) : 0;
 
-  const sortedItems = [...items].sort((a, b) => {
+  const itemList = Array.isArray(items) ? items : [];
+  const sortedItems = [...itemList].sort((a, b) => {
     if (sortBy === 'price-low') return parseFloat(a.price) - parseFloat(b.price);
     if (sortBy === 'price-high') return parseFloat(b.price) - parseFloat(a.price);
     if (sortBy === 'name') return a.name.localeCompare(b.name);
