@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import useAuth from '../../../hooks/useAuth';
 import { Link, useNavigate, useLocation } from 'react-router';
@@ -19,6 +19,7 @@ const Register = () => {
     const [registeredData, setRegisteredData] = useState(null);
     const [countdown, setCountdown] = useState(60);
     const [canResend, setCanResend] = useState(false);
+    const widgetIdRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -44,7 +45,11 @@ const Register = () => {
                 const el = document.getElementById('turnstile-widget');
                 if (window.turnstile && el && el.children.length === 0) {
                     try {
-                        window.turnstile.render('#turnstile-widget', {
+                        if (widgetIdRef.current !== null) {
+                            try { window.turnstile.remove(widgetIdRef.current); } catch (_) {}
+                            widgetIdRef.current = null;
+                        }
+                        widgetIdRef.current = window.turnstile.render('#turnstile-widget', {
                             sitekey: TURNSTILE_SITE_KEY,
                             theme: 'dark',
                             callback: (token) => setTurnstileToken(token),
@@ -56,7 +61,13 @@ const Register = () => {
                 }
             }, 300);
         }
-        return () => clearInterval(checkAndRender);
+        return () => {
+            if (checkAndRender) clearInterval(checkAndRender);
+            if (widgetIdRef.current !== null && window.turnstile) {
+                try { window.turnstile.remove(widgetIdRef.current); } catch (_) {}
+                widgetIdRef.current = null;
+            }
+        };
     }, [step]);
 
     // Resend countdown timer
