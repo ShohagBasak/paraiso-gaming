@@ -49,6 +49,7 @@ const Register = () => {
                             theme: 'dark',
                             callback: (token) => setTurnstileToken(token),
                             'expired-callback': () => setTurnstileToken(''),
+                            'error-callback': (code) => console.warn('Turnstile widget warning/code:', code),
                         });
                         clearInterval(checkAndRender);
                     } catch (_) { /* silent */ }
