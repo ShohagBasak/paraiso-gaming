@@ -49,7 +49,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Donate', path: '/donate' },
+    { name: 'Donate Store', path: '/donate' },
     {
       name: 'Rules',
       isDropdown: true,

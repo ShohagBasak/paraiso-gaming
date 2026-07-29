@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 import { FaSun } from 'react-icons/fa';
 import bgImage from '../../assets/bg.jpg';
 
@@ -67,14 +68,12 @@ const Announcement = () => {
             >
               Join Discord
             </a>
-            <a
-              href="https://forums.pgaming.net/index.php"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/donate"
               className="inline-flex items-center justify-center px-8 py-3 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black active:scale-95 text-yellow-500 font-bold rounded-full transition-all duration-200 hover:scale-105 whitespace-nowrap min-w-[150px] animate-fade-up animation-delay-2s"
             >
-              Forum
-            </a>
+              Donate Store
+            </Link>
           </div>
 
           {/* SA:MP Server Card Button */}

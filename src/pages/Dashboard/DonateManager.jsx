@@ -56,7 +56,7 @@ const DonateManager = () => {
   // Item form
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', price: '', image_url: '' });
+  const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' });
   const [imagePreview, setImagePreview] = useState('');
   const [savingItem, setSavingItem] = useState(false);
 
@@ -255,6 +255,7 @@ const DonateManager = () => {
         body: JSON.stringify({
           ...itemForm,
           price: parseFloat(itemForm.price) || 0,
+          renewal_price: (itemForm.renewal_price !== '' && itemForm.renewal_price !== null) ? parseFloat(itemForm.renewal_price) : null,
           category_id: parseInt(itemForm.category_id),
         }),
       });
@@ -262,7 +263,7 @@ const DonateManager = () => {
         toast.success(editingItem ? 'Item updated!' : 'Item created!');
         setShowItemForm(false);
         setEditingItem(null);
-        setItemForm({ name: '', description: '', category_id: '', price: '', image_url: '' });
+        setItemForm({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' });
         setImagePreview('');
         fetchItems();
         fetchCategories();
@@ -313,6 +314,7 @@ const DonateManager = () => {
       description: item.description || '',
       category_id: item.category_id,
       price: item.price,
+      renewal_price: item.renewal_price !== null && item.renewal_price !== undefined ? item.renewal_price : '',
       image_url: item.image_url || '',
     });
     setImagePreview(item.image_url || '');
@@ -455,7 +457,7 @@ const DonateManager = () => {
       {activeTab === 'items' && (
         <div>
           <button
-            onClick={() => { setShowItemForm(true); setEditingItem(null); setItemForm({ name: '', description: '', category_id: '', price: '', image_url: '' }); setImagePreview(''); }}
+            onClick={() => { setShowItemForm(true); setEditingItem(null); setItemForm({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' }); setImagePreview(''); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl text-sm font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all mb-6"
           >
             <MdAdd size={18} /> Add Item
@@ -481,30 +483,54 @@ const DonateManager = () => {
                         placeholder="e.g. 1x Boombox" />
                     </div>
 
-                    {/* Category + Price row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5">
+                    {/* Category + Price + Renewal Price row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="flex flex-col gap-1.5 sm:col-span-1">
                         <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Category *</label>
                         <select value={itemForm.category_id} onChange={e => setItemForm(f => ({ ...f, category_id: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all">
+                          className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all">
                           <option value="" className="bg-[#0b0f15] text-slate-200">Select...</option>
                           {categories.map(c => <option key={c.id} value={c.id} className="bg-[#0b0f15] text-slate-200">{c.name}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Price ($)</label>
+                        <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Price ($) *</label>
                         <input type="number" step="0.01" min="0" value={itemForm.price} onChange={e => setItemForm(f => ({ ...f, price: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all"
-                          placeholder="0.00" />
+                          className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all"
+                          placeholder="48.50" />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Renew Price</label>
+                          <span className="text-[10px] text-cyan-400 font-medium">Optional</span>
+                        </div>
+                        <input type="number" step="0.01" min="0" value={itemForm.renewal_price} onChange={e => setItemForm(f => ({ ...f, renewal_price: e.target.value }))}
+                          className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all"
+                          placeholder="25.00" />
                       </div>
                     </div>
 
                     {/* Description */}
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Description</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Description</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setItemForm(f => ({
+                              ...f,
+                              description: f.description ? f.description + '\n• ' : '• '
+                            }));
+                          }}
+                          className="px-2 py-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/25 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                          title="Click to insert bullet point"
+                        >
+                          + Add Bullet (•)
+                        </button>
+                      </div>
                       <textarea value={itemForm.description} onChange={e => setItemForm(f => ({ ...f, description: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all resize-none"
-                        rows={3} placeholder="Optional description..." />
+                        className="w-full px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all resize-y min-h-[110px]"
+                        rows={4} placeholder={"e.g.\n• Special tag in-game\n• Access to donator chat\n• Exclusive perks"} />
                     </div>
 
                     {/* Image */}
@@ -585,10 +611,15 @@ const DonateManager = () => {
                       {item.description && (
                         <p className="text-slate-400 text-xs mt-1 whitespace-pre-line leading-relaxed">{item.description}</p>
                       )}
-                      <p className="text-slate-500 text-xs flex items-center gap-2 mt-1">
+                      <p className="text-slate-500 text-xs flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-cyan-400">{item.category_name}</span>
                         <span>•</span>
                         <span className="text-emerald-400 font-bold">${parseFloat(item.price).toFixed(2)}</span>
+                        {item.renewal_price && parseFloat(item.renewal_price) > 0 && (
+                          <span className="bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            Renew: ${parseFloat(item.renewal_price).toFixed(2)}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
