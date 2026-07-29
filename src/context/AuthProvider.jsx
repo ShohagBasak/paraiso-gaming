@@ -94,6 +94,18 @@ const AuthProvider = ({ children }) => {
         return data;
     };
 
+    const parseResponse = async (res, defaultError) => {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || defaultError);
+            return data;
+        } else {
+            const text = await res.text();
+            throw new Error(!res.ok ? `Server error (${res.status}). Please try again.` : defaultError);
+        }
+    };
+
     // Send OTP — POST /send-otp
     const sendOtp = async (email) => {
         const res = await fetch(`${BASE_URL}/send-otp`, {
@@ -102,9 +114,7 @@ const AuthProvider = ({ children }) => {
             credentials: 'include',
             body: JSON.stringify({ email }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-        return data;
+        return await parseResponse(res, 'Failed to send OTP');
     };
 
     // Public Register — POST /public-register (community users with OTP)
@@ -115,8 +125,7 @@ const AuthProvider = ({ children }) => {
             credentials: 'include',
             body: JSON.stringify({ username, email, password, otp, turnstileToken }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Registration failed');
+        const data = await parseResponse(res, 'Registration failed');
         if (data.token) {
             localStorage.setItem('token', data.token);
         }
