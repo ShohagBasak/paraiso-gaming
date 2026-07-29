@@ -59,21 +59,36 @@ const Announcement = () => {
           <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto mb-8 sm:mb-12 animate-fade-up animation-delay-1-6s"></div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-8">
-            <a
-              href="https://discord.com/invite/7AsJaG3KSV"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-8 py-3 bg-[#1e40af] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-full transition-all duration-200 shadow-lg shadow-blue-500/20 hover:scale-105 whitespace-nowrap min-w-[150px] animate-fade-up animation-delay-1-8s"
-            >
-              Join Discord
-            </a>
-            <Link
-              to="/donate"
-              className="inline-flex items-center justify-center px-8 py-3 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black active:scale-95 text-yellow-500 font-bold rounded-full transition-all duration-200 hover:scale-105 whitespace-nowrap min-w-[150px] animate-fade-up animation-delay-2s"
-            >
-              Donate Store
-            </Link>
+          <div className="flex flex-col items-center justify-center gap-4 mt-8 animate-fade-up animation-delay-1-8s">
+            {/* Top Row: Join Discord & Forum */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+              <a
+                href="https://discord.com/invite/7AsJaG3KSV"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-8 py-3 bg-[#1e40af] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-full transition-all duration-200 shadow-lg shadow-blue-500/20 hover:scale-105 whitespace-nowrap min-w-[150px]"
+              >
+                Join Discord
+              </a>
+              <a
+                href="https://forums.pgaming.net/index.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-8 py-3 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black active:scale-95 text-yellow-500 font-bold rounded-full transition-all duration-200 shadow-lg shadow-yellow-500/20 hover:scale-105 whitespace-nowrap min-w-[150px]"
+              >
+                Forum
+              </a>
+            </div>
+
+            {/* Bottom Row: Donate Store */}
+            <div className="flex items-center justify-center">
+              <Link
+                to="/donate"
+                className="inline-flex items-center justify-center px-8 py-3 border-2 border-cyan-500 hover:bg-cyan-500 hover:text-black active:scale-95 text-cyan-400 font-bold rounded-full transition-all duration-200 shadow-lg shadow-cyan-500/20 hover:scale-105 whitespace-nowrap min-w-[150px]"
+              >
+                Donate Store
+              </Link>
+            </div>
           </div>
 
           {/* SA:MP Server Card Button */}

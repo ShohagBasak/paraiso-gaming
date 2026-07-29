@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle } from 'react-icons/hi';
 import { MdStorefront, MdCategory } from 'react-icons/md';
 import useAuth from '../../hooks/useAuth';
@@ -204,25 +204,63 @@ const Donate = () => {
                 HOW IT WORKS
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { step: 1, text: 'Select an item and click Purchase.' },
-                { step: 2, text: 'Enter your IGN and Discord Username.' },
-                { step: 3, text: 'Click Create Order.' },
-                { step: 4, text: 'Open My Tickets to chat with an admin.' },
-                { step: 5, text: 'Complete your payment.' },
-                { step: 6, text: 'Your order will be processed and delivered.' },
-              ].map((item) => (
+                {
+                  cardId: 1,
+                  steps: [
+                    {
+                      num: 1,
+                      isLink: true,
+                      linkLabel: 'Register an Account',
+                      linkUrl: '/register',
+                      suffix: ' – Create your account here before making a purchase.',
+                    },
+                    {
+                      num: 2,
+                      text: 'Select an item and click Purchase.',
+                    },
+                  ],
+                },
+                {
+                  cardId: 2,
+                  steps: [
+                    { num: 3, text: 'Enter your IGN and Discord Username.' },
+                    { num: 4, text: 'Click Create Order.' },
+                  ],
+                },
+                {
+                  cardId: 3,
+                  steps: [
+                    { num: 5, text: 'Open My Tickets to chat with an admin.' },
+                    { num: 6, text: 'Complete your payment.' },
+                    { num: 7, text: 'Your order will be processed and delivered.' },
+                  ],
+                },
+              ].map((card) => (
                 <div
-                  key={item.step}
-                  className="bg-[#131a22] border border-slate-800 hover:border-cyan-500/40 rounded-xl px-3 py-2.5 flex items-center gap-2.5 transition-all duration-200 group h-full"
+                  key={card.cardId}
+                  className="bg-[#131a22] border border-slate-800 hover:border-cyan-500/40 rounded-xl p-4 flex flex-col justify-center gap-3 transition-all duration-200 h-full"
                 >
-                  <span className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-cyan-500 group-hover:text-black transition-colors">
-                    {item.step}
-                  </span>
-                  <p className="text-slate-300 text-xs font-medium leading-snug">
-                    {item.text}
-                  </p>
+                  {card.steps.map((item) => (
+                    <div key={item.num} className="flex items-center gap-2.5 group/step">
+                      <span className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover/step:bg-cyan-500 group-hover/step:text-black transition-colors">
+                        {item.num}
+                      </span>
+                      <p className="text-slate-300 text-xs font-medium leading-snug">
+                        {item.isLink ? (
+                          <>
+                            <Link to={item.linkUrl} className="text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">
+                              {item.linkLabel}
+                            </Link>
+                            {item.suffix}
+                          </>
+                        ) : (
+                          item.text
+                        )}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

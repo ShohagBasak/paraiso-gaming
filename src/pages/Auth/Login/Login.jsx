@@ -74,6 +74,11 @@ const Login = () => {
                                 {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
                             </button>
                         </div>
+                        <div className="flex justify-end mt-0.5">
+                            <Link to="/forgot-password" className="text-cyan-400 text-xs font-semibold hover:underline">
+                                Forgot password?
+                            </Link>
+                        </div>
                         {errors.password?.type === "required" && (
                             <p role="alert" className='text-red-500'>Password is required!</p>
                         )}

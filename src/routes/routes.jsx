@@ -11,6 +11,7 @@ import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Login from '../pages/Auth/Login/Login';
 import Register from '../pages/Auth/Register/Register';
+import ForgotPassword from '../pages/Auth/ForgotPassword/ForgotPassword';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import BannerManager from '../pages/Dashboard/BannerManager';
 import AnnouncementManager from '../pages/Dashboard/AnnouncementManager';
@@ -99,6 +100,7 @@ export const router = createBrowserRouter([
     children: [
       { path: 'login', Component: Login },
       { path: 'register', Component: Register },
+      { path: 'forgot-password', Component: ForgotPassword },
     ]
   },
   {
