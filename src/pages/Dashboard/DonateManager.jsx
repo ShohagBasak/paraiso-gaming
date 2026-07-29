@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   MdAdd, MdEdit, MdDelete, MdCategory, MdStore, MdClose,
-  MdImage, MdSave, MdVisibility, MdVisibilityOff, MdHelpOutline, MdDragIndicator
+  MdImage, MdSave, MdVisibility, MdVisibilityOff, MdHelpOutline, MdDragIndicator, MdSearch
 } from 'react-icons/md';
 import { HiTag } from 'react-icons/hi';
 
@@ -42,6 +42,7 @@ const DonateManager = () => {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Drag & drop state
   const [draggedCatIndex, setDraggedCatIndex] = useState(null);
@@ -56,7 +57,7 @@ const DonateManager = () => {
   // Item form
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' });
+  const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', price: '', image_url: '' });
   const [imagePreview, setImagePreview] = useState('');
   const [savingItem, setSavingItem] = useState(false);
 
@@ -255,7 +256,6 @@ const DonateManager = () => {
         body: JSON.stringify({
           ...itemForm,
           price: parseFloat(itemForm.price) || 0,
-          renewal_price: (itemForm.renewal_price !== '' && itemForm.renewal_price !== null) ? parseFloat(itemForm.renewal_price) : null,
           category_id: parseInt(itemForm.category_id),
         }),
       });
@@ -263,7 +263,7 @@ const DonateManager = () => {
         toast.success(editingItem ? 'Item updated!' : 'Item created!');
         setShowItemForm(false);
         setEditingItem(null);
-        setItemForm({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' });
+        setItemForm({ name: '', description: '', category_id: '', price: '', image_url: '' });
         setImagePreview('');
         fetchItems();
         fetchCategories();
@@ -314,7 +314,6 @@ const DonateManager = () => {
       description: item.description || '',
       category_id: item.category_id,
       price: item.price,
-      renewal_price: item.renewal_price !== null && item.renewal_price !== undefined ? item.renewal_price : '',
       image_url: item.image_url || '',
     });
     setImagePreview(item.image_url || '');
@@ -456,12 +455,34 @@ const DonateManager = () => {
       {/* ════════ ITEMS TAB ════════ */}
       {activeTab === 'items' && (
         <div>
-          <button
-            onClick={() => { setShowItemForm(true); setEditingItem(null); setItemForm({ name: '', description: '', category_id: '', price: '', renewal_price: '', image_url: '' }); setImagePreview(''); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl text-sm font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all mb-6"
-          >
-            <MdAdd size={18} /> Add Item
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <button
+              onClick={() => { setShowItemForm(true); setEditingItem(null); setItemForm({ name: '', description: '', category_id: '', price: '', image_url: '' }); setImagePreview(''); }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-xl text-sm font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all cursor-pointer"
+            >
+              <MdAdd size={18} /> Add Item
+            </button>
+
+            {/* Real-time Search Input */}
+            <div className="relative flex-1 max-w-xs">
+              <MdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search items..."
+                className="w-full pl-10 pr-9 py-2 bg-[#0d1117] border border-slate-800 focus:border-cyan-500/50 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all placeholder:text-slate-500 font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                >
+                  <MdClose size={16} />
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Item form modal */}
           {showItemForm && (
@@ -483,9 +504,9 @@ const DonateManager = () => {
                         placeholder="e.g. 1x Boombox" />
                     </div>
 
-                    {/* Category + Price + Renewal Price row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="flex flex-col gap-1.5 sm:col-span-1">
+                    {/* Category + Price row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
                         <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Category *</label>
                         <select value={itemForm.category_id} onChange={e => setItemForm(f => ({ ...f, category_id: e.target.value }))}
                           className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all">
@@ -498,15 +519,6 @@ const DonateManager = () => {
                         <input type="number" step="0.01" min="0" value={itemForm.price} onChange={e => setItemForm(f => ({ ...f, price: e.target.value }))}
                           className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all"
                           placeholder="48.50" />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between">
-                          <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">Renew Price</label>
-                          <span className="text-[10px] text-cyan-400 font-medium">Optional</span>
-                        </div>
-                        <input type="number" step="0.01" min="0" value={itemForm.renewal_price} onChange={e => setItemForm(f => ({ ...f, renewal_price: e.target.value }))}
-                          className="w-full px-3 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all"
-                          placeholder="25.00" />
                       </div>
                     </div>
 
@@ -577,7 +589,17 @@ const DonateManager = () => {
               <p className="text-slate-500 text-xs mb-3 flex items-center gap-1.5 font-medium">
                 💡 Drag & drop item cards to change their display order.
               </p>
-              {items.map((item, idx) => (
+              {items
+                .filter(item => {
+                  if (!searchQuery.trim()) return true;
+                  const q = searchQuery.toLowerCase().trim();
+                  return (
+                    item.name.toLowerCase().includes(q) ||
+                    (item.category_name && item.category_name.toLowerCase().includes(q)) ||
+                    (item.description && item.description.toLowerCase().includes(q))
+                  );
+                })
+                .map((item, idx) => (
                 <div
                   key={item.id}
                   draggable
@@ -615,11 +637,6 @@ const DonateManager = () => {
                         <span className="text-cyan-400">{item.category_name}</span>
                         <span>•</span>
                         <span className="text-emerald-400 font-bold">${parseFloat(item.price).toFixed(2)}</span>
-                        {item.renewal_price && parseFloat(item.renewal_price) > 0 && (
-                          <span className="bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                            Renew: ${parseFloat(item.renewal_price).toFixed(2)}
-                          </span>
-                        )}
                       </p>
                     </div>
                   </div>

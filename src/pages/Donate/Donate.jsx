@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
-import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle } from 'react-icons/hi';
-import { MdStorefront, MdCategory } from 'react-icons/md';
+import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle, HiSearch } from 'react-icons/hi';
+import { MdStorefront, MdCategory, MdSearch, MdClose } from 'react-icons/md';
 import useAuth from '../../hooks/useAuth';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -72,7 +72,7 @@ const Donate = () => {
   const [successModal, setSuccessModal] = useState(null);
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const [sortBy, setSortBy] = useState('default');
-  const [orderType, setOrderType] = useState('new');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchCategories();
@@ -111,14 +111,13 @@ const Donate = () => {
     setItemDetailModal(item);
   };
 
-  const handlePurchase = (item, initialOrderType = 'new') => {
+  const handlePurchase = (item) => {
     if (!user) {
       navigate('/login', { state: { from: location } });
       return;
     }
     setPurchaseModal(item);
     setItemDetailModal(null);
-    setOrderType(initialOrderType);
     setIngameName('');
     setDiscordUsername('');
     setQuantity(1);
@@ -146,7 +145,6 @@ const Donate = () => {
           ingame_name: ingameName.trim(),
           discord_username: discordUsername.trim(),
           quantity: Math.max(1, parseInt(quantity) || 1),
-          order_type: orderType,
         }),
       });
       const data = await res.json();
@@ -338,27 +336,51 @@ const Donate = () => {
 
           {/* ── ITEMS GRID ── */}
           <main className="lg:col-span-9">
-            {/* Filter bar */}
-            <div className="flex items-center justify-between mb-6">
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
               <p className="text-slate-400 text-sm">
-                Showing <span className="text-white font-bold">{sortedItems.length}</span> items
+                Showing <span className="text-white font-bold">{sortedItems.filter(item => !searchQuery.trim() || item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (item.category_name && item.category_name.toLowerCase().includes(searchQuery.toLowerCase().trim())) || (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length}</span> items
                 {selectedCategory && categories.find(c => c.id === selectedCategory) && (
                   <span className="text-cyan-400"> in {categories.find(c => c.id === selectedCategory)?.name}</span>
                 )}
               </p>
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value)}
-                  className="appearance-none bg-[#0d1117] border border-slate-800 text-slate-300 text-sm rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:border-cyan-500/50 cursor-pointer hover:border-slate-700 transition-colors"
-                >
-                  <option value="default" className="bg-[#0b0f15] text-slate-200">Default</option>
-                  <option value="price-low" className="bg-[#0b0f15] text-slate-200">Price: Low to High</option>
-                  <option value="price-high" className="bg-[#0b0f15] text-slate-200">Price: High to Low</option>
-                  <option value="name" className="bg-[#0b0f15] text-slate-200">Name: A-Z</option>
-                  <option value="newest" className="bg-[#0b0f15] text-slate-200">Newest First</option>
-                </select>
-                <HiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" size={16} />
+              
+              <div className="flex items-center gap-3">
+                {/* Search Bar */}
+                <div className="relative flex-1 sm:w-64">
+                  <MdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" size={18} />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search items..."
+                    className="w-full pl-10 pr-8 py-2.5 bg-[#0d1117] border border-slate-800 focus:border-cyan-500/50 rounded-xl text-white text-xs sm:text-sm focus:outline-none transition-all placeholder:text-slate-500 font-medium"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                    >
+                      <MdClose size={16} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value)}
+                    className="appearance-none bg-[#0d1117] border border-slate-800 text-slate-300 text-sm rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:border-cyan-500/50 cursor-pointer hover:border-slate-700 transition-colors"
+                  >
+                    <option value="default" className="bg-[#0b0f15] text-slate-200">Default</option>
+                    <option value="price-low" className="bg-[#0b0f15] text-slate-200">Price: Low to High</option>
+                    <option value="price-high" className="bg-[#0b0f15] text-slate-200">Price: High to Low</option>
+                    <option value="name" className="bg-[#0b0f15] text-slate-200">Name: A-Z</option>
+                    <option value="newest" className="bg-[#0b0f15] text-slate-200">Newest First</option>
+                  </select>
+                  <HiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" size={16} />
+                </div>
               </div>
             </div>
 
@@ -370,15 +392,25 @@ const Donate = () => {
                   <p className="text-slate-500 text-sm uppercase tracking-widest">Loading items...</p>
                 </div>
               </div>
-            ) : sortedItems.length === 0 ? (
+            ) : sortedItems.filter(item => !searchQuery.trim() || item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) || (item.category_name && item.category_name.toLowerCase().includes(searchQuery.toLowerCase().trim())) || (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase().trim()))).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-[#0d1117] border border-dashed border-slate-800 rounded-2xl">
                 <MdStorefront className="text-slate-700 mb-4" size={48} />
-                <p className="text-slate-500 font-medium">No items available</p>
-                <p className="text-slate-600 text-sm mt-1">Check back later for new items!</p>
+                <p className="text-slate-500 font-medium">No items found</p>
+                <p className="text-slate-600 text-sm mt-1">Try searching for something else or clear your search.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
-                {sortedItems.map((item, idx) => (
+                {sortedItems
+                  .filter(item => {
+                    if (!searchQuery.trim()) return true;
+                    const q = searchQuery.toLowerCase().trim();
+                    return (
+                      item.name.toLowerCase().includes(q) ||
+                      (item.category_name && item.category_name.toLowerCase().includes(q)) ||
+                      (item.description && item.description.toLowerCase().includes(q))
+                    );
+                  })
+                  .map((item, idx) => (
                   <div
                     key={item.id}
                     className="group bg-[#131a22] border border-slate-700/60 rounded-xl p-4 hover:border-cyan-500/40 transition-all duration-300 flex flex-col shadow-xl"
@@ -423,22 +455,10 @@ const Donate = () => {
 
                     {/* Price & Purchase Button Row */}
                     <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-700/60">
-                      <div className="relative group/price inline-block cursor-pointer">
-                        <span className="text-emerald-400 font-black text-lg hover:text-emerald-300 transition-colors">
+                      <div>
+                        <span className="text-emerald-400 font-black text-lg">
                           ${parseFloat(item.price).toFixed(2)}
                         </span>
-
-                        {/* Hover Tooltip Popup for Renewal Price (Positioned Below Price) */}
-                        {item.renewal_price && parseFloat(item.renewal_price) > 0 && (
-                          <div className="absolute left-0 top-full mt-1 hidden group-hover/price:flex flex-col items-start z-30 pointer-events-none animate-fadeIn">
-                            {/* Tooltip Arrow pointing UP */}
-                            <div className="w-2 h-2 bg-[#0b0f15] border-l border-t border-cyan-500/50 rotate-45 ml-3 -mb-1 z-10"></div>
-                            <div className="bg-[#0b0f15] border border-cyan-500/50 text-cyan-300 text-[11px] font-bold font-mono px-2.5 py-1 rounded-lg shadow-2xl whitespace-nowrap flex items-center gap-1.5">
-                              <span className="text-slate-400 text-[10px] uppercase font-semibold">Renew:</span>
-                              <span className="text-cyan-400 font-bold">${parseFloat(item.renewal_price).toFixed(2)}</span>
-                            </div>
-                          </div>
-                        )}
                       </div>
                       <button
                         onClick={() => handlePurchase(item)}
@@ -494,7 +514,7 @@ const Donate = () => {
                     )}
                     <p className="text-slate-400 text-xs mt-0.5">
                       Unit Price: <span className="text-emerald-400 font-bold">
-                        ${((orderType === 'renewal' && purchaseModal.renewal_price && parseFloat(purchaseModal.renewal_price) > 0) ? parseFloat(purchaseModal.renewal_price) : parseFloat(purchaseModal.price)).toFixed(2)}
+                        ${parseFloat(purchaseModal.price).toFixed(2)}
                       </span>
                     </p>
                   </div>
@@ -536,37 +556,6 @@ const Donate = () => {
                   />
                 </div>
 
-                {/* Order Type Selection in Modal */}
-                {purchaseModal.renewal_price && parseFloat(purchaseModal.renewal_price) > 0 && (
-                  <div className="flex flex-col gap-1.5 mb-3.5">
-                    <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Purchase Option *</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setOrderType('new')}
-                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                          orderType === 'new'
-                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-md'
-                            : 'bg-[#080d13] border-slate-800 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        New (${parseFloat(purchaseModal.price).toFixed(2)})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOrderType('renewal')}
-                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                          orderType === 'renewal'
-                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-md'
-                            : 'bg-[#080d13] border-slate-800 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Renewal (${parseFloat(purchaseModal.renewal_price).toFixed(2)})
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-3 items-center">
                   <div className="flex flex-col gap-1">
                     <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Quantity *</label>
@@ -582,7 +571,7 @@ const Donate = () => {
                   <div className="flex flex-col justify-end text-right">
                     <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Amount</span>
                     <span className="text-emerald-400 font-black text-xl">
-                      ${(((orderType === 'renewal' && purchaseModal.renewal_price && parseFloat(purchaseModal.renewal_price) > 0) ? parseFloat(purchaseModal.renewal_price) : parseFloat(purchaseModal.price)) * Math.max(1, parseInt(quantity) || 1)).toFixed(2)}
+                      ${(parseFloat(purchaseModal.price) * Math.max(1, parseInt(quantity) || 1)).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -670,58 +659,15 @@ const Donate = () => {
                   )}
                   <h2 className="text-white font-black text-2xl tracking-wide">{itemDetailModal.name}</h2>
                   
-                  {/* Price display with optional renewal */}
-                  <div className="flex items-center justify-center sm:justify-start gap-4 pt-1 flex-wrap">
-                    <div>
-                      <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider block">First Purchase</span>
-                      <span className="text-emerald-400 font-black text-2xl">
-                        ${parseFloat(itemDetailModal.price).toFixed(2)}
-                      </span>
-                    </div>
-                    {itemDetailModal.renewal_price && parseFloat(itemDetailModal.renewal_price) > 0 && (
-                      <div className="border-l border-slate-800 pl-4">
-                        <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider block">Renewal Price</span>
-                        <span className="text-cyan-400 font-black text-2xl">
-                          ${parseFloat(itemDetailModal.renewal_price).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
+                  {/* Price display */}
+                  <div className="pt-1">
+                    <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider block">Price</span>
+                    <span className="text-emerald-400 font-black text-2xl">
+                      ${parseFloat(itemDetailModal.price).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
-
-              {/* Order Type Selection in Details Modal if renewal price exists */}
-              {itemDetailModal.renewal_price && parseFloat(itemDetailModal.renewal_price) > 0 && (
-                <div className="bg-[#080d13] border border-slate-800 rounded-xl p-3.5 space-y-2">
-                  <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block">Select Purchase Option</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setOrderType('new')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        orderType === 'new'
-                          ? 'bg-cyan-500/15 border-cyan-500 text-white shadow-lg shadow-cyan-500/10'
-                          : 'bg-[#0b0f15] border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <span className="block font-bold text-xs uppercase text-slate-300">New Purchase</span>
-                      <span className="text-emerald-400 font-black text-lg mt-0.5 block">${parseFloat(itemDetailModal.price).toFixed(2)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOrderType('renewal')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        orderType === 'renewal'
-                          ? 'bg-cyan-500/15 border-cyan-500 text-white shadow-lg shadow-cyan-500/10'
-                          : 'bg-[#0b0f15] border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <span className="block font-bold text-xs uppercase text-slate-300">Renewal Order</span>
-                      <span className="text-cyan-400 font-black text-lg mt-0.5 block">${parseFloat(itemDetailModal.renewal_price).toFixed(2)}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Description Box (Only rendered if description exists) */}
               {itemDetailModal.description && (
@@ -745,7 +691,7 @@ const Donate = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handlePurchase(itemDetailModal, orderType)}
+                onClick={() => handlePurchase(itemDetailModal)}
                 className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-95"
               >
                 <HiShoppingCart size={15} />
