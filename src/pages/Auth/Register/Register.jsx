@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
 const Register = () => {
-    console.log("Current Turnstile Site Key:", TURNSTILE_SITE_KEY);
     const { register, handleSubmit, formState: { errors }, watch } = useForm();
     const { publicRegister, sendOtp } = useAuth();
     const [step, setStep] = useState(1); // Step 1: Info, Step 2: OTP
