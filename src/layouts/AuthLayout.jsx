@@ -4,9 +4,9 @@ import { Link, Outlet } from 'react-router';
 const AuthLayout = () => {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-[#0a0f14]">
-            <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 relative">
-                <Link to="/" className="absolute top-8 left-8"> 
-                    <img src="/logo.png" alt="logo" className="w-16 h-16 hover:opacity-80 transition-opacity" />
+            <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-4 sm:p-8 lg:p-16 relative min-h-screen py-8">
+                <Link to="/" className="md:absolute md:top-8 md:left-8 mb-6 md:mb-0 flex justify-center"> 
+                    <img src="/logonobg.png" alt="logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain hover:opacity-80 transition-opacity drop-shadow-md" />
                 </Link>
 
                 <div className="w-full max-w-md">

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   MdAdd, MdEdit, MdDelete, MdCategory, MdStore, MdClose,
-  MdImage, MdSave, MdVisibility, MdVisibilityOff, MdHelpOutline
+  MdImage, MdSave, MdVisibility, MdVisibilityOff, MdHelpOutline, MdDragIndicator
 } from 'react-icons/md';
 import { HiTag } from 'react-icons/hi';
 
@@ -43,6 +43,10 @@ const DonateManager = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Drag & drop state
+  const [draggedCatIndex, setDraggedCatIndex] = useState(null);
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+
   // Category form
   const [showCatForm, setShowCatForm] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
@@ -80,6 +84,79 @@ const DonateManager = () => {
       setItems(data);
     } catch { /* silent */ }
     setLoading(false);
+  };
+
+  // ─── Drag & Drop Reorder Handlers ─────────────────
+  const handleCatDragStart = (e, index) => {
+    setDraggedCatIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCatDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedCatIndex === null || draggedCatIndex === index) return;
+    const newCategories = [...categories];
+    const draggedCat = newCategories[draggedCatIndex];
+    newCategories.splice(draggedCatIndex, 1);
+    newCategories.splice(index, 0, draggedCat);
+    setDraggedCatIndex(index);
+    setCategories(newCategories);
+  };
+
+  const handleCatDragEnd = async () => {
+    setDraggedCatIndex(null);
+    const reordered = categories.map((cat, idx) => ({ id: cat.id, sort_order: idx }));
+    try {
+      const res = await fetch(`${BASE_URL}/donate-categories-reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ orders: reordered })
+      });
+      if (res.ok) {
+        toast.success('Categories order saved!');
+      } else {
+        toast.error('Failed to save category order');
+      }
+    } catch {
+      toast.error('Network error while reordering');
+    }
+  };
+
+  const handleItemDragStart = (e, index) => {
+    setDraggedItemIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleItemDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    const newItems = [...items];
+    const draggedItem = newItems[draggedItemIndex];
+    newItems.splice(draggedItemIndex, 1);
+    newItems.splice(index, 0, draggedItem);
+    setDraggedItemIndex(index);
+    setItems(newItems);
+  };
+
+  const handleItemDragEnd = async () => {
+    setDraggedItemIndex(null);
+    const reordered = items.map((item, idx) => ({ id: item.id, sort_order: idx }));
+    try {
+      const res = await fetch(`${BASE_URL}/donate-items-reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ orders: reordered })
+      });
+      if (res.ok) {
+        toast.success('Items order saved!');
+      } else {
+        toast.error('Failed to save item order');
+      }
+    } catch {
+      toast.error('Network error while reordering');
+    }
   };
 
   // ─── Category CRUD ──────────────────────────────
@@ -247,7 +324,7 @@ const DonateManager = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-wider">Donate Shop</h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-wider">Shop</h2>
           <p className="text-slate-400 text-sm mt-1">Manage categories and shop items</p>
         </div>
       </div>
@@ -320,9 +397,26 @@ const DonateManager = () => {
 
           {/* Categories list */}
           <div className="space-y-2">
-            {categories.map(cat => (
-              <div key={cat.id} className="flex items-center justify-between bg-[#0d1117] border border-slate-800 rounded-xl px-5 py-4 hover:border-slate-700 transition-colors">
+            <p className="text-slate-500 text-xs mb-3 flex items-center gap-1.5 font-medium">
+              💡 Drag & drop category cards to change their display order.
+            </p>
+            {categories.map((cat, idx) => (
+              <div
+                key={cat.id}
+                draggable
+                onDragStart={(e) => handleCatDragStart(e, idx)}
+                onDragOver={(e) => handleCatDragOver(e, idx)}
+                onDragEnd={handleCatDragEnd}
+                className={`flex items-center justify-between bg-[#0d1117] border rounded-xl px-5 py-4 transition-all ${
+                  draggedCatIndex === idx
+                    ? 'border-cyan-500 bg-cyan-950/20 opacity-70 shadow-lg scale-[1.01]'
+                    : 'border-slate-800 hover:border-slate-700'
+                }`}
+              >
                 <div className="flex items-center gap-3">
+                  <div className="text-slate-600 hover:text-cyan-400 transition-colors p-1 cursor-grab active:cursor-grabbing">
+                    <MdDragIndicator size={20} />
+                  </div>
                   <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
                     <HiTag className="text-cyan-400" size={16} />
                   </div>
@@ -454,11 +548,28 @@ const DonateManager = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {items.map(item => (
-                <div key={item.id} className={`flex items-center justify-between bg-[#0d1117] border rounded-xl px-5 py-4 transition-colors ${
-                  item.is_active ? 'border-slate-800 hover:border-slate-700' : 'border-slate-800/50 opacity-60'
-                }`}>
+              <p className="text-slate-500 text-xs mb-3 flex items-center gap-1.5 font-medium">
+                💡 Drag & drop item cards to change their display order.
+              </p>
+              {items.map((item, idx) => (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={(e) => handleItemDragStart(e, idx)}
+                  onDragOver={(e) => handleItemDragOver(e, idx)}
+                  onDragEnd={handleItemDragEnd}
+                  className={`flex items-center justify-between bg-[#0d1117] border rounded-xl px-5 py-4 transition-all ${
+                    draggedItemIndex === idx
+                      ? 'border-cyan-500 bg-cyan-950/20 opacity-70 shadow-lg scale-[1.01]'
+                      : item.is_active
+                      ? 'border-slate-800 hover:border-slate-700'
+                      : 'border-slate-800/50 opacity-60'
+                  }`}
+                >
                   <div className="flex items-center gap-4">
+                    <div className="text-slate-600 hover:text-cyan-400 transition-colors p-1 cursor-grab active:cursor-grabbing">
+                      <MdDragIndicator size={20} />
+                    </div>
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-contain p-1 border border-slate-700 bg-[#080d13]" />
                     ) : (
@@ -471,7 +582,10 @@ const DonateManager = () => {
                         {item.name}
                         {!item.is_active && <span className="text-[10px] bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded font-mono">HIDDEN</span>}
                       </h4>
-                      <p className="text-slate-500 text-xs flex items-center gap-2">
+                      {item.description && (
+                        <p className="text-slate-400 text-xs mt-1 whitespace-pre-line leading-relaxed">{item.description}</p>
+                      )}
+                      <p className="text-slate-500 text-xs flex items-center gap-2 mt-1">
                         <span className="text-cyan-400">{item.category_name}</span>
                         <span>•</span>
                         <span className="text-emerald-400 font-bold">${parseFloat(item.price).toFixed(2)}</span>

@@ -19,7 +19,6 @@ const Register = () => {
     const [registeredData, setRegisteredData] = useState(null);
     const [countdown, setCountdown] = useState(60);
     const [canResend, setCanResend] = useState(false);
-    const [devOtpHint, setDevOtpHint] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -82,9 +81,6 @@ const Register = () => {
             setStep(2);
             setCountdown(60);
             setCanResend(false);
-            if (res.devOtp) {
-                setDevOtpHint(res.devOtp);
-            }
             toast.success('OTP code sent to your email!');
         } catch (error) {
             setServerError(error.message || 'Failed to send OTP code.');
@@ -127,9 +123,6 @@ const Register = () => {
             const res = await sendOtp(registeredData.email);
             setCountdown(60);
             setCanResend(false);
-            if (res.devOtp) {
-                setDevOtpHint(res.devOtp);
-            }
             toast.success('New OTP code sent!');
         } catch (error) {
             setServerError(error.message || 'Failed to resend OTP.');
@@ -148,7 +141,7 @@ const Register = () => {
                         <p className="text-slate-400 text-xs mt-1">Join the Paraiso Gaming community</p>
                     </div>
 
-                    <fieldset className="fieldset w-full space-y-4">
+                    <fieldset className="fieldset w-full space-y-3.5">
                         {/* Username Field */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-slate-300 font-bold text-xs uppercase tracking-wider">Username</label>
@@ -213,7 +206,9 @@ const Register = () => {
                         </div>
 
                         {/* Turnstile Bot Protection Widget */}
-                        <div id="turnstile-widget" className="flex justify-center my-2 min-h-[65px]" />
+                        <div className="flex justify-center items-center overflow-hidden h-[65px] rounded-xl my-1">
+                            <div id="turnstile-widget" className="flex justify-center empty:hidden h-[65px] overflow-hidden" />
+                        </div>
 
                         {/* Server Error */}
                         {serverError && (
@@ -257,13 +252,6 @@ const Register = () => {
                             We sent a 6-digit OTP code to <strong className="text-cyan-400 font-mono">{registeredData?.email}</strong>
                         </p>
                     </div>
-
-                    {devOtpHint && (
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-center">
-                            <p className="text-amber-400 text-xs font-bold">DEV MODE OTP CODE:</p>
-                            <p className="text-white text-lg font-mono font-black tracking-widest mt-0.5">{devOtpHint}</p>
-                        </div>
-                    )}
 
                     <div className="flex flex-col gap-2">
                         <label className="text-slate-300 font-bold text-xs uppercase tracking-wider text-center">Enter 6-Digit OTP Code</label>

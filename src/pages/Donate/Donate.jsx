@@ -15,6 +15,7 @@ const Donate = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchaseModal, setPurchaseModal] = useState(null);
+  const [itemDetailModal, setItemDetailModal] = useState(null);
   const [ingameName, setIngameName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -56,26 +57,32 @@ const Donate = () => {
     setLoading(false);
   };
 
+  const openItemDetail = (item) => {
+    setItemDetailModal(item);
+  };
+
   const handlePurchase = (item) => {
     if (!user) {
       navigate('/login', { state: { from: location } });
       return;
     }
     setPurchaseModal(item);
+    setItemDetailModal(null);
     setIngameName('');
     setDiscordUsername('');
     setQuantity(1);
   };
 
-  const confirmPurchase = async (e) => {
+  const confirmPurchase = async (e, customItem = null) => {
     if (e) e.preventDefault();
-    if (!purchaseModal) return;
+    const targetItem = customItem || itemDetailModal || purchaseModal;
+    if (!targetItem) return;
     const nameTrimmed = ingameName.trim();
-    if (!nameTrimmed) return toast.error('Please enter your Ingame Name.');
+    if (!nameTrimmed) return;
     if (!nameTrimmed.includes('_') || nameTrimmed.startsWith('_') || nameTrimmed.endsWith('_')) {
-      return toast.error('Ingame Name must be in Firstname_Lastname format (e.g. Joe_Doe)');
+      return;
     }
-    if (!discordUsername.trim()) return toast.error('Please enter your Discord Username.');
+    if (!discordUsername.trim()) return;
 
     setPurchasing(true);
     try {
@@ -84,7 +91,7 @@ const Donate = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          item_id: purchaseModal.id,
+          item_id: targetItem.id,
           ingame_name: ingameName.trim(),
           discord_username: discordUsername.trim(),
           quantity: Math.max(1, parseInt(quantity) || 1),
@@ -92,8 +99,9 @@ const Donate = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccessModal({ ticketId: data.id, item: purchaseModal, quantity: Math.max(1, parseInt(quantity) || 1) });
+        setSuccessModal({ ticketId: data.id, item: targetItem, quantity: Math.max(1, parseInt(quantity) || 1) });
         setPurchaseModal(null);
+        setItemDetailModal(null);
       } else {
         alert(data.message || 'Failed to create ticket');
       }
@@ -246,7 +254,7 @@ const Donate = () => {
                 <p className="text-slate-600 text-sm mt-1">Check back later for new items!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
                 {sortedItems.map((item, idx) => (
                   <div
                     key={item.id}
@@ -254,7 +262,11 @@ const Donate = () => {
                     style={{ animationDelay: `${idx * 60}ms` }}
                   >
                     {/* Inner Image Container matching reference */}
-                    <div className="relative w-full max-w-[210px] aspect-square mx-auto rounded-lg overflow-hidden bg-[#080d13] mb-4 flex items-center justify-center border border-slate-800">
+                    <div 
+                      onClick={() => openItemDetail(item)}
+                      className="relative w-full max-w-[210px] aspect-square mx-auto rounded-lg overflow-hidden bg-[#080d13] mb-4 flex items-center justify-center border border-slate-800 cursor-pointer group-hover:border-cyan-500/50 transition-all"
+                      title="Click to view details"
+                    >
                       {item.image_url ? (
                         <img
                           src={item.image_url}
@@ -275,12 +287,15 @@ const Donate = () => {
                       )}
                     </div>
 
-                    {/* Title & Description */}
+                    {/* Title */}
                     <div className="mb-3">
-                      <h3 className="text-white font-bold text-base line-clamp-1">{item.name}</h3>
-                      {item.description && (
-                        <p className="text-slate-400 text-xs mt-0.5 line-clamp-2">{item.description}</p>
-                      )}
+                      <h3 
+                        onClick={() => openItemDetail(item)}
+                        className="text-white font-bold text-base line-clamp-1 hover:text-cyan-400 hover:underline cursor-pointer transition-colors inline-block"
+                        title="Click to view details"
+                      >
+                        {item.name}
+                      </h3>
                     </div>
 
                     {/* Price & Purchase Button Row */}
@@ -306,10 +321,10 @@ const Donate = () => {
 
       {/* ── PURCHASE CONFIRMATION MODAL ── */}
       {purchaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500"></div>
-            <div className="p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 shrink-0"></div>
+            <div className="p-6 overflow-y-auto flex-1">
               {/* Header */}
               <div className="flex items-start justify-between mb-5">
                 <div className="flex items-center gap-3">
@@ -318,7 +333,6 @@ const Donate = () => {
                   </div>
                   <div>
                     <h3 className="text-white font-bold uppercase tracking-wider text-sm">Confirm Purchase</h3>
-                    <p className="text-slate-500 text-xs mt-0.5">A support ticket will be created</p>
                   </div>
                 </div>
                 <button onClick={() => setPurchaseModal(null)} className="text-slate-500 hover:text-white transition-colors">
@@ -429,6 +443,94 @@ const Donate = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ITEM DETAIL MODAL ── */}
+      {itemDetailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-lg bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Top Accent Line */}
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-cyan-500 shrink-0"></div>
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-[#0d1117] shrink-0">
+              <div className="flex items-center gap-2">
+                <HiTag className="text-cyan-400" size={18} />
+                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Item Details</h3>
+              </div>
+              <button
+                onClick={() => setItemDetailModal(null)}
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <HiX size={20} />
+              </button>
+            </div>
+
+            {/* Modal Content Body (Scrollable) */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-5">
+              {/* Image & Main Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+                {/* Left: Image */}
+                <div className="sm:col-span-5 flex justify-center">
+                  <div className="w-full aspect-square max-w-[180px] rounded-xl bg-[#080d13] border border-slate-800 p-3 flex items-center justify-center shadow-inner">
+                    {itemDetailModal.image_url ? (
+                      <img
+                        src={itemDetailModal.image_url}
+                        alt={itemDetailModal.name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <MdStorefront className="text-slate-700" size={60} />
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Title, Category & Price */}
+                <div className="sm:col-span-7 space-y-2 text-center sm:text-left">
+                  {itemDetailModal.category_name && (
+                    <span className="inline-flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                      <HiTag size={12} />
+                      {itemDetailModal.category_name}
+                    </span>
+                  )}
+                  <h2 className="text-white font-black text-2xl tracking-wide">{itemDetailModal.name}</h2>
+                  <p className="text-emerald-400 font-black text-2xl">
+                    ${parseFloat(itemDetailModal.price).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description Box (Only rendered if description exists) */}
+              {itemDetailModal.description && (
+                <div className="pt-2">
+                  <h4 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1.5">Description</h4>
+                  <div className="bg-[#080d13] border border-slate-800 rounded-xl p-3.5 text-slate-300 text-xs sm:text-sm whitespace-pre-line leading-relaxed max-h-40 overflow-y-auto">
+                    {itemDetailModal.description}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons Footer (Pinned at bottom) */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800/80 bg-[#0d1117] shrink-0">
+              <button
+                type="button"
+                onClick={() => setItemDetailModal(null)}
+                className="px-4 py-2.5 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePurchase(itemDetailModal)}
+                className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-95"
+              >
+                <HiShoppingCart size={15} />
+                Purchase Item
+              </button>
             </div>
           </div>
         </div>

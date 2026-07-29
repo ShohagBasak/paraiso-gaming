@@ -297,7 +297,7 @@ const HelperRoster = () => {
                             {/* Description */}
                             {member.description && (
                               <p
-                                className="text-xs leading-relaxed"
+                                className="text-xs leading-relaxed whitespace-pre-line"
                                 style={{ color: 'rgba(203,213,225,0.65)' }}
                               >
                                 {member.description}

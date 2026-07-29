@@ -93,8 +93,8 @@ const ALL_SECTIONS = [
     {
         key: 'donate',
         to: '/dashboard/donate',
-        label: 'Donate Items',
-        actionLabel: 'Donate Shop',
+        label: 'Shop Items',
+        actionLabel: 'Shop',
         icon: <MdStore className="text-indigo-400" size={24} />,
         actionIcon: <MdStore size={16} />,
         color: 'bg-indigo-500/10',
