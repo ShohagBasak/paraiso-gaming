@@ -1,15 +1,34 @@
+# Disable MultiViews to prevent Apache route conflicts
+Options -MultiViews
+
+# Ensure correct MIME Types
 <IfModule mod_mime.c>
   AddType text/css .css
-  AddType application/javascript .js
+  AddType application/javascript .js .mjs
   AddType image/svg+xml .svg
   AddType image/webp .webp
+  AddType font/woff2 .woff2
 </IfModule>
 
+# Enable CORS Headers for Assets
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# SPA Routing & Asset Rules
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+
+  # 1. Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Never rewrite real existing files or directories (assets, css, js, images)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Fallback all React client SPA routes to index.html
+  RewriteRule ^ index.html [L]
 </IfModule>
