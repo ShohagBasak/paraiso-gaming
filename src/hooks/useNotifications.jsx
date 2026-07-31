@@ -80,6 +80,23 @@ const useNotifications = () => {
         ), { id: `notif-${notif.id}`, duration: 5000 });
       });
 
+      socket.on('ticket-deleted', (data) => {
+        const deletedId = data?.id;
+        if (deletedId) {
+          setNotifications(prev =>
+            prev.filter(n => {
+              const linkMatch = n.link && (
+                n.link.includes(`id=${deletedId}`) ||
+                n.link.includes(`/my-tickets/${deletedId}`)
+              );
+              const titleMatch = n.title && n.title.includes(`#${deletedId}`);
+              return !(linkMatch || titleMatch);
+            })
+          );
+          fetchNotifications();
+        }
+      });
+
       return () => {
         socket.disconnect();
       };

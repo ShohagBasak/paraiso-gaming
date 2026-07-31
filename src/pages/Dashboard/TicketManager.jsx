@@ -98,6 +98,21 @@ const TicketManager = () => {
 
       socket.on('new-ticket', () => { fetchTickets(); });
       socket.on('ticket-updated', () => { fetchTickets(); });
+      socket.on('ticket-deleted', (data) => {
+        fetchTickets();
+        if (data?.id) {
+          setSelectedTicket(prev => {
+            if (prev == data.id) {
+              setTicketDetail(null);
+              setMessages([]);
+              setSearchParams({}, { replace: true });
+              toast.error('This ticket has been deleted');
+              return null;
+            }
+            return prev;
+          });
+        }
+      });
 
       return () => { socket.disconnect(); };
     }
@@ -171,16 +186,34 @@ const TicketManager = () => {
     try {
       const res = await fetch(`${BASE_URL}/tickets/${id}`, { credentials: 'include' });
       const data = await res.json();
-      setTicketDetail(data);
-    } catch { /* silent */ }
+      if (res.ok) {
+        setTicketDetail(data);
+      } else {
+        setTicketDetail(null);
+        setSelectedTicket(null);
+        setMessages([]);
+        setSearchParams({}, { replace: true });
+        toast.error(data.message || 'Ticket not found or has been deleted');
+      }
+    } catch {
+      setTicketDetail(null);
+      setSelectedTicket(null);
+      setMessages([]);
+    }
   };
 
   const fetchMessages = async (id) => {
     try {
       const res = await fetch(`${BASE_URL}/tickets/${id}/messages`, { credentials: 'include' });
       const data = await res.json();
-      setMessages(data);
-    } catch { /* silent */ }
+      if (res.ok && Array.isArray(data)) {
+        setMessages(data);
+      } else {
+        setMessages([]);
+      }
+    } catch {
+      setMessages([]);
+    }
   };
 
   const handleSendMessage = async (e) => {
@@ -308,7 +341,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
 --- CHAT MESSAGES LOG ---
 `;
 
-    const body = messages.map(m => {
+    const body = (Array.isArray(messages) ? messages : []).map(m => {
       const time = new Date(m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       const sender = (m.sender_role === 'master' || m.sender_role === 'admin') ? `${m.sender_name} [STAFF]` : m.sender_name;
       return `[${time}] ${sender}:\n${m.message}`;
@@ -493,7 +526,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
 
               {/* Messages */}
               <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
-                {messages.map(msg => {
+                {(Array.isArray(messages) ? messages : []).map(msg => {
                   const isAdmin = msg.sender_role === 'admin' || msg.sender_role === 'master';
                   const isMe = msg.sender_id === user?.id;
                   return (

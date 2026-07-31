@@ -88,9 +88,11 @@ const TicketChat = () => {
       const res = await fetch(`${BASE_URL}/tickets/${id}/messages`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        setMessages(data);
+        setMessages(Array.isArray(data) ? data : []);
+      } else {
+        setMessages([]);
       }
-    } catch { /* silent */ }
+    } catch { setMessages([]); }
   };
 
   const handleSendMessage = async (e) => {
@@ -209,13 +211,13 @@ const TicketChat = () => {
 
         {/* Messages */}
         <div ref={chatContainerRef} className="flex-1 bg-[#080d13] border-x border-slate-800 overflow-y-auto p-3 sm:p-5 space-y-3">
-          {messages.length === 0 && (
+          {(!Array.isArray(messages) || messages.length === 0) && (
             <div className="text-center py-12">
               <HiShoppingCart className="text-slate-800 mx-auto mb-3" size={40} />
               <p className="text-slate-600 text-sm">No messages yet. Start the conversation!</p>
             </div>
           )}
-          {messages.map(msg => {
+          {(Array.isArray(messages) ? messages : []).map(msg => {
             const isAdmin = msg.sender_role === 'admin' || msg.sender_role === 'master';
             const isMe = msg.sender_id === user?.id;
             return (
