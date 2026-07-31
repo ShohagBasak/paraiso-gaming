@@ -100,7 +100,7 @@ const HomeTwo = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <FaServer className="text-cyan-500" />
-                  <span className='text-cyan-500'>Samp</span> Server
+                  <span className='text-cyan-500'>SAMP</span> SERVER
                 </h3>
                 {getStatusBadge(serverInfo.status || 'online')}
               </div>
