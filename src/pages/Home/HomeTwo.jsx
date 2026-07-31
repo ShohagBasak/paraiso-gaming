@@ -1,16 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SwiperBanner from './SwiperBanner';
 import FeaturesSlider from './FeaturesSlider';
-import { FaServer, FaDiscord } from 'react-icons/fa';
+import { FaServer, FaGamepad } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
+
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const HomeTwo = () => {
   const [copied, setCopied] = useState(false);
-  const serverIP = "Coming Soon";
+  const [serverInfo, setServerInfo] = useState({
+    server_ip: 'Coming Soon...',
+    discord_url: 'https://discord.gg/7AsJaG3KSV',
+    status: 'online'
+  });
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/server-info`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.server_ip) {
+          setServerInfo(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCopyIP = () => {
-    navigator.clipboard.writeText(serverIP);
+    const ipToCopy = serverInfo.server_ip || 'Coming Soon...';
+    navigator.clipboard.writeText(ipToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getStatusBadge = (st) => {
+    switch (st) {
+      case 'online':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Online
+          </span>
+        );
+      case 'offline':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/30 text-red-400">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            Offline
+          </span>
+        );
+      case 'maintenance':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            Maintenance
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleConnectClick = (e) => {
+    const currentStatus = serverInfo.status || 'online';
+    if (currentStatus === 'offline') {
+      e.preventDefault();
+      toast.error('Server is currently offline!');
+      return;
+    }
+    if (currentStatus === 'maintenance') {
+      e.preventDefault();
+      toast.error('Server is currently under maintenance!');
+      return;
+    }
+    if (!serverInfo.server_ip || serverInfo.server_ip === 'Coming Soon...') {
+      e.preventDefault();
+      toast.error('Server IP is coming soon!');
+      return;
+    }
   };
 
   return (
@@ -31,10 +97,13 @@ const HomeTwo = () => {
             
             {/* Status Card */}
             <div className="w-full bg-[#0d1219] border border-[#1e293b] rounded-2xl p-5 shadow-xl">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <FaServer className="text-cyan-500" />
-                <span className='text-cyan-500'>Paraiso</span> Gaming Server
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <FaServer className="text-cyan-500" />
+                  <span className='text-cyan-500'>Samp</span> Server
+                </h3>
+                {getStatusBadge(serverInfo.status || 'online')}
+              </div>
 
               <div onClick={handleCopyIP} className="flex items-center justify-between bg-black/40 p-4 rounded-lg cursor-pointer border border-[#1e293b] hover:border-cyan-500/50 transition-colors mb-4 group">
                 <div>
@@ -42,13 +111,28 @@ const HomeTwo = () => {
                     {copied ? 'IP Copied!' : 'Click to Copy IP'}
                   </p>
                   <p className={`font-mono font-bold text-sm ${copied ? 'text-green-400' : 'text-cyan-400'}`}>
-                    Coming Soon...
+                    {serverInfo.server_ip || 'Coming Soon...'}
                   </p>
                 </div>
               </div>
 
-              <a href="https://discord.gg/7AsJaG3KSV" target="_blank" rel="noreferrer" className="w-full py-3 bg-[#5865F2] hover:bg-[#4752C4] rounded-lg text-white transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest font-bold">
-                <FaDiscord className="text-xl" /> Join Community
+              <a
+                href={serverInfo.server_ip && serverInfo.server_ip !== 'Coming Soon...' ? `samp://${serverInfo.server_ip}` : '#'}
+                onClick={handleConnectClick}
+                className={`w-full py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest font-black shadow-lg cursor-pointer ${
+                  serverInfo.status === 'offline'
+                    ? 'bg-red-500/20 border border-red-500/40 text-red-400'
+                    : serverInfo.status === 'maintenance'
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20'
+                }`}
+              >
+                <FaGamepad className="text-xl" />
+                {serverInfo.status === 'offline'
+                  ? 'Server Offline'
+                  : serverInfo.status === 'maintenance'
+                  ? 'Under Maintenance'
+                  : 'Connect to Server'}
               </a>
             </div>
 

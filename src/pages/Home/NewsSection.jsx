@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCopy, FaCheck, FaDiscord, FaServer } from 'react-icons/fa';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const NewsSection = () => {
   // IP Copy korar state control
   const [copied, setCopied] = useState(false);
-  const serverIP = "play.paraiso-rp.com:7777"; 
+  const [serverIP, setServerIP] = useState("Coming Soon...");
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/server-info`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.server_ip) setServerIP(data.server_ip);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCopyIP = () => {
     navigator.clipboard.writeText(serverIP);

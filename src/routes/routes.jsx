@@ -29,6 +29,7 @@ import ChainOfCommandManager from '../pages/Dashboard/ChainOfCommandManager';
 import CreateUserManager from '../pages/Dashboard/CreateUserManager';
 import DonateManager from '../pages/Dashboard/DonateManager';
 import TicketManager from '../pages/Dashboard/TicketManager';
+import ServerSettingsManager from '../pages/Dashboard/ServerSettingsManager';
 import MyTickets from '../pages/Tickets/MyTickets';
 import TicketChat from '../pages/Tickets/TicketChat';
 
@@ -112,6 +113,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Dashboard /> },
+      { path: 'server-settings', element: <ServerSettingsManager /> },
       { path: 'banners', element: <PermissionGuard permission="banners"><BannerManager /></PermissionGuard> },
       { path: 'announcements', element: <PermissionGuard permission="announcements"><AnnouncementManager /></PermissionGuard> },
       { path: 'users', element: <PermissionGuard permission="users"><UserManager /></PermissionGuard> },
