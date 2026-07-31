@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, useRef } from 'react';
+import { useSearchParams } from 'react-router';
 import { toast } from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
@@ -49,6 +50,7 @@ const DeleteConfirmModal = ({ isOpen, ticketId, onConfirm, onCancel }) => {
 
 const TicketManager = () => {
   const { user } = useContext(AuthContext);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
@@ -63,6 +65,26 @@ const TicketManager = () => {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // Auto select ticket from URL search param (e.g. ?id=15 or ?ticketId=15)
+  useEffect(() => {
+    const urlTicketId = searchParams.get('id') || searchParams.get('ticketId');
+    if (urlTicketId) {
+      const parsedId = parseInt(urlTicketId, 10);
+      if (!isNaN(parsedId)) {
+        setSelectedTicket(parsedId);
+      }
+    }
+  }, [searchParams]);
+
+  const handleSelectTicket = (id) => {
+    setSelectedTicket(id);
+    if (id) {
+      setSearchParams({ id }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   useEffect(() => {
     fetchTickets();
@@ -256,7 +278,7 @@ const TicketManager = () => {
         toast.success('Ticket deleted successfully!');
         setShowDeleteModal(false);
         if (selectedTicket === ticketId) {
-          setSelectedTicket(null);
+          handleSelectTicket(null);
           setTicketDetail(null);
           setMessages([]);
         }
@@ -361,7 +383,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                 return (
                   <button
                     key={ticket.id}
-                    onClick={() => setSelectedTicket(ticket.id)}
+                    onClick={() => handleSelectTicket(ticket.id)}
                     className={`w-full text-left px-4 py-3.5 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors ${
                       selectedTicket === ticket.id ? 'bg-cyan-500/5 border-l-2 border-l-cyan-500' : ''
                     }`}
@@ -398,7 +420,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
               <div className="p-2.5 sm:p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 flex-shrink-0 relative">
                 <div className="flex items-center gap-2 sm:gap-3 pr-6 sm:pr-0">
                   <button 
-                    onClick={() => setSelectedTicket(null)}
+                    onClick={() => handleSelectTicket(null)}
                     className="md:hidden p-1 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all flex-shrink-0"
                     title="Back to ticket list"
                   >
@@ -410,9 +432,16 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                   <div className="min-w-0 flex-1">
                     <h3 className="text-white font-bold text-xs sm:text-sm flex flex-wrap items-center gap-1.5 sm:gap-2">
                       Ticket #{ticketDetail.id}
-                      <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md border ${statusConfig[ticketDetail.status]?.bg} ${statusConfig[ticketDetail.status]?.color}`}>
-                        {statusConfig[ticketDetail.status]?.label}
-                      </span>
+                      {ticketDetail.admin_name ? (
+                        <span className="text-[10px] text-cyan-400 font-medium bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                          Claimed by <strong className="text-white font-bold">{ticketDetail.admin_name}</strong>
+                        </span>
+                      ) : (
+                        <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md border ${statusConfig[ticketDetail.status]?.bg} ${statusConfig[ticketDetail.status]?.color}`}>
+                          {statusConfig[ticketDetail.status]?.label}
+                        </span>
+                      )}
                     </h3>
                     <p className="text-slate-400 text-[10px] sm:text-xs mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                       <span>Item: <strong className="text-white">{ticketDetail.item_name}</strong> (x{ticketDetail.quantity || 1})</span>
@@ -428,9 +457,11 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                       <button onClick={() => handleClaim(ticketDetail.id)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-cyan-500/20 transition-all">
                         Claim
                       </button>
-                      <button onClick={() => setShowAssignModal(true)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-purple-500/20 transition-all">
-                        Assign
-                      </button>
+                      {user?.role === 'master' && (
+                        <button onClick={() => setShowAssignModal(true)} className="px-2 py-0.5 sm:px-2.5 sm:py-1.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-purple-500/20 transition-all">
+                          Assign
+                        </button>
+                      )}
                     </>
                   )}
                   {ticketDetail.status !== 'closed' ? (
@@ -452,7 +483,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
 
                 {/* Top right close panel button */}
                 <button 
-                  onClick={() => { setSelectedTicket(null); setTicketDetail(null); setMessages([]); }} 
+                  onClick={() => { handleSelectTicket(null); setTicketDetail(null); setMessages([]); }} 
                   className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 p-1 text-slate-500 hover:text-white hover:bg-slate-800/80 rounded-lg transition-all"
                   title="Close panel"
                 >
@@ -490,7 +521,20 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
               </div>
 
               {/* Message input */}
-              {ticketDetail.status !== 'closed' ? (
+              {ticketDetail.status === 'open' ? (
+                <div className="p-4 border-t border-slate-800 text-center flex flex-col sm:flex-row items-center justify-center gap-3 bg-amber-500/5">
+                  <p className="text-amber-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    Ticket is open. You must Claim this ticket before sending messages.
+                  </p>
+                  <button
+                    onClick={() => handleClaim(ticketDetail.id)}
+                    className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-lg shadow-cyan-500/20"
+                  >
+                    Claim Ticket Now
+                  </button>
+                </div>
+              ) : ticketDetail.status === 'claimed' ? (
                 <form onSubmit={handleSendMessage} className="p-3 sm:px-5 sm:py-3.5 border-t border-slate-800">
                   <div className="flex items-center gap-3">
                     <textarea

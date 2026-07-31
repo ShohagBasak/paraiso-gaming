@@ -192,10 +192,17 @@ const TicketChat = () => {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-              <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border ${sc.bg} ${sc.color}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`}></span>
-                {sc.label}
-              </span>
+              {ticket.admin_name ? (
+                <span className="text-[10px] text-cyan-400 font-medium bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  Claimed by <strong className="text-white font-bold ml-0.5">{ticket.admin_name}</strong>
+                </span>
+              ) : (
+                <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border ${sc.bg} ${sc.color}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`}></span>
+                  {sc.label}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -239,29 +246,37 @@ const TicketChat = () => {
         {/* Input */}
         <div className="bg-[#0d1117] border border-slate-800 rounded-b-2xl p-3 sm:px-5 sm:py-3.5">
           {ticket.status !== 'closed' ? (
-            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-              <textarea
-                rows={1}
-                value={newMessage}
-                onChange={e => setNewMessage(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(e);
-                  }
-                }}
-                className="flex-1 px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all resize-none max-h-32 overflow-y-auto"
-                placeholder="Type a message..."
-                autoFocus
-              />
-              <button
-                type="submit"
-                disabled={sending || !newMessage.trim()}
-                className="p-2.5 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
-              >
-                <MdSend size={18} />
-              </button>
-            </form>
+            <>
+              {ticket.status === 'open' && (
+                <div className="mb-2 text-center text-amber-400/90 text-[11px] font-medium flex items-center justify-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  Your ticket is now open. A staff member will contact you soon.
+                </div>
+              )}
+              <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+                <textarea
+                  rows={1}
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-sm focus:outline-none transition-all resize-none max-h-32 overflow-y-auto"
+                  placeholder="Type a message..."
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={sending || !newMessage.trim()}
+                  className="p-2.5 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                >
+                  <MdSend size={18} />
+                </button>
+              </form>
+            </>
           ) : (
             <div className="text-center py-2 flex items-center justify-center gap-3">
               <p className="text-slate-500 text-xs">This ticket has been completed.</p>

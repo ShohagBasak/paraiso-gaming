@@ -35,7 +35,7 @@ const Root = () => {
       
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Toaster toastOptions={{ style: { background: '#0d1117', color: '#fff', border: '1px solid #1e293b' } }} />
+        <Toaster position="top-right" toastOptions={{ style: { background: '#0d1117', color: '#fff', border: '1px solid #1e293b' } }} />
         <Navbar />
         <main className="flex-grow">
           <Outlet />

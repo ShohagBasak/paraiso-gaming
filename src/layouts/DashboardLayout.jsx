@@ -8,6 +8,8 @@ import {
 import { FaGamepad } from 'react-icons/fa';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
+import NotificationDropdown from '../components/NotificationDropdown';
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const navItems = [
@@ -152,7 +154,7 @@ const DashboardLayout = () => {
 
     return (
         <div className="min-h-screen bg-[#080d13] flex">
-            <Toaster toastOptions={{ style: { background: '#0d1117', color: '#fff', border: '1px solid #1e293b' } }} />
+            <Toaster position="top-right" toastOptions={{ style: { background: '#0d1117', color: '#fff', border: '1px solid #1e293b' } }} />
             {/* Desktop Sidebar */}
             <div className="hidden md:flex flex-col fixed left-0 top-0 h-full w-64 z-40">
                 <Sidebar />
@@ -182,6 +184,7 @@ const DashboardLayout = () => {
                         Admin Dashboard
                     </h1>
                     <div className="flex items-center gap-3">
+                        <NotificationDropdown />
                         <Link
                             to="/"
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all duration-200"

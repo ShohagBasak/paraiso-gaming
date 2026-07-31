@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import { HiMenu, HiX, HiChevronDown } from 'react-icons/hi';
 import useAuth from '../hooks/useAuth';
+import NotificationDropdown from './NotificationDropdown';
 
 const Navbar = () => {
   const { user, logoutUser } = useAuth();
@@ -244,13 +245,17 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center gap-4 xl:gap-8">
               {renderLinks(navLinks, false)}
               {renderLinks(actionLinks, false)}
+              {user && <NotificationDropdown />}
             </div>
 
-            {!isOpen && (
-              <button className="lg:hidden text-cyan-400 bg-transparent border-none cursor-pointer" onClick={toggleMenu}>
-                <HiMenu size={24} />
-              </button>
-            )}
+            <div className="flex items-center gap-2 lg:hidden">
+              {user && <NotificationDropdown />}
+              {!isOpen && (
+                <button className="text-cyan-400 bg-transparent border-none cursor-pointer p-1" onClick={toggleMenu}>
+                  <HiMenu size={24} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </nav>
