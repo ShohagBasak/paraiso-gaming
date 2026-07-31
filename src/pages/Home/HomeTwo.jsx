@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SwiperBanner from './SwiperBanner';
 import FeaturesSlider from './FeaturesSlider';
-import { FaServer, FaGamepad } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
+import { FaServer } from 'react-icons/fa';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -60,25 +59,6 @@ const HomeTwo = () => {
     }
   };
 
-  const handleConnectClick = (e) => {
-    const currentStatus = serverInfo.status || 'online';
-    if (currentStatus === 'offline') {
-      e.preventDefault();
-      toast.error('Server is currently offline!');
-      return;
-    }
-    if (currentStatus === 'maintenance') {
-      e.preventDefault();
-      toast.error('Server is currently under maintenance!');
-      return;
-    }
-    if (!serverInfo.server_ip || serverInfo.server_ip === 'Coming Soon...') {
-      e.preventDefault();
-      toast.error('Server IP is coming soon!');
-      return;
-    }
-  };
-
   return (
     <div id="home-two" className="w-full px-4 sm:px-6 lg:px-8 my-4 md:my-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -105,7 +85,7 @@ const HomeTwo = () => {
                 {getStatusBadge(serverInfo.status || 'online')}
               </div>
 
-              <div onClick={handleCopyIP} className="flex items-center justify-between bg-black/40 p-4 rounded-lg cursor-pointer border border-[#1e293b] hover:border-cyan-500/50 transition-colors mb-4 group">
+              <div onClick={handleCopyIP} className="flex items-center justify-between bg-black/40 p-4 rounded-lg cursor-pointer border border-[#1e293b] hover:border-cyan-500/50 transition-colors group">
                 <div>
                   <p className="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-wider">
                     {copied ? 'IP Copied!' : 'Click to Copy IP'}
@@ -115,25 +95,6 @@ const HomeTwo = () => {
                   </p>
                 </div>
               </div>
-
-              <a
-                href={serverInfo.server_ip && serverInfo.server_ip !== 'Coming Soon...' ? `samp://${serverInfo.server_ip}` : '#'}
-                onClick={handleConnectClick}
-                className={`w-full py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest font-black shadow-lg cursor-pointer ${
-                  serverInfo.status === 'offline'
-                    ? 'bg-red-500/20 border border-red-500/40 text-red-400'
-                    : serverInfo.status === 'maintenance'
-                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
-                    : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20'
-                }`}
-              >
-                <FaGamepad className="text-xl" />
-                {serverInfo.status === 'offline'
-                  ? 'Server Offline'
-                  : serverInfo.status === 'maintenance'
-                  ? 'Under Maintenance'
-                  : 'Connect to Server'}
-              </a>
             </div>
 
             {/* Discord Widget */}

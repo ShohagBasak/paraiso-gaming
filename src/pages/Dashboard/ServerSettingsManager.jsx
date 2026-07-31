@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaServer, FaGlobe, FaGamepad, FaCircle } from 'react-icons/fa';
+import { FaServer, FaGlobe, FaCircle } from 'react-icons/fa';
 import { MdSave, MdRefresh } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 
@@ -227,7 +227,7 @@ const ServerSettingsManager = () => {
 
                 <div
                   onClick={handleCopyPreview}
-                  className="flex items-center justify-between bg-black/50 p-4 rounded-xl cursor-pointer border border-[#1e293b] hover:border-cyan-500/50 transition-colors mb-4 group"
+                  className="flex items-center justify-between bg-black/50 p-4 rounded-xl cursor-pointer border border-[#1e293b] hover:border-cyan-500/50 transition-colors group"
                 >
                   <div>
                     <p className="text-[10px] text-slate-500 mb-1 uppercase font-bold tracking-wider">
@@ -238,20 +238,6 @@ const ServerSettingsManager = () => {
                     </p>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  className={`w-full py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest font-black shadow-lg ${
-                    status === 'online'
-                      ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20'
-                      : status === 'maintenance'
-                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
-                      : 'bg-red-500/20 border border-red-500/40 text-red-400'
-                  }`}
-                >
-                  <FaGamepad className="text-lg" />
-                  {status === 'online' ? 'Connect to Server' : status === 'maintenance' ? 'Under Maintenance' : 'Server Offline'}
-                </button>
               </div>
             </div>
           </div>
