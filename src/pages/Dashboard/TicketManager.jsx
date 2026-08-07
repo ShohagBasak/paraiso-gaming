@@ -5,7 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { io } from 'socket.io-client';
 import {
   MdConfirmationNumber, MdPerson, MdClose, MdSend, MdAssignment,
-  MdCheckCircle, MdAccessTime, MdFilterList, MdRefresh, MdStore, MdDelete, MdHelpOutline, MdDownload, MdArrowBack
+  MdCheckCircle, MdAccessTime, MdFilterList, MdRefresh, MdStore, MdDelete, MdHelpOutline, MdDownload, MdArrowBack, MdShoppingCart, MdExpandMore, MdExpandLess, MdAdd, MdRemove
 } from 'react-icons/md';
 import { HiShoppingCart } from 'react-icons/hi';
 
@@ -62,6 +62,8 @@ const TicketManager = () => {
   const [admins, setAdmins] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [ticketItems, setTicketItems] = useState([]);
+  const [itemsExpanded, setItemsExpanded] = useState(false);
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -114,6 +116,28 @@ const TicketManager = () => {
         }
       });
 
+      socket.on('ticket-item-added', (data) => {
+        if (data?.ticketId && data.ticketId == selectedTicket) {
+          fetchTicketItems(data.ticketId);
+          fetchTicketDetail(data.ticketId);
+        }
+      });
+
+      socket.on('ticket-item-updated', (data) => {
+        if (data?.ticketId && data.ticketId == selectedTicket) {
+          fetchTicketItems(data.ticketId);
+          fetchTicketDetail(data.ticketId);
+          fetchMessages(data.ticketId);
+        }
+      });
+
+      socket.on('ticket-item-deleted', (data) => {
+        if (data?.ticketId && data.ticketId == selectedTicket) {
+          fetchTicketItems(data.ticketId);
+          fetchTicketDetail(data.ticketId);
+        }
+      });
+
       return () => { socket.disconnect(); };
     }
   }, []);
@@ -126,6 +150,7 @@ const TicketManager = () => {
     if (selectedTicket) {
       fetchTicketDetail(selectedTicket);
       fetchMessages(selectedTicket);
+      fetchTicketItems(selectedTicket);
 
       // Join ticket room
       if (socketRef.current) {
@@ -135,6 +160,11 @@ const TicketManager = () => {
             if (prev.some(m => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
+        });
+        socketRef.current.on('message-deleted', (data) => {
+          if (data.ticketId == selectedTicket) {
+            setMessages(prev => prev.filter(m => m.id !== data.messageId));
+          }
         });
         socketRef.current.on('ticket-updated', (data) => {
           if (data.id == selectedTicket) {
@@ -216,6 +246,62 @@ const TicketManager = () => {
     }
   };
 
+  const fetchTicketItems = async (id) => {
+    try {
+      const res = await fetch(`${BASE_URL}/tickets/${id}/items`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setTicketItems(Array.isArray(data) ? data : []);
+      } else {
+        setTicketItems([]);
+      }
+    } catch {
+      setTicketItems([]);
+    }
+  };
+
+  const handleUpdateItemQuantity = async (itemId, newQty) => {
+    if (!selectedTicket || newQty < 1) return;
+    try {
+      const res = await fetch(`${BASE_URL}/tickets/${selectedTicket}/items/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ quantity: newQty })
+      });
+      if (res.ok) {
+        toast.success('Quantity updated');
+        fetchTicketItems(selectedTicket);
+        fetchTicketDetail(selectedTicket);
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to update');
+      }
+    } catch { toast.error('Network error'); }
+  };
+
+  const handleRemoveTicketItem = async (itemId, itemName) => {
+    if (!selectedTicket) return;
+    if (ticketItems.length <= 1) {
+      toast.error('A ticket must have at least one item');
+      return;
+    }
+    try {
+      const res = await fetch(`${BASE_URL}/tickets/${selectedTicket}/items/${itemId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        toast.success(`Removed "${itemName}"`);
+        fetchTicketItems(selectedTicket);
+        fetchTicketDetail(selectedTicket);
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to remove item');
+      }
+    } catch { toast.error('Network error'); }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedTicket) return;
@@ -235,6 +321,23 @@ const TicketManager = () => {
       }
     } catch { toast.error('Network error'); }
     setSending(false);
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!selectedTicket) return;
+    try {
+      const res = await fetch(`${BASE_URL}/tickets/${selectedTicket}/messages/${msgId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        toast.success('Message deleted');
+        setMessages(prev => prev.filter(m => m.id !== msgId));
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to delete message');
+      }
+    } catch { toast.error('Network error'); }
   };
 
   const handleClaim = async (ticketId) => {
@@ -524,20 +627,121 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                 </button>
               </div>
 
+              {/* Ticket Items Section */}
+              {ticketItems.length > 0 && (
+                <div className="border-b border-slate-800 bg-[#080d13]">
+                  <button
+                    onClick={() => setItemsExpanded(!itemsExpanded)}
+                    className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MdShoppingCart className="text-cyan-400" size={14} />
+                      <span className="text-cyan-400 text-xs uppercase tracking-wider font-bold">
+                        {ticketItems.length} {ticketItems.length === 1 ? 'Item' : 'Items'} in Ticket
+                      </span>
+                      <span className="text-emerald-400 text-xs font-mono font-bold">
+                        • ${ticketItems.reduce((sum, ti) => sum + (parseFloat(ti.item_price || 0) * (ti.quantity || 1)), 0).toFixed(2)} Total
+                      </span>
+                    </div>
+                    {itemsExpanded ? <MdExpandLess className="text-slate-500" size={18} /> : <MdExpandMore className="text-slate-500" size={18} />}
+                  </button>
+
+                  {itemsExpanded && (
+                    <div className="px-4 pb-3 space-y-1.5 border-t border-slate-800/60 pt-2">
+                      {ticketItems.map((ti, idx) => {
+                        const itemPrice = parseFloat(ti.item_price || 0);
+                        const itemTotal = itemPrice * (ti.quantity || 1);
+                        return (
+                          <div key={ti.id || idx} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 py-1.5 px-3 rounded-xl bg-[#0d1117]/80 border border-slate-800/80">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              {ti.item_image ? (
+                                <img src={ti.item_image} alt={ti.item_name} className="w-8 h-8 rounded-lg object-cover border border-slate-700 flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0">
+                                  <MdStore className="text-slate-600" size={14} />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-white text-xs font-bold truncate">{ti.item_name}</p>
+                                <p className="text-slate-400 text-[10px] font-mono">${itemPrice.toFixed(2)} each</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              {/* Quantity Controls */}
+                              {ticketDetail.status !== 'closed' ? (
+                                <div className="flex items-center gap-1 bg-[#080d13] border border-slate-700 rounded-lg p-0.5">
+                                  <button
+                                    onClick={() => handleUpdateItemQuantity(ti.id, (ti.quantity || 1) - 1)}
+                                    disabled={(ti.quantity || 1) <= 1}
+                                    className="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 flex items-center justify-center text-white text-xs transition-colors cursor-pointer"
+                                    title="Decrease quantity"
+                                  >
+                                    <MdRemove size={10} />
+                                  </button>
+                                  <span className="w-7 text-center text-xs font-mono font-bold text-white">
+                                    {ti.quantity || 1}
+                                  </span>
+                                  <button
+                                    onClick={() => handleUpdateItemQuantity(ti.id, (ti.quantity || 1) + 1)}
+                                    className="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-white text-xs transition-colors cursor-pointer"
+                                    title="Increase quantity"
+                                  >
+                                    <MdAdd size={10} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 text-xs font-mono">x{ti.quantity || 1}</span>
+                              )}
+
+                              {/* Subtotal */}
+                              <span className="text-emerald-400 text-xs font-mono font-bold w-16 text-right">
+                                ${itemTotal.toFixed(2)}
+                              </span>
+
+                              {/* Delete Item Button */}
+                              {ticketDetail.status !== 'closed' && ticketItems.length > 1 && (
+                                <button
+                                  onClick={() => handleRemoveTicketItem(ti.id, ti.item_name)}
+                                  className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all cursor-pointer"
+                                  title="Remove item"
+                                >
+                                  <MdDelete size={15} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Messages */}
               <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
                 {(Array.isArray(messages) ? messages : []).map(msg => {
                   const isAdmin = msg.sender_role === 'admin' || msg.sender_role === 'master';
                   const isMe = msg.sender_id === user?.id;
+                  const canDelete = isMe || user?.role === 'admin' || user?.role === 'master' || ticketDetail?.user_id === user?.id;
                   return (
-                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] sm:max-w-[70%] ${isMe ? 'order-2' : 'order-1'}`}>
+                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
+                      <div className={`max-w-[85%] sm:max-w-[70%] relative ${isMe ? 'order-2' : 'order-1'}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${isAdmin ? 'text-cyan-400' : 'text-amber-400'}`}>
                             {msg.sender_name}
                           </span>
                           {isAdmin && <span className="text-[8px] bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded font-mono">STAFF</span>}
                           <span className="text-slate-600 text-[10px]">{formatTime(msg.created_at)}</span>
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all p-0.5 ml-1 cursor-pointer"
+                              title="Delete message"
+                            >
+                              <MdDelete size={13} />
+                            </button>
+                          )}
                         </div>
                         <div className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words ${
                           isMe
@@ -615,7 +819,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
           )}
         </div>
       </div>
-
+      
       {/* ── ASSIGN MODAL ── */}
       {showAssignModal && selectedTicket && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">

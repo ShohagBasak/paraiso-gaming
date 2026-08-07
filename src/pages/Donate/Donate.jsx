@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
-import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle, HiSearch } from 'react-icons/hi';
+import { HiFilter, HiShoppingCart, HiTag, HiX, HiCheckCircle, HiSearch, HiMinus, HiPlus } from 'react-icons/hi';
 import { MdStorefront, MdCategory, MdSearch, MdClose } from 'react-icons/md';
 import useAuth from '../../hooks/useAuth';
 
@@ -74,15 +74,6 @@ const Donate = () => {
   const [sortBy, setSortBy] = useState('default');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchCategories();
-    fetchItems();
-  }, []);
-
-  useEffect(() => {
-    fetchItems(selectedCategory);
-  }, [selectedCategory]);
-
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${BASE_URL}/donate-categories`);
@@ -106,6 +97,15 @@ const Donate = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchItems();
+  }, []);
+
+  useEffect(() => {
+    fetchItems(selectedCategory);
+  }, [selectedCategory]);
 
   const openItemDetail = (item) => {
     setItemDetailModal(item);
@@ -225,14 +225,15 @@ const Donate = () => {
                   steps: [
                     { num: 3, text: 'Enter your IGN and Discord Username.' },
                     { num: 4, text: 'Click Create Order.' },
+                    { num: 5, text: 'Open My Tickets to chat with an admin.' },
                   ],
                 },
                 {
                   cardId: 3,
                   steps: [
-                    { num: 5, text: 'Open My Tickets to chat with an admin.' },
-                    { num: 6, text: 'Complete your payment.' },
-                    { num: 7, text: 'Your order will be processed and delivered.' },
+                    { num: 6, text: 'You can add multiple items in your existing ticket/chat.' },
+                    { num: 7, text: 'Complete your payment.' },
+                    { num: 8, text: 'Your order will be processed and delivered.' },
                   ],
                 },
               ].map((card) => (
@@ -559,14 +560,30 @@ const Donate = () => {
                 <div className="grid grid-cols-2 gap-3 items-center">
                   <div className="flex flex-col gap-1">
                     <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Quantity *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={quantity}
-                      onChange={e => setQuantity(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-white text-xs focus:outline-none transition-all font-bold"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(q => Math.max(1, (parseInt(q) || 1) - 1))}
+                        className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                      >
+                        <HiMinus size={14} />
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        value={quantity}
+                        onChange={e => setQuantity(e.target.value)}
+                        className="w-12 h-9 text-center bg-[#080d13] border border-slate-700/80 focus:border-cyan-500 rounded-lg text-white text-xs font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(q => (parseInt(q) || 0) + 1)}
+                        className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                      >
+                        <HiPlus size={14} />
+                      </button>
+                    </div>
                   </div>
                   <div className="flex flex-col justify-end text-right">
                     <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Amount</span>

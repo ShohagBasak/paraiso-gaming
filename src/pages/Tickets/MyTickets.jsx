@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { MdConfirmationNumber, MdAccessTime, MdStore } from 'react-icons/md';
+import { MdConfirmationNumber, MdAccessTime, MdStore, MdShoppingCart } from 'react-icons/md';
 import { HiShoppingCart, HiChatAlt2, HiExternalLink } from 'react-icons/hi';
-import { toast } from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -18,10 +17,6 @@ const MyTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
   const fetchTickets = async () => {
     try {
       const res = await fetch(`${BASE_URL}/tickets/my`, { credentials: 'include' });
@@ -32,6 +27,10 @@ const MyTickets = () => {
     } catch { /* silent */ }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
   const formatDate = (date) => {
     return new Date(date).toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric',
@@ -106,6 +105,11 @@ const MyTickets = () => {
                           <span>{ticket.item_name}</span>
                           <span className="text-slate-400 font-normal text-xs">(x{ticket.quantity || 1})</span>
                           <span className="text-emerald-400 text-xs sm:text-sm font-mono">${(parseFloat(ticket.item_price) * (ticket.quantity || 1)).toFixed(2)}</span>
+                          {ticket.item_count > 1 && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 rounded-md">
+                              <MdShoppingCart size={10} /> {ticket.item_count} items
+                            </span>
+                          )}
                         </h3>
                         <p className="text-slate-500 text-[11px] sm:text-xs flex flex-wrap items-center gap-x-2 gap-y-0.5">
                           <span className="flex items-center gap-1">

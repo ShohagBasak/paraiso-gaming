@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SwiperBanner from './SwiperBanner';
 import FeaturesSlider from './FeaturesSlider';
 import { FaServer } from 'react-icons/fa';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { BASE_URL } from '../../config/api';
 
 const HomeTwo = () => {
   const [copied, setCopied] = useState(false);
@@ -14,7 +13,7 @@ const HomeTwo = () => {
   });
 
   useEffect(() => {
-    fetch(`${BASE_URL}/server-info`)
+    fetch(`${BASE_URL}/server-info?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.server_ip) {

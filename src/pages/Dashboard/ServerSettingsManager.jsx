@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaServer, FaGlobe, FaCircle } from 'react-icons/fa';
 import { MdSave, MdRefresh } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { BASE_URL } from '../../config/api';
 
 const ServerSettingsManager = () => {
   const [serverIp, setServerIp] = useState('');
@@ -16,7 +15,7 @@ const ServerSettingsManager = () => {
   const fetchServerInfo = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/server-info`);
+      const res = await fetch(`${BASE_URL}/server-info?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         setServerIp(data.server_ip || '');

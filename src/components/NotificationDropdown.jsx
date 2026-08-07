@@ -35,11 +35,19 @@ const NotificationDropdown = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const handleToggleDropdown = () => {
+    const nextState = !isOpen;
+    setIsOpen(nextState);
+    if (nextState && unreadCount > 0) {
+      markAllAsRead();
+    }
+  };
+
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
       {/* Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleDropdown}
         className="relative p-2 rounded-xl text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/30 transition-all cursor-pointer focus:outline-none"
         title="Notifications"
       >
@@ -97,7 +105,7 @@ const NotificationDropdown = () => {
                       <Link
                         to={notif.link || '#'}
                         onClick={() => {
-                          if (isUnread) markAsRead(notif.id);
+                          markAllAsRead();
                           setIsOpen(false);
                         }}
                         className="block group"

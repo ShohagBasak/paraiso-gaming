@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCopy, FaCheck, FaDiscord, FaServer } from 'react-icons/fa';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { BASE_URL } from '../../config/api';
 
 const NewsSection = () => {
   // IP Copy korar state control
@@ -9,7 +8,7 @@ const NewsSection = () => {
   const [serverIP, setServerIP] = useState("Coming Soon...");
 
   useEffect(() => {
-    fetch(`${BASE_URL}/server-info`)
+    fetch(`${BASE_URL}/server-info?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.server_ip) setServerIP(data.server_ip);
