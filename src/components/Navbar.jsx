@@ -50,6 +50,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'UCP', path: '/ucp' },
     { name: 'Donate Store', path: '/donate' },
     {
       name: 'Rules',

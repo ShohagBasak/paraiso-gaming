@@ -37,7 +37,13 @@ window.fetch = async (input, options = {}) => {
     // Check if the request is to our API (same hostname, relative path, or non-http relative URL)
     const isApiRequest = requestHostname === apiHostname || urlStr.startsWith('/') || !urlStr.startsWith('http');
     
-    if (token && isApiRequest) {
+    const hasAuthHeader = (() => {
+        if (!options.headers) return false;
+        if (options.headers instanceof Headers) return options.headers.has('Authorization');
+        return Object.keys(options.headers).some(k => k.toLowerCase() === 'authorization');
+    })();
+
+    if (token && isApiRequest && !hasAuthHeader && !urlStr.includes('/api/ucp')) {
         if (input instanceof Request) {
             // If the input is a Request object, we must clone it and set the headers
             // to avoid mutating the original read-only headers.

@@ -32,6 +32,7 @@ import TicketManager from '../pages/Dashboard/TicketManager';
 import ServerSettingsManager from '../pages/Dashboard/ServerSettingsManager';
 import MyTickets from '../pages/Tickets/MyTickets';
 import TicketChat from '../pages/Tickets/TicketChat';
+import UcpPage from '../pages/Ucp/UcpPage';
 
 import PermissionGuard from '../components/PermissionGuard';
 import PrivateRoute from '../components/PrivateRoute';
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: '/ucp',
+        element: <UcpPage />,
       },
       {
         path: '/donate',
