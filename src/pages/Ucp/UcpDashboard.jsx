@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useUcp } from '../../context/UcpContext';
 import { 
-  FiLogOut, FiPhone, FiBriefcase, FiUsers, FiHeart, 
-  FiDollarSign, FiAward, FiZap, FiClock, FiShield,
-  FiHome, FiTruck, FiUser, FiActivity, FiCreditCard,
-  FiGrid, FiList, FiLock, FiCheckCircle, FiAlertTriangle,
-  FiMenu, FiX, FiCrosshair
+  FiLogOut, FiBriefcase, FiHeart, FiDollarSign, FiAward, FiZap,
+  FiClock, FiShield, FiHome, FiTruck, FiUser, FiGrid, 
+  FiList, FiLock, FiCheckCircle, FiAlertTriangle, FiMenu, 
+  FiX, FiCrosshair, FiSmartphone, FiMonitor, FiGlobe, 
+  FiPower, FiTrash2, FiHelpCircle, FiExternalLink, FiLifeBuoy, 
+  FiMessageSquare, FiCheck
 } from 'react-icons/fi';
-import { FaShieldAlt, FaUserGraduate, FaCoins, FaIdCard } from 'react-icons/fa';
+import { FaDiscord } from 'react-icons/fa';
 
 const UcpDashboard = () => {
   const { ucpPlayer, ucpStats, loading, fetchUcpStats, logoutUcp } = useUcp();
@@ -16,6 +17,58 @@ const UcpDashboard = () => {
     return localStorage.getItem('ucp_active_tab') || 'overview';
   });
   const [rosterViewMode, setRosterViewMode] = useState('list');
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [securityMessage, setSecurityMessage] = useState('');
+
+  const handleRevokeOtherSessions = async () => {
+    try {
+      setIsRevoking(true);
+      setSecurityMessage('');
+      const token = localStorage.getItem('ucp_token');
+      const res = await fetch('/api/ucp/sessions/revoke-others', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSecurityMessage('Successfully logged out from all other devices!');
+        if (fetchUcpStats) fetchUcpStats();
+      } else {
+        setSecurityMessage(data.message || 'Failed to terminate other sessions.');
+      }
+    } catch (err) {
+      setSecurityMessage('Connection error. Please try again.');
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
+  const handleRevokeSingleSession = async (sessionId) => {
+    try {
+      setSecurityMessage('');
+      const token = localStorage.getItem('ucp_token');
+      const res = await fetch('/api/ucp/sessions/revoke-one', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sessionId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSecurityMessage('Device session removed successfully!');
+        if (fetchUcpStats) fetchUcpStats();
+      } else {
+        setSecurityMessage(data.message || 'Failed to remove device.');
+      }
+    } catch (err) {
+      setSecurityMessage('Connection error. Please try again.');
+    }
+  };
 
   // Background Live-Sync: Refetch stats every 2 seconds & on mount
   useEffect(() => {
@@ -211,6 +264,184 @@ const UcpDashboard = () => {
       return `${name} (Leader)`;
     }
     return name;
+  };
+
+  const getSAMPWeaponName = (weaponId) => {
+    const wid = Number(weaponId || 0);
+    const weapons = {
+      1: 'Brass Knuckles', 2: 'Golf Club', 3: 'Nitestick', 4: 'Knife', 5: 'Baseball Bat',
+      6: 'Shovel', 7: 'Pool Cue', 8: 'Katana', 9: 'Chainsaw', 10: 'Purple Dildo',
+      11: 'Small White Dildo', 12: 'Large White Dildo', 13: 'Silver Vibrator', 14: 'Flowers', 15: 'Cane',
+      16: 'Grenade', 17: 'Tear Gas', 18: 'Molotov Cocktail',
+      22: 'Colt 45 (9mm)', 23: 'Silenced 9mm', 24: 'Desert Eagle', 25: 'Shotgun',
+      26: 'Sawnoff Shotgun', 27: 'Combat Shotgun', 28: 'Micro UZI', 29: 'MP5',
+      30: 'AK-47', 31: 'M4 Rifle', 32: 'Tec-9', 33: 'Country Rifle', 34: 'Sniper Rifle',
+      35: 'RPG', 36: 'HS Rocket', 37: 'Flamethrower', 38: 'Minigun', 39: 'Satchel Charge',
+      40: 'Detonator', 41: 'Spraycan', 42: 'Fire Extinguisher', 43: 'Camera',
+      44: 'Night Vision', 45: 'Thermal Vision', 46: 'Parachute'
+    };
+    return weapons[wid] || `Weapon #${wid}`;
+  };
+
+  const getPlayerWeapons = (stats) => {
+    if (!stats) return [];
+    const list = [];
+    for (let i = 0; i <= 13; i++) {
+      const gunId = Number(stats[`Gun${i}`] ?? stats[`pGun${i}`] ?? stats[`Weapon${i}`] ?? stats[`pWeapon${i}`] ?? 0);
+      const ammo = Number(stats[`Ammo${i}`] ?? stats[`pAmmo${i}`] ?? stats[`GunAmmo${i}`] ?? 0);
+      if (gunId > 0) {
+        list.push({
+          slot: i,
+          id: gunId,
+          name: getSAMPWeaponName(gunId),
+          ammo: ammo
+        });
+      }
+    }
+    return list;
+  };
+
+  const getHouseWeapons = (house) => {
+    if (!house) return [];
+    const list = [];
+    for (let i = 1; i <= 5; i++) {
+      const gunId = Number(house[`gun${i}`] ?? house[`Gun${i}`] ?? house[`weapon${i}`] ?? house[`Weapon${i}`] ?? 0);
+      const ammo = Number(house[`ammo${i}`] ?? house[`Ammo${i}`] ?? 0);
+      if (gunId > 0) {
+        list.push({
+          slot: i,
+          id: gunId,
+          name: getSAMPWeaponName(gunId),
+          ammo: ammo
+        });
+      }
+    }
+    return list;
+  };
+
+  const parseAnyDate = (dateVal, timeVal) => {
+    if (!dateVal || dateVal === '0' || dateVal === 0 || dateVal === '' || dateVal === 'N/A' || dateVal === 'null') {
+      return null;
+    }
+
+    const strVal = String(dateVal).trim();
+
+    // Ignore small integers (like ConnectTime = 21 minutes played)
+    if (!isNaN(Number(strVal)) && Number(strVal) < 100000000) {
+      return null;
+    }
+
+    let year = null;
+    let month = null; // 0-indexed
+    let day = null;
+    let hours = 0;
+    let minutes = 0;
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Time string from timeVal parameter
+    if (timeVal && typeof timeVal === 'string' && timeVal.trim() !== '') {
+      const timeMatch = timeVal.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+      if (timeMatch) {
+        let h = parseInt(timeMatch[1], 10);
+        const m = parseInt(timeMatch[2], 10);
+        const ampm = timeMatch[4];
+        if (ampm) {
+          if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+          if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+        }
+        hours = h;
+        minutes = m;
+      }
+    }
+
+    // Case A: Unix Timestamp
+    if (!isNaN(Number(strVal))) {
+      const num = Number(strVal);
+      const dateObj = new Date(num > 10000000000 ? num : num * 1000);
+      if (!isNaN(dateObj.getTime())) {
+        day = dateObj.getDate();
+        month = dateObj.getMonth();
+        year = dateObj.getFullYear();
+        hours = dateObj.getHours();
+        minutes = dateObj.getMinutes();
+      }
+    } else {
+      // Case B: String date like "09/08/2026 15:30" or "2026-08-09"
+      const inlineTimeMatch = strVal.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+      if (inlineTimeMatch && (!timeVal || typeof timeVal !== 'string')) {
+        let h = parseInt(inlineTimeMatch[1], 10);
+        const m = parseInt(inlineTimeMatch[2], 10);
+        const ampm = inlineTimeMatch[4];
+        if (ampm) {
+          if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+          if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+        }
+        hours = h;
+        minutes = m;
+      }
+
+      const dateOnlyStr = strVal.replace(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/gi, '').trim();
+
+      const parts = dateOnlyStr.split(/[\/\-\.\s,]+/);
+      if (parts.length >= 3) {
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          day = parseInt(parts[2], 10);
+        } else if (parts[2].length === 4) {
+          // DD/MM/YYYY
+          year = parseInt(parts[2], 10);
+          const p0 = parseInt(parts[0], 10);
+          const p1 = parseInt(parts[1], 10);
+          day = p0;
+          month = p1 - 1;
+        }
+      }
+
+      if (!day || !year) {
+        const parsed = Date.parse(strVal);
+        if (!isNaN(parsed)) {
+          const dateObj = new Date(parsed);
+          day = dateObj.getDate();
+          month = dateObj.getMonth();
+          year = dateObj.getFullYear();
+          hours = dateObj.getHours();
+          minutes = dateObj.getMinutes();
+        }
+      }
+    }
+
+    if (!day || !year || month === null || month < 0 || month > 11) {
+      return strVal;
+    }
+
+    const formattedDay = String(day).padStart(2, '0');
+    const monthStr = monthNames[month];
+    const ampmStr = hours >= 12 ? 'PM' : 'AM';
+    let h12 = hours % 12;
+    h12 = h12 ? h12 : 12;
+    const formattedHours = String(h12).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+
+    return `${formattedDay} ${monthStr} ${year}, ${formattedHours}:${formattedMinutes} ${ampmStr}`;
+  };
+
+  const formatLastLogin = (stats) => {
+    if (!stats) return 'N/A';
+    const dateVal = stats.LastLogin ?? stats.LastLoginDate ?? stats.LastConnected ?? stats.LastConnect ?? stats.LastOn ?? stats.LastSeen ?? stats.LoginTime ?? stats.LastDate ?? stats.LastTime;
+    const timeVal = stats.LastLoginTime ?? stats.LoginTimeStr ?? stats.ConnectTimeStr;
+    const formatted = parseAnyDate(dateVal, timeVal);
+    return formatted || 'Recently Online';
+  };
+
+  const formatRegDate = (stats) => {
+    if (!stats) return 'N/A';
+    const dateVal = stats.RegDate ?? stats.Reg_Date ?? stats.RegisterDate ?? stats.RegistrationDate ?? stats.RegisteredDate ?? stats.DateRegistered ?? stats.Registered ?? stats.AccountCreated ?? stats.CreateDate ?? stats.CreationDate ?? stats.Created ?? stats.JoinDate ?? stats.JoinedDate ?? stats.pRegDate ?? stats.pRegisterDate;
+    const timeVal = stats.RegTime ?? stats.RegisterTime ?? stats.Reg_Time ?? stats.RegTimeStr ?? stats.CreationTime;
+    const formatted = parseAnyDate(dateVal, timeVal);
+    return formatted || 'N/A';
   };
 
   const getVehicleName = (modelId) => {
@@ -604,25 +835,13 @@ const UcpDashboard = () => {
               <button
                 onClick={() => handleTabChange('faction')}
                 className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
-                  activeTab === 'faction'
+                  activeTab === 'faction' || activeTab === 'families'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
                 }`}
               >
                 <FiBriefcase className="w-4 h-4" />
-                <span>Faction & Jobs</span>
-              </button>
-
-              <button
-                onClick={() => handleTabChange('families')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
-                  activeTab === 'families'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-[#121922]'
-                }`}
-              >
-                <FiUsers className="w-4 h-4" />
-                <span>Families & Gangs</span>
+                <span>Faction & Gangs</span>
               </button>
 
               <button
@@ -671,6 +890,30 @@ const UcpDashboard = () => {
               >
                 <FiAward className="w-4 h-4" />
                 <span>Character Skills</span>
+              </button>
+
+              <button
+                onClick={() => handleTabChange('security')}
+                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                  activeTab === 'security'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-[#121922]'
+                }`}
+              >
+                <FiShield className="w-4 h-4 text-emerald-400" />
+                <span>Active Devices</span>
+              </button>
+
+              <button
+                onClick={() => handleTabChange('support')}
+                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                  activeTab === 'support'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-[#121922]'
+                }`}
+              >
+                <FiHelpCircle className="w-4 h-4 text-indigo-400" />
+                <span>Support & Help</span>
               </button>
             </nav>
 
@@ -793,14 +1036,50 @@ const UcpDashboard = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                      {/* Health Status */}
+                      <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <FiHeart className="w-3.5 h-3.5 text-rose-400" />
+                            <span>Health Status</span>
+                          </span>
+                          <span className="text-xs font-mono font-extrabold text-rose-400">
+                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.Health || 100))))}% HP
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-rose-500 to-rose-400 transition-all duration-500 rounded-full"
+                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.Health || 100))))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Armor Protection */}
+                      <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <FiShield className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>Armor Protection</span>
+                          </span>
+                          <span className="text-xs font-mono font-extrabold text-cyan-400">
+                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.Armor || ucpStats.Armour || ucpStats.SpawnArmor || ucpStats.pArmor || ucpStats.pArmour || 0))))}% AP
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 rounded-full"
+                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.Armor || ucpStats.Armour || ucpStats.SpawnArmor || ucpStats.pArmor || ucpStats.pArmour || 0))))}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4">
                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Phone Number</p>
                         <p className="text-base font-extrabold text-white mt-1 font-mono">
                           {ucpStats.PhoneNumber && Number(ucpStats.PhoneNumber) !== 0 ? ucpStats.PhoneNumber : 'N/A'}
                         </p>
                       </div>
-
-
 
                       <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4">
                         <div className="flex items-center justify-between">
@@ -850,10 +1129,13 @@ const UcpDashboard = () => {
                         )}
                       </div>
 
-                      <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4">
-                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Warnings</p>
-                        <p className={`text-base font-extrabold mt-1 font-mono ${ucpStats.Warnings > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                          {ucpStats.Warnings || 0} / 3 Warnings
+                      <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4 space-y-1">
+                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <FiClock className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Last Login Date & Time</span>
+                        </p>
+                        <p className="text-sm font-extrabold text-white font-mono leading-tight">
+                          {formatLastLogin(ucpStats)}
                         </p>
                       </div>
 
@@ -898,9 +1180,10 @@ const UcpDashboard = () => {
               </div>
             )}
 
-            {/* TAB CONTENT: Faction */}
-            {activeTab === 'faction' && (
+            {/* TAB CONTENT: Faction, Families & Gangs (Combined View) */}
+            {(activeTab === 'faction' || activeTab === 'families') && (
               <div className="space-y-6">
+                {/* Official Faction Block */}
                 <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
                   <div className="border-b border-slate-800 pb-4">
                     <h3 className="text-xl font-black text-white tracking-wide uppercase">Official Faction</h3>
@@ -1061,12 +1344,8 @@ const UcpDashboard = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            )}
 
-            {/* TAB CONTENT: Families & Gangs */}
-            {activeTab === 'families' && (
-              <div className="space-y-6">
+                {/* Families & Gangs Block */}
                 <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
                   <div className="border-b border-slate-800 pb-4">
                     <h3 className="text-xl font-black text-white tracking-wide uppercase">Families & Gangs</h3>
@@ -1330,35 +1609,96 @@ const UcpDashboard = () => {
                       No residential houses currently owned.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {ucpStats.houses.map((house, idx) => (
-                        <div key={house.id || idx} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-sm font-black text-white font-mono">House #{house.id}</h5>
-                            <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-black uppercase font-mono">
-                              Level {house.level}
-                            </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {ucpStats.houses.map((house, idx) => {
+                        const houseGuns = getHouseWeapons(house);
+                        const isRentable = Number(house.rentable || 0) === 1;
+                        const isLocked = Number(house.locked || 0) === 1;
+                        return (
+                          <div key={house.id || idx} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-4 shadow-xl">
+                            {/* Header */}
+                            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                                  <FiHome className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <h5 className="text-sm font-black text-white font-mono">House #{house.id}</h5>
+                                  <span className="text-[10px] text-slate-400 font-mono font-bold">Level {house.level || 1} Interior</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase border ${
+                                  isLocked ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                }`}>
+                                  {isLocked ? 'Locked' : 'Unlocked'}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase border ${
+                                  isRentable ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-slate-800 text-slate-400 border-slate-700'
+                                }`}>
+                                  {isRentable ? 'Rentable' : 'Private'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Property Details Grid */}
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                              <div>
+                                <span className="text-[10px] font-extrabold text-slate-500 uppercase">Property Value</span>
+                                <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(house.price || 0).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-extrabold text-slate-500 uppercase">Rent Fee</span>
+                                <p className="font-mono font-bold text-cyan-400 mt-0.5">${Number(house.rent_fee || 0).toLocaleString()}/hr</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-extrabold text-slate-500 uppercase">House Safe Cash</span>
+                                <p className="font-mono font-bold text-amber-400 mt-0.5">${Number(house.safe_money || house.money || 0).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-extrabold text-slate-500 uppercase">Materials Vault</span>
+                                <p className="font-mono font-bold text-purple-400 mt-0.5">{Number(house.materials || 0).toLocaleString()}</p>
+                              </div>
+                              {(house.pot > 0 || house.crack > 0) && (
+                                <div className="col-span-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono">
+                                  <span className="text-[10px] font-extrabold text-slate-500 uppercase">Contraband Storage</span>
+                                  <span className="text-amber-400 font-bold">Pot: {house.pot || 0}g | Crack: {house.crack || 0}g</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* House Stored Guns (/storegun & /getgun) */}
+                            <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <FiCrosshair className="w-3.5 h-3.5 text-red-400" />
+                                  <span>Stored Weapons</span>
+                                </span>
+                              </div>
+
+                              {houseGuns.length === 0 ? (
+                                <div className="bg-[#0b1016] border border-slate-800/60 rounded-xl p-2.5 text-center text-slate-500 text-[11px] font-bold">
+                                  No firearms currently stored in house arsenal vault.
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {houseGuns.map((hg, hgIdx) => (
+                                    <div key={hgIdx} className="bg-[#0b1016] border border-slate-800/80 p-2 rounded-xl flex items-center justify-between text-xs">
+                                      <div className="flex items-center gap-2">
+                                        <FiCrosshair className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                                        <span className="font-bold text-white text-xs truncate">{hg.name}</span>
+                                      </div>
+                                      <span className="px-1.5 py-0.5 rounded bg-slate-800 text-red-300 font-mono text-[10px] font-extrabold">
+                                        {hg.ammo > 0 ? `${hg.ammo} Ammo` : 'Stored'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-800">
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Property Value</span>
-                              <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(house.price || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Rent Fee</span>
-                              <p className="font-mono font-bold text-cyan-400 mt-0.5">${Number(house.rent_fee || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">House Safe Cash</span>
-                              <p className="font-mono font-bold text-amber-400 mt-0.5">${Number(house.safe_money || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Materials Vault</span>
-                              <p className="font-mono font-bold text-purple-400 mt-0.5">{Number(house.materials || 0).toLocaleString()}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -1413,54 +1753,171 @@ const UcpDashboard = () => {
               </div>
             )}
 
-            {/* TAB CONTENT: Inventory */}
+            {/* TAB CONTENT: Inventory & Assets */}
             {activeTab === 'inventory' && (
               <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
                 <div className="border-b border-slate-800 pb-4">
                   <h3 className="text-xl font-black text-white tracking-wide uppercase">Inventory & Personal Assets</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Items, Consumables & Tokens</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Carried Items, Tactical Gear & Electronics</p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Materials</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Materials || 0}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rope</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Rope ?? ucpStats.rope ?? 0}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Crack</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Crack || 0}g</p>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Cigars</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Cigars ?? ucpStats.Cigar ?? ucpStats.cigars ?? 0}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Pot</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Pot || 0}g</p>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Sprunk Can</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Sprunk ?? ucpStats.sprunk ?? 0}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Weapon Crates</span>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Spray Can</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Spraycan ?? ucpStats.Spray ?? ucpStats.spraycan ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Seeds</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Seeds ?? ucpStats.Seed ?? ucpStats.seeds ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Screwdriver</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Screwdriver ?? ucpStats.screwdriver ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Wristwatch</span>
+                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
+                      {(ucpStats.Wristwatch || ucpStats.Watch || ucpStats.wristwatch) ? 'Owned' : 'None'}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Tires</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Tire ?? ucpStats.Tires ?? ucpStats.tire ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">First Aid Kit</span>
+                    <p className="text-lg font-black text-emerald-400 font-mono mt-1">{ucpStats.FirstAid ?? ucpStats.Firstaid ?? ucpStats.firstaid ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">RC Cam</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.RCCam ?? ucpStats.Rccam ?? ucpStats.rccam ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Receiver</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Receiver ?? ucpStats.receiver ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">GPS Navigator</span>
+                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
+                      {(ucpStats.GPS || ucpStats.Gps || ucpStats.gps) ? 'Owned' : 'None'}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Bug Sweep</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.BugSweep ?? ucpStats.Bugsweep ?? ucpStats.bugsweep ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Lockpick</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Lockpick ?? ucpStats.Lockpicks ?? ucpStats.lockpick ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rim Kit</span>
+                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.RimKit ?? ucpStats.Rimkit ?? ucpStats.rimkit ?? 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Materials</span>
+                    <p className="text-lg font-black text-purple-400 font-mono mt-1">{ucpStats.Materials || 0}</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Crack</span>
+                    <p className="text-lg font-black text-amber-400 font-mono mt-1">{ucpStats.Crack || 0}g</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Pot</span>
+                    <p className="text-lg font-black text-emerald-400 font-mono mt-1">{ucpStats.Pot || 0}g</p>
+                  </div>
+
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Weapon Crates</span>
                     <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.WeaponCrates || 0}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Double EXP Tokens</span>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Double EXP Tokens</span>
                     <p className="text-lg font-black text-amber-400 font-mono mt-1">{ucpStats.DoubleExpToken || 0}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Boombox</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1">{ucpStats.Boombox ? 'Owned' : 'None'}</p>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Boombox</span>
+                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Boombox ? 'Owned' : 'None'}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">MP3 Player</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1">{ucpStats.Mp3 ? 'Owned' : 'None'}</p>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">MP3 Player</span>
+                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Mp3 ? 'Owned' : 'None'}</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase">Phonebook</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1">{ucpStats.Phonebook ? 'Owned' : 'None'}</p>
+                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Phonebook</span>
+                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Phonebook ? 'Owned' : 'None'}</p>
                   </div>
+                </div>
+
+                {/* Section: Carrying Guns & Firearms (/myguns) */}
+                <div className="pt-6 border-t border-slate-800 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
+                    <h4 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <FiCrosshair className="w-5 h-5 text-red-400" />
+                      <span>Equipped Weapons & Firearms</span>
+                    </h4>
+                    
+                  </div>
+
+                  {getPlayerWeapons(ucpStats).length === 0 ? (
+                    <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-5 text-center text-slate-500 text-xs font-bold">
+                      No weapons or firearms currently equipped in carried inventory slots.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {getPlayerWeapons(ucpStats).map((w, idx) => (
+                        <div key={idx} className="bg-[#121922] border border-slate-800 hover:border-red-500/40 p-4 rounded-xl flex items-center justify-between transition-all shadow-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+                              <FiCrosshair className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-black text-white">{w.name}</h5>
+                              <span className="text-[10px] font-mono text-slate-400 font-semibold">Slot #{w.slot} • Weapon ID #{w.id}</span>
+                            </div>
+                          </div>
+                          <div className="text-right font-mono">
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-red-300 text-xs font-extrabold border border-slate-700/60">
+                              {w.ammo > 0 ? `${w.ammo.toLocaleString()} Ammo` : 'Equipped'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1564,6 +2021,207 @@ const UcpDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* TAB CONTENT: Active Devices & Security */}
+            {activeTab === 'security' && (
+              <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                  <div>
+                    <h3 className="text-xl font-black text-white tracking-wide uppercase flex items-center gap-2">
+                      <FiShield className="w-6 h-6 text-emerald-400" />
+                      <span>Active Devices & Logged-in Sessions</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Monitor all devices currently logged into your UCP account and terminate unknown logins.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleRevokeOtherSessions}
+                    disabled={isRevoking}
+                    className="px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-2 self-start md:self-auto active:scale-95 disabled:opacity-50"
+                  >
+                    <FiPower className="w-4 h-4" />
+                    <span>{isRevoking ? 'Logging out...' : 'Log Out All Other Devices'}</span>
+                  </button>
+                </div>
+
+                {securityMessage && (
+                  <div className={`p-4 rounded-xl text-xs font-bold border ${securityMessage.includes('Successfully') ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                    {securityMessage}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <FiMonitor className="w-4 h-4 text-cyan-400" />
+                    <span>Currently Active Logged-in Devices ({(ucpStats.activeSessions || []).length})</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(ucpStats.activeSessions || []).map((session, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`bg-[#121922] border rounded-xl p-5 transition-all space-y-3 relative overflow-hidden ${
+                          session.isCurrent 
+                            ? 'border-emerald-500/50 shadow-lg shadow-emerald-500/10' 
+                            : 'border-slate-800 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-3 rounded-xl border ${session.isCurrent ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                              {session.deviceType === 'Mobile' ? (
+                                <FiSmartphone className="w-6 h-6" />
+                              ) : (
+                                <FiMonitor className="w-6 h-6" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-sm font-black text-white">{session.os || 'Desktop OS'}</h5>
+                                {session.isCurrent && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider font-mono">
+                                    THIS DEVICE (ACTIVE)
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs font-semibold text-slate-400 mt-0.5">{session.browser || 'Web Browser'}</p>
+                            </div>
+                          </div>
+
+                          {!session.isCurrent && (
+                            <button
+                              onClick={() => handleRevokeSingleSession(session.sessionId)}
+                              className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold transition-all flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+                              title="Log out and remove this device"
+                            >
+                              <FiTrash2 className="w-3.5 h-3.5" />
+                              <span>Remove</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">IP Address</span>
+                            <span className="text-slate-300 font-mono font-bold mt-0.5 flex items-center gap-1">
+                              <FiGlobe className="w-3 h-3 text-slate-400" />
+                              <span>{session.ip || '127.0.0.1'}</span>
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Login Time</span>
+                            <span className="text-slate-300 font-mono font-bold mt-0.5 flex items-center gap-1">
+                              <FiClock className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{parseAnyDate(session.loginTime) || 'Recently'}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: Support & Help */}
+            {activeTab === 'support' && (
+              <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                
+                {/* Hero Header Card */}
+                <div className="bg-gradient-to-r from-cyan-950/40 via-[#121922] to-blue-950/40 border border-cyan-500/30 rounded-2xl p-6 relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-xl">
+                  <div className="space-y-2 max-w-2xl">
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-extrabold uppercase tracking-widest font-mono inline-flex items-center gap-1.5">
+                      <FiLifeBuoy className="w-3.5 h-3.5 text-cyan-400" />
+                      Official Support Center
+                    </span>
+                    <h3 className="text-2xl font-black text-white tracking-wide uppercase">
+                      Need Assistance or Support?
+                    </h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      For account recovery, bug reporting, player reports, or staff inquiries, visit our official Community Forum Support & Tickets section or join our Discord server.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-shrink-0">
+                    <a
+                      href="https://forums.pgaming.net/index.php"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-95"
+                    >
+                      <FiMessageSquare className="w-4 h-4" />
+                      <span>Official Forum Support & Tickets</span>
+                      <FiExternalLink className="w-3.5 h-3.5 opacity-80" />
+                    </a>
+
+                    <a
+                      href="https://discord.gg/paraisogaming"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-3 rounded-xl bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/40 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
+                    >
+                      <FaDiscord className="w-4 h-4 text-[#5865F2]" />
+                      <span>Discord Server</span>
+                      <FiExternalLink className="w-3.5 h-3.5 opacity-80" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Step-by-Step Ticket Creation Guide */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <FiMessageSquare className="w-4 h-4 text-cyan-400" />
+                    <span>How to Submit a Support Ticket (Forum & Discord)</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
+                        01
+                      </div>
+                      <h5 className="text-sm font-extrabold text-white">Visit Forum / Discord</h5>
+                      <p className="text-xs text-slate-400 leading-normal">
+                        Click <span className="text-cyan-400 font-mono font-bold">Official Forum Support</span> or join our Discord server.
+                      </p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
+                        02
+                      </div>
+                      <h5 className="text-sm font-extrabold text-white">Support & Tickets</h5>
+                      <p className="text-xs text-slate-400 leading-normal">
+                        Open the <span className="text-cyan-400 font-mono font-bold">Support & Tickets</span> section on Forum or Discord.
+                      </p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
+                        03
+                      </div>
+                      <h5 className="text-sm font-extrabold text-white">Submit Ticket</h5>
+                      <p className="text-xs text-slate-400 leading-normal">
+                        Create a new thread or ticket selecting your category (Account / Bug / Refund).
+                      </p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
+                        04
+                      </div>
+                      <h5 className="text-sm font-extrabold text-white">Staff Review</h5>
+                      <p className="text-xs text-slate-400 leading-normal">
+                        Provide details & screenshots. Our Admin Team will assist you promptly!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
 
           </main>
 
