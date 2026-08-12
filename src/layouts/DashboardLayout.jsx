@@ -106,7 +106,7 @@ const DashboardLayout = () => {
                         end={item.end}
                         onClick={() => setSidebarOpen(false)}
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-200 ${
                                 isActive
                                     ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
                                     : 'text-slate-400 hover:text-white hover:bg-slate-800'

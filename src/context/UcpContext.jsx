@@ -24,9 +24,26 @@ export const UcpProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(!ucpPlayer);
 
-  // Check active UCP session on mount
+  // Check active UCP session on mount & periodically every 5 seconds
   useEffect(() => {
     checkUcpSession();
+
+    const interval = setInterval(() => {
+      const token = localStorage.getItem('ucp_token');
+      if (token) checkUcpSession();
+    }, 5000);
+
+    const handleFocus = () => {
+      const token = localStorage.getItem('ucp_token');
+      if (token) checkUcpSession();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const checkUcpSession = async () => {
@@ -59,7 +76,6 @@ export const UcpProvider = ({ children }) => {
         setUcpPlayer(null);
         setUcpStats(null);
       } else {
-        // Fallback: fetch stats with cached token
         fetchUcpStats(token, ucpPlayer);
       }
     } catch (err) {
@@ -84,14 +100,17 @@ export const UcpProvider = ({ children }) => {
         const data = await res.json();
         setUcpStats(data.stats);
         localStorage.setItem('ucp_stats', JSON.stringify(data.stats));
+      } else if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('ucp_token');
+        localStorage.removeItem('ucp_user');
+        localStorage.removeItem('ucp_stats');
+        setUcpPlayer(null);
+        setUcpStats(null);
       } else if (fallbackUser && !ucpStats) {
         setUcpStats({ Username: fallbackUser.username, Level: fallbackUser.level || 1, ID: fallbackUser.id || 0 });
       }
     } catch (err) {
       console.error("Failed to fetch UCP stats:", err);
-      if (fallbackUser && !ucpStats) {
-        setUcpStats({ Username: fallbackUser.username, Level: fallbackUser.level || 1, ID: fallbackUser.id || 0 });
-      }
     }
   };
 

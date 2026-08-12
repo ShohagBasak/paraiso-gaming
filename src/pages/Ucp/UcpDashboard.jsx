@@ -923,7 +923,7 @@ const UcpDashboard = () => {
             <nav className="-mx-5 space-y-1">
               <button
                 onClick={() => handleTabChange('overview')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'overview'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -935,7 +935,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('finance')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'finance'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -947,7 +947,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('faction')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'faction' || activeTab === 'families'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -959,7 +959,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('vehicles')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'vehicles'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -971,7 +971,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('properties')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'properties'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -983,7 +983,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('inventory')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'inventory'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -995,7 +995,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('skills')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'skills'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -1007,7 +1007,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('security')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'security'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -1019,7 +1019,7 @@ const UcpDashboard = () => {
 
               <button
                 onClick={() => handleTabChange('support')}
-                className={`w-full flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
+                className={`w-full cursor-pointer flex items-center gap-3.5 px-6 py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                   activeTab === 'support'
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
                     : 'text-slate-400 hover:text-white hover:bg-[#121922]'
@@ -1035,7 +1035,7 @@ const UcpDashboard = () => {
             {/* Logout Action */}
             <button
               onClick={logoutUcp}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-xs uppercase tracking-wider transition-all active:scale-95"
+              className="w-full cursor-pointer flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-xs uppercase tracking-wider transition-all active:scale-95"
             >
               <FiLogOut className="w-4 h-4" />
               <span>Logout Control Panel</span>
