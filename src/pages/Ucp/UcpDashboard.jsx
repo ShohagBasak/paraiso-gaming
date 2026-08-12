@@ -19,7 +19,7 @@ const UcpDashboard = () => {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('ucp_active_tab') || 'overview';
   });
-  const [rosterViewMode, setRosterViewMode] = useState('list');
+  const [rosterViewMode, setRosterViewMode] = useState('grid');
   const [isRevoking, setIsRevoking] = useState(false);
   const [securityMessage, setSecurityMessage] = useState('');
 
@@ -763,7 +763,7 @@ const UcpDashboard = () => {
       return familyNames[fId] || `Family #${fId}`;
     }
 
-    if (gangColId > 0) {
+    if (gangColId > 0 && gangColId !== 255) {
       const familyNames = {
         1: 'Grove Street Families',
         2: '18th Street Pacris Fraternity',
@@ -787,7 +787,7 @@ const UcpDashboard = () => {
     const memberId = Number(stats.Member || stats.Leader || stats.Faction || 0);
     const gangColId = Number(stats.Gang || 0);
     if (!memberId || officialFactionIds.includes(memberId)) return 'No Rank';
-    const fId = familyGangIds.includes(memberId) ? memberId : (gangColId || 6);
+    const fId = familyGangIds.includes(memberId) ? memberId : (gangColId && gangColId !== 255 ? gangColId : 6);
 
     const groupRanks = {
       6: { 1: 'Young G', 2: 'Soldier', 3: 'Big Homie', 4: 'O.G.', 5: 'Shot Caller', 6: 'Kingpin', 7: 'Kingpin' },
