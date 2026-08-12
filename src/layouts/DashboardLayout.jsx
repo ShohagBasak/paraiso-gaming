@@ -14,7 +14,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const navItems = [
     { to: '/dashboard', label: 'Overview', icon: <MdDashboard size={20} />, end: true },
-    { to: '/dashboard/server-settings', label: 'Server Settings', icon: <FaServer size={20} /> },
+    { to: '/dashboard/server-settings', label: 'Server Settings', icon: <FaServer size={20} />, permission: 'settings' },
     { to: '/dashboard/banners', label: 'Banner Slides', icon: <MdImage size={20} />, permission: 'banners' },
     { to: '/dashboard/announcements', label: 'Announcements', icon: <MdCampaign size={20} />, permission: 'announcements' },
     { to: '/dashboard/staff', label: 'Staff Roster', icon: <MdSupervisedUserCircle size={20} />, permission: 'staff' },

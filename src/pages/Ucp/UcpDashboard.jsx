@@ -6,9 +6,12 @@ import {
   FiList, FiLock, FiCheckCircle, FiAlertTriangle, FiMenu, 
   FiX, FiCrosshair, FiSmartphone, FiMonitor, FiGlobe, 
   FiPower, FiTrash2, FiHelpCircle, FiExternalLink, FiLifeBuoy, 
-  FiMessageSquare, FiCheck
+  FiMessageSquare, FiCheck, FiKey, FiUserPlus, FiUserMinus, 
+  FiEdit3, FiUnlock
 } from 'react-icons/fi';
 import { FaDiscord } from 'react-icons/fa';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const UcpDashboard = () => {
   const { ucpPlayer, ucpStats, loading, fetchUcpStats, logoutUcp } = useUcp();
@@ -25,7 +28,7 @@ const UcpDashboard = () => {
       setIsRevoking(true);
       setSecurityMessage('');
       const token = localStorage.getItem('ucp_token');
-      const res = await fetch('/api/ucp/sessions/revoke-others', {
+      const res = await fetch(`${API_BASE_URL}/api/ucp/sessions/revoke-others`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -35,6 +38,7 @@ const UcpDashboard = () => {
       const data = await res.json();
       if (res.ok) {
         setSecurityMessage('Successfully logged out from all other devices!');
+        fetchTabModuleData('security');
         if (fetchUcpStats) fetchUcpStats();
       } else {
         setSecurityMessage(data.message || 'Failed to terminate other sessions.');
@@ -50,7 +54,7 @@ const UcpDashboard = () => {
     try {
       setSecurityMessage('');
       const token = localStorage.getItem('ucp_token');
-      const res = await fetch('/api/ucp/sessions/revoke-one', {
+      const res = await fetch(`${API_BASE_URL}/api/ucp/sessions/revoke-one`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,6 +65,7 @@ const UcpDashboard = () => {
       const data = await res.json();
       if (res.ok) {
         setSecurityMessage('Device session removed successfully!');
+        fetchTabModuleData('security');
         if (fetchUcpStats) fetchUcpStats();
       } else {
         setSecurityMessage(data.message || 'Failed to remove device.');
@@ -70,21 +75,116 @@ const UcpDashboard = () => {
     }
   };
 
-  // Background Live-Sync: Refetch stats every 2 seconds & on mount
+  // Modular On-Demand Module State
+  const [vehicles, setVehicles] = useState([]);
+  const [houses, setHouses] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
+  const [factionMembers, setFactionMembers] = useState([]);
+  const [gangMembers, setGangMembers] = useState([]);
+  const [inventoryData, setInventoryData] = useState(null);
+  const [skillsData, setSkillsData] = useState(null);
+  const [financeData, setFinanceData] = useState(null);
+  const [sessionsData, setSessionsData] = useState([]);
+  const [isModuleLoading, setIsModuleLoading] = useState(false);
+
+  const fetchTabModuleData = async (tab) => {
+    const token = localStorage.getItem('ucp_token');
+    if (!token) return;
+    try {
+      setIsModuleLoading(true);
+      if (tab === 'vehicles') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/vehicles`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setVehicles(data.vehicles || []);
+        }
+      } else if (tab === 'properties') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/properties`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setHouses(data.houses || []);
+          setBusinesses(data.businesses || []);
+        }
+      } else if (tab === 'faction') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/faction-roster`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFactionMembers(data.factionMembers || []);
+        }
+      } else if (tab === 'gang') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/gang-roster`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setGangMembers(data.gangMembers || []);
+        }
+      } else if (tab === 'inventory') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/inventory`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setInventoryData(data);
+        }
+      } else if (tab === 'skills') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/skills`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSkillsData(data.skills || {});
+        }
+      } else if (tab === 'finance') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/finances`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFinanceData(data.finances || {});
+        }
+      } else if (tab === 'security') {
+        const res = await fetch(`${API_BASE_URL}/api/ucp/sessions`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSessionsData(data.activeSessions || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching modular tab data:', err);
+    } finally {
+      setIsModuleLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (fetchUcpStats) fetchUcpStats();
-    const timer = setInterval(() => {
-      if (fetchUcpStats) fetchUcpStats();
-    }, 2000);
-    return () => clearInterval(timer);
-  }, []);
+    if (activeTab && ['vehicles', 'properties', 'faction', 'gang', 'inventory', 'skills', 'finance', 'security'].includes(activeTab)) {
+      fetchTabModuleData(activeTab);
+    }
+  }, [activeTab]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     localStorage.setItem('ucp_active_tab', tab);
     setIsSidebarOpen(false);
-    if (fetchUcpStats) fetchUcpStats();
   };
+
+  // Unified fallback arrays
+  const vehiclesList = vehicles.length > 0 ? vehicles : (ucpStats?.vehicles || []);
+  const housesList = houses.length > 0 ? houses : (ucpStats?.houses || []);
+  const businessesList = businesses.length > 0 ? businesses : (ucpStats?.businesses || []);
+  const factionMembersList = factionMembers.length > 0 ? factionMembers : (ucpStats?.factionMembers || []);
+  const gangMembersList = gangMembers.length > 0 ? gangMembers : (ucpStats?.gangMembers || []);
+  const activeSessionsList = sessionsData.length > 0 ? sessionsData : (ucpStats?.activeSessions || []);
 
   // Real In-Game Faction Colors and Meta
   const factionMeta = {
@@ -210,39 +310,44 @@ const UcpDashboard = () => {
 
   const getDonatorExpiryText = (stats) => {
     if (!stats || !stats.Donator || Number(stats.Donator) === 0) {
-      return 'N/A';
+      return 'Expired / None';
     }
 
     const expTime = stats.DonatorTime ?? stats.DonatorDate ?? stats.DonatorExp ?? stats.DonatorExpire ?? stats.DonatorExpiration ?? stats.VIPTime ?? stats.VIPDate ?? stats.VIPExp ?? stats.VIPExpire ?? stats.DTime ?? stats.DDate ?? stats.DonationDate ?? stats.DonationTime ?? stats.DonationExp;
 
-    if (expTime === undefined || expTime === null || expTime === '' || Number(expTime) === 0) {
+    if (expTime === undefined || expTime === null || expTime === '' || String(expTime).toLowerCase() === 'permanent' || String(expTime) === '9999999999') {
       return 'Permanent';
     }
 
-    // If it's a string like "Sep 09 2026, 21:11:54" or "2026-09-09"
-    if (typeof expTime === 'string' && isNaN(Number(expTime))) {
-      // Clean up string date
-      if (expTime.includes(',')) {
-        return expTime.split(',')[0]; // e.g. "Sep 09 2026"
-      }
-      return expTime;
-    }
-
+    let expiryDate = null;
     const numExp = Number(expTime);
+
     if (!isNaN(numExp)) {
+      if (numExp === 0) {
+        return 'Permanent';
+      }
+      if (numExp < 0) {
+        return 'Expired';
+      }
       if (numExp > 1000000000) {
         // Unix timestamp in seconds
-        const dateObj = new Date(numExp * 1000);
-        return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-      }
-      if (numExp > 1000000) {
+        expiryDate = new Date(numExp * 1000);
+      } else if (numExp > 1000000) {
         // Timestamp in milliseconds
-        const dateObj = new Date(numExp);
-        return dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-      }
-      if (numExp < 3650) {
+        expiryDate = new Date(numExp);
+      } else if (numExp <= 3650) {
         return `${numExp} Days Left`;
       }
+    } else if (typeof expTime === 'string') {
+      expiryDate = new Date(expTime);
+    }
+
+    if (expiryDate && !isNaN(expiryDate.getTime())) {
+      const now = new Date();
+      if (expiryDate < now) {
+        return `Expired (${expiryDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })})`;
+      }
+      return expiryDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
     return String(expTime);
@@ -285,6 +390,14 @@ const UcpDashboard = () => {
 
   const getPlayerWeapons = (stats) => {
     if (!stats) return [];
+    if (Array.isArray(stats.weapons)) {
+      return stats.weapons.map(w => ({
+        slot: w.slot,
+        id: w.id,
+        name: getSAMPWeaponName(w.id),
+        ammo: w.ammo
+      }));
+    }
     const list = [];
     for (let i = 0; i <= 13; i++) {
       const gunId = Number(stats[`Gun${i}`] ?? stats[`pGun${i}`] ?? stats[`Weapon${i}`] ?? stats[`pWeapon${i}`] ?? 0);
@@ -1154,31 +1267,38 @@ const UcpDashboard = () => {
             )}
 
             {/* TAB CONTENT: Finance */}
-            {activeTab === 'finance' && (
-              <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-                <div className="border-b border-slate-800 pb-4">
-                  <h3 className="text-xl font-black text-white tracking-wide uppercase">Financial Overview</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Cash, Bank, and Total Net Wealth details</p>
+            {activeTab === 'finance' && (() => {
+              const fin = financeData || ucpStats;
+              const cashVal = Number(fin.Cash ?? fin.cash ?? fin.pMoney ?? fin.Money ?? 0);
+              const bankVal = Number(fin.Bank ?? fin.bank ?? fin.pBank ?? 0);
+              const totalNet = fin.TotalWealth !== undefined ? Number(fin.TotalWealth) : (cashVal + bankVal);
+
+              return (
+                <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                  <div className="border-b border-slate-800 pb-4">
+                    <h3 className="text-xl font-black text-white tracking-wide uppercase">Financial Overview</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Cash, Bank, and Total Net Wealth details</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash On Hand</p>
+                      <p className="text-3xl font-black text-emerald-400 font-mono mt-2">${cashVal.toLocaleString()}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bank Balance</p>
+                      <p className="text-3xl font-black text-cyan-400 font-mono mt-2">${bankVal.toLocaleString()}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Net Wealth</p>
+                      <p className="text-3xl font-black text-amber-400 font-mono mt-2">${totalNet.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cash On Hand</p>
-                    <p className="text-3xl font-black text-emerald-400 font-mono mt-2">${cash.toLocaleString()}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bank Balance</p>
-                    <p className="text-3xl font-black text-cyan-400 font-mono mt-2">${bank.toLocaleString()}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-6 rounded-2xl">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Net Wealth</p>
-                    <p className="text-3xl font-black text-amber-400 font-mono mt-2">{formattedWealth}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* TAB CONTENT: Faction, Families & Gangs (Combined View) */}
             {(activeTab === 'faction' || activeTab === 'families') && (
@@ -1219,11 +1339,11 @@ const UcpDashboard = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-3">
                         <h4 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                           <FiShield className="w-5 h-5 text-cyan-400" />
-                          <span>Faction Roster ({((ucpStats.factionMembers && ucpStats.factionMembers.length > 0) ? ucpStats.factionMembers : [ucpStats]).length} Members)</span>
+                          <span>Faction Roster ({(factionMembersList.length > 0 ? factionMembersList : [ucpStats]).length} Members)</span>
                         </h4>
                         <div className="flex items-center gap-3 self-end sm:self-auto">
                           <span className="text-xs font-bold text-cyan-400 font-mono">
-                            Online: {((ucpStats.factionMembers && ucpStats.factionMembers.length > 0) ? ucpStats.factionMembers : [ucpStats]).filter(m => Number(m.Online) > 0).length} / {((ucpStats.factionMembers && ucpStats.factionMembers.length > 0) ? ucpStats.factionMembers : [ucpStats]).length}
+                            Online: {(factionMembersList.length > 0 ? factionMembersList : [ucpStats]).filter(m => Number(m.Online) > 0).length} / {(factionMembersList.length > 0 ? factionMembersList : [ucpStats]).length}
                           </span>
                           <div className="flex items-center bg-[#121922] p-1 rounded-xl border border-slate-800 gap-1">
                             <button
@@ -1246,7 +1366,7 @@ const UcpDashboard = () => {
 
                       {rosterViewMode === 'grid' ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {((ucpStats.factionMembers && ucpStats.factionMembers.length > 0) ? ucpStats.factionMembers : [ucpStats]).map((m) => {
+                          {(factionMembersList.length > 0 ? factionMembersList : [ucpStats]).map((m) => {
                             const isLeader = Number(m.Leader || 0) > 0;
                             const isOnline = Number(m.Online || 0) > 0;
                             const mName = m.Username || playerName;
@@ -1299,7 +1419,7 @@ const UcpDashboard = () => {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/60 font-medium">
-                              {((ucpStats.factionMembers && ucpStats.factionMembers.length > 0) ? ucpStats.factionMembers : [ucpStats]).map((m) => {
+                              {(factionMembersList.length > 0 ? factionMembersList : [ucpStats]).map((m) => {
                                 const isLeader = Number(m.Leader || 0) > 0;
                                 const isOnline = Number(m.Online || 0) > 0;
                                 const mName = m.Username || playerName;
@@ -1374,11 +1494,11 @@ const UcpDashboard = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-3">
                         <h4 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                           <FiCrosshair className="w-5 h-5 text-emerald-400" />
-                          <span>Gang Roster ({((ucpStats.gangMembers && ucpStats.gangMembers.length > 0) ? ucpStats.gangMembers : [ucpStats]).length} Members)</span>
+                          <span>Gang Roster ({(gangMembersList.length > 0 ? gangMembersList : [ucpStats]).length} Members)</span>
                         </h4>
                         <div className="flex items-center gap-3 self-end sm:self-auto">
                           <span className="text-xs font-bold text-emerald-400 font-mono">
-                            Online: {((ucpStats.gangMembers && ucpStats.gangMembers.length > 0) ? ucpStats.gangMembers : [ucpStats]).filter(m => Number(m.Online) > 0).length} / {((ucpStats.gangMembers && ucpStats.gangMembers.length > 0) ? ucpStats.gangMembers : [ucpStats]).length}
+                            Online: {(gangMembersList.length > 0 ? gangMembersList : [ucpStats]).filter(m => Number(m.Online) > 0).length} / {(gangMembersList.length > 0 ? gangMembersList : [ucpStats]).length}
                           </span>
                           <div className="flex items-center bg-[#121922] p-1 rounded-xl border border-slate-800 gap-1">
                             <button
@@ -1401,7 +1521,7 @@ const UcpDashboard = () => {
 
                       {rosterViewMode === 'grid' ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {((ucpStats.gangMembers && ucpStats.gangMembers.length > 0) ? ucpStats.gangMembers : [ucpStats]).map((m) => {
+                          {(gangMembersList.length > 0 ? gangMembersList : [ucpStats]).map((m) => {
                             const isLeader = Number(m.FLeader || 0) > 0 || Number(m.Leader || 0) > 0;
                             const isOnline = Number(m.Online || 0) > 0;
                             const mName = m.Username || playerName;
@@ -1454,7 +1574,7 @@ const UcpDashboard = () => {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/60 font-medium">
-                              {((ucpStats.gangMembers && ucpStats.gangMembers.length > 0) ? ucpStats.gangMembers : [ucpStats]).map((m) => {
+                              {(gangMembersList.length > 0 ? gangMembersList : [ucpStats]).map((m) => {
                                 const isLeader = Number(m.FLeader || 0) > 0 || Number(m.Leader || 0) > 0;
                                 const isOnline = Number(m.Online || 0) > 0;
                                 const mName = m.Username || playerName;
@@ -1512,7 +1632,7 @@ const UcpDashboard = () => {
                   </div>
                   <div className="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-black uppercase tracking-wider flex items-center gap-2">
                     <FiTruck className="w-4 h-4" />
-                    <span>Slots Used: {ucpStats.vehicles?.length || 0} / 12 Max</span>
+                    <span>Slots Used: {vehiclesList.length} / 12 Max</span>
                   </div>
                 </div>
 
@@ -1520,18 +1640,18 @@ const UcpDashboard = () => {
                 <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl space-y-2">
                   <div className="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider">
                     <span className="text-slate-400">Vehicle Slot Capacity</span>
-                    <span className="text-cyan-400 font-mono">{ucpStats.vehicles?.length || 0} / 12</span>
+                    <span className="text-cyan-400 font-mono">{vehiclesList.length} / 12</span>
                   </div>
                   <div className="w-full h-3 bg-[#070b0e] rounded-full overflow-hidden border border-slate-800">
                     <div
                       className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, ((ucpStats.vehicles?.length || 0) / 12) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (vehiclesList.length / 12) * 100)}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Vehicles Grid */}
-                {(!ucpStats.vehicles || ucpStats.vehicles.length === 0) ? (
+                {vehiclesList.length === 0 ? (
                   <div className="bg-[#121922] border border-slate-800/80 rounded-2xl p-8 text-center space-y-3">
                     <FiTruck className="w-12 h-12 text-slate-600 mx-auto" />
                     <h4 className="text-base font-bold text-slate-300">No Vehicles Owned</h4>
@@ -1541,7 +1661,7 @@ const UcpDashboard = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {ucpStats.vehicles.map((veh, idx) => (
+                    {vehiclesList.map((veh, idx) => (
                       <div key={veh.ID || idx} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -1549,8 +1669,7 @@ const UcpDashboard = () => {
                               <FiTruck className="w-5 h-5" />
                             </div>
                             <div>
-                              <h4 className="text-base font-black text-white">{getVehicleName(veh.ModelID)}</h4>
-                              <p className="text-[10px] text-slate-400 font-mono font-bold">Model #{veh.ModelID} | ID #{veh.ID}</p>
+                              <h4 className="text-base font-black text-white">{getVehicleName(veh.ModelID || veh.Model || veh.model || 400)}</h4>
                             </div>
                           </div>
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider font-mono border ${
@@ -1600,39 +1719,43 @@ const UcpDashboard = () => {
                   <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                     <h4 className="text-base font-black text-white flex items-center gap-2">
                       <FiHome className="text-cyan-400" />
-                      <span>Owned Houses ({ucpStats.houses?.length || 0})</span>
+                      <span>Owned Houses ({housesList.length})</span>
                     </h4>
                   </div>
 
-                  {(!ucpStats.houses || ucpStats.houses.length === 0) ? (
+                  {housesList.length === 0 ? (
                     <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-6 text-center text-slate-500 text-xs font-bold">
                       No residential houses currently owned.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {ucpStats.houses.map((house, idx) => {
+                      {housesList.map((house, idx) => {
                         const houseGuns = getHouseWeapons(house);
-                        const isRentable = Number(house.rentable || 0) === 1;
-                        const isLocked = Number(house.locked || 0) === 1;
+                        const isRentable = Number(house.rentable || house.hRentable || 0) === 1;
+                        const isLocked = Number(house.locked || house.Lock || house.hLocked || 0) === 1;
+                        const houseIdVal = house.id || house.ID || house.houseid || idx;
+
                         return (
-                          <div key={house.id || idx} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-4 shadow-xl">
+                          <div key={houseIdVal} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-4 shadow-xl">
                             {/* Header */}
-                            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
                               <div className="flex items-center gap-2.5">
                                 <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                                   <FiHome className="w-5 h-5" />
                                 </div>
                                 <div>
-                                  <h5 className="text-sm font-black text-white font-mono">House #{house.id}</h5>
-                                  <span className="text-[10px] text-slate-400 font-mono font-bold">Level {house.level || 1} Interior</span>
+                                  <h5 className="text-sm font-black text-white font-mono">House #{houseIdVal}</h5>
+                                  <span className="text-[10px] text-slate-400 font-mono font-bold">Level {house.level || house.hLevel || 1} Interior</span>
                                 </div>
                               </div>
+                              
                               <div className="flex items-center gap-1.5">
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase border ${
                                   isLocked ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                 }`}>
                                   {isLocked ? 'Locked' : 'Unlocked'}
                                 </span>
+
                                 <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase border ${
                                   isRentable ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-slate-800 text-slate-400 border-slate-700'
                                 }`}>
@@ -1645,29 +1768,23 @@ const UcpDashboard = () => {
                             <div className="grid grid-cols-2 gap-3 text-xs">
                               <div>
                                 <span className="text-[10px] font-extrabold text-slate-500 uppercase">Property Value</span>
-                                <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(house.price || 0).toLocaleString()}</p>
+                                <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(house.price || house.hPrice || 0).toLocaleString()}</p>
                               </div>
                               <div>
                                 <span className="text-[10px] font-extrabold text-slate-500 uppercase">Rent Fee</span>
-                                <p className="font-mono font-bold text-cyan-400 mt-0.5">${Number(house.rent_fee || 0).toLocaleString()}/hr</p>
+                                <p className="font-mono font-bold text-cyan-400 mt-0.5">${Number(house.rent_fee || house.rent || house.hRent || 0).toLocaleString()}/hr</p>
                               </div>
                               <div>
                                 <span className="text-[10px] font-extrabold text-slate-500 uppercase">House Safe Cash</span>
-                                <p className="font-mono font-bold text-amber-400 mt-0.5">${Number(house.safe_money || house.money || 0).toLocaleString()}</p>
+                                <p className="font-mono font-bold text-amber-400 mt-0.5">${Number(house.safe_money || house.money || house.safe || 0).toLocaleString()}</p>
                               </div>
                               <div>
                                 <span className="text-[10px] font-extrabold text-slate-500 uppercase">Materials Vault</span>
                                 <p className="font-mono font-bold text-purple-400 mt-0.5">{Number(house.materials || 0).toLocaleString()}</p>
                               </div>
-                              {(house.pot > 0 || house.crack > 0) && (
-                                <div className="col-span-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono">
-                                  <span className="text-[10px] font-extrabold text-slate-500 uppercase">Contraband Storage</span>
-                                  <span className="text-amber-400 font-bold">Pot: {house.pot || 0}g | Crack: {house.crack || 0}g</span>
-                                </div>
-                              )}
                             </div>
 
-                            {/* House Stored Guns (/storegun & /getgun) */}
+                            {/* House Stored Guns */}
                             <div className="pt-3 border-t border-slate-800/80 space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1708,44 +1825,74 @@ const UcpDashboard = () => {
                   <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                     <h4 className="text-base font-black text-white flex items-center gap-2">
                       <FiBriefcase className="text-cyan-400" />
-                      <span>Owned Businesses ({ucpStats.businesses?.length || 0})</span>
+                      <span>Owned Businesses ({businessesList.length})</span>
                     </h4>
                   </div>
 
-                  {(!ucpStats.businesses || ucpStats.businesses.length === 0) ? (
+                  {businessesList.length === 0 ? (
                     <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-6 text-center text-slate-500 text-xs font-bold">
                       No commercial businesses currently owned.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {ucpStats.businesses.map((biz, idx) => (
-                        <div key={biz.id || idx} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-sm font-black text-white">{biz.name || `Business #${biz.id}`}</h5>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase font-mono">
-                              Biz #{biz.id}
-                            </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {businessesList.map((biz, idx) => {
+                        const bizIdVal = (biz.id !== undefined && biz.id !== null) ? biz.id : 
+                                         ((biz.ID !== undefined && biz.ID !== null) ? biz.ID : 
+                                         (biz.bizzid || biz.BizzID || biz.bID || biz.bizz_id || idx));
+                        const isBizLocked = Number(biz.locked || biz.Lock || biz.bLocked || 0) === 1;
+                        const currentSafeVal = Number(biz.safe || biz.Safe || biz.money || biz.Till || 0);
+
+                        return (
+                          <div key={bizIdVal} className="bg-[#121922] border border-slate-800 hover:border-cyan-500/50 p-5 rounded-2xl transition-all space-y-4 shadow-xl">
+                            {/* Business Header */}
+                            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                                  <FiBriefcase className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <h5 className="text-sm font-black text-white">{biz.bName || biz.bizz_name || biz.bizzName || biz.StoreName || biz.store_name || biz.bTitle || biz.Title || biz.name || biz.Name || biz.interior_text || `Business #${bizIdVal}`}</h5>
+                                  <span className="text-[10px] text-slate-400 font-mono font-bold">Owner: {biz.owner || biz.Owner || playerName}</span>
+                                </div>
+                              </div>
+
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-extrabold uppercase border ${
+                                isBizLocked ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                              }`}>
+                                {isBizLocked ? 'Closed' : 'Open'}
+                              </span>
+                            </div>
+
+                            {/* Details Grid */}
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Price Value</span>
+                                <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(biz.price || biz.Price || 0).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Safe Till Vault</span>
+                                <p className="font-mono font-bold text-cyan-400 mt-0.5">${currentSafeVal.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Stock Products</span>
+                                <p className="font-mono font-bold text-amber-400 mt-0.5">{Number(biz.products || biz.Products || 0).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Business Level</span>
+                                <p className="font-mono font-bold text-purple-400 mt-0.5">Level {biz.level || biz.Level || 1}</p>
+                              </div>
+                            </div>
+
+                            {/* Store Announcement Message */}
+                            {biz.message || biz.Message ? (
+                              <div className="bg-[#0b1016] border border-slate-800 p-2.5 rounded-xl text-xs">
+                                <span className="text-[10px] font-extrabold text-slate-500 uppercase block">Store Message</span>
+                                <p className="text-slate-300 italic mt-0.5">"{biz.message || biz.Message}"</p>
+                              </div>
+                            ) : null}
                           </div>
-                          <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-800">
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Business Price</span>
-                              <p className="font-mono font-bold text-emerald-400 mt-0.5">${Number(biz.price || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Vault Cash</span>
-                              <p className="font-mono font-bold text-cyan-400 mt-0.5">${Number(biz.money || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Stock Products</span>
-                              <p className="font-mono font-bold text-amber-400 mt-0.5">{Number(biz.products || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Status</span>
-                              <p className="font-mono font-bold text-slate-300 mt-0.5">{biz.locked === 1 ? 'Closed' : 'Open for Business'}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -1754,176 +1901,181 @@ const UcpDashboard = () => {
             )}
 
             {/* TAB CONTENT: Inventory & Assets */}
-            {activeTab === 'inventory' && (
-              <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-                <div className="border-b border-slate-800 pb-4">
-                  <h3 className="text-xl font-black text-white tracking-wide uppercase">Inventory & Personal Assets</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Carried Items, Tactical Gear & Electronics</p>
-                </div>
+            {activeTab === 'inventory' && (() => {
+              const inv = inventoryData?.inventory || ucpStats;
+              const weaponsList = inventoryData?.weapons ? getPlayerWeapons(inventoryData) : getPlayerWeapons(ucpStats);
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rope</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Rope ?? ucpStats.rope ?? 0}</p>
+              return (
+                <div className="bg-[#0d131a]/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                  <div className="border-b border-slate-800 pb-4">
+                    <h3 className="text-xl font-black text-white tracking-wide uppercase">Inventory & Personal Assets</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Carried Items, Tactical Gear & Electronics</p>
                   </div>
 
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Cigars</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Cigars ?? ucpStats.Cigar ?? ucpStats.cigars ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Sprunk Can</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Sprunk ?? ucpStats.sprunk ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Spray Can</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Spraycan ?? ucpStats.Spray ?? ucpStats.spraycan ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Seeds</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Seeds ?? ucpStats.Seed ?? ucpStats.seeds ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Screwdriver</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Screwdriver ?? ucpStats.screwdriver ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Wristwatch</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
-                      {(ucpStats.Wristwatch || ucpStats.Watch || ucpStats.wristwatch) ? 'Owned' : 'None'}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Tires</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Tire ?? ucpStats.Tires ?? ucpStats.tire ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">First Aid Kit</span>
-                    <p className="text-lg font-black text-emerald-400 font-mono mt-1">{ucpStats.FirstAid ?? ucpStats.Firstaid ?? ucpStats.firstaid ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">RC Cam</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.RCCam ?? ucpStats.Rccam ?? ucpStats.rccam ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Receiver</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Receiver ?? ucpStats.receiver ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">GPS Navigator</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
-                      {(ucpStats.GPS || ucpStats.Gps || ucpStats.gps) ? 'Owned' : 'None'}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Bug Sweep</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.BugSweep ?? ucpStats.Bugsweep ?? ucpStats.bugsweep ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Lockpick</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.Lockpick ?? ucpStats.Lockpicks ?? ucpStats.lockpick ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rim Kit</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.RimKit ?? ucpStats.Rimkit ?? ucpStats.rimkit ?? 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Materials</span>
-                    <p className="text-lg font-black text-purple-400 font-mono mt-1">{ucpStats.Materials || 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Crack</span>
-                    <p className="text-lg font-black text-amber-400 font-mono mt-1">{ucpStats.Crack || 0}g</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Pot</span>
-                    <p className="text-lg font-black text-emerald-400 font-mono mt-1">{ucpStats.Pot || 0}g</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Weapon Crates</span>
-                    <p className="text-lg font-black text-white font-mono mt-1">{ucpStats.WeaponCrates || 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Double EXP Tokens</span>
-                    <p className="text-lg font-black text-amber-400 font-mono mt-1">{ucpStats.DoubleExpToken || 0}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Boombox</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Boombox ? 'Owned' : 'None'}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">MP3 Player</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Mp3 ? 'Owned' : 'None'}</p>
-                  </div>
-
-                  <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Phonebook</span>
-                    <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{ucpStats.Phonebook ? 'Owned' : 'None'}</p>
-                  </div>
-                </div>
-
-                {/* Section: Carrying Guns & Firearms (/myguns) */}
-                <div className="pt-6 border-t border-slate-800 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
-                    <h4 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
-                      <FiCrosshair className="w-5 h-5 text-red-400" />
-                      <span>Equipped Weapons & Firearms</span>
-                    </h4>
-                    
-                  </div>
-
-                  {getPlayerWeapons(ucpStats).length === 0 ? (
-                    <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-5 text-center text-slate-500 text-xs font-bold">
-                      No weapons or firearms currently equipped in carried inventory slots.
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rope</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Rope ?? inv.rope ?? 0}</p>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {getPlayerWeapons(ucpStats).map((w, idx) => (
-                        <div key={idx} className="bg-[#121922] border border-slate-800 hover:border-red-500/40 p-4 rounded-xl flex items-center justify-between transition-all shadow-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-                              <FiCrosshair className="w-5 h-5" />
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Cigars</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Cigars ?? inv.Cigar ?? inv.cigars ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Sprunk Can</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Sprunk ?? inv.sprunk ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Spray Can</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Spraycan ?? inv.Spray ?? inv.spraycan ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Seeds</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Seeds ?? inv.Seed ?? inv.seeds ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Screwdriver</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Screwdriver ?? inv.screwdriver ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Wristwatch</span>
+                      <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
+                        {(inv.Wristwatch || inv.Watch || inv.wristwatch) ? 'Owned' : 'None'}
+                      </p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Tires</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Tire ?? inv.Tires ?? inv.tire ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">First Aid Kit</span>
+                      <p className="text-lg font-black text-emerald-400 font-mono mt-1">{inv.FirstAid ?? inv.Firstaid ?? inv.firstaid ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">RC Cam</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.RCCam ?? inv.Rccam ?? inv.rccam ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Receiver</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Receiver ?? inv.receiver ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">GPS Navigator</span>
+                      <p className="text-lg font-black text-cyan-400 mt-1 font-mono">
+                        {(inv.GPS || inv.Gps || inv.gps) ? 'Owned' : 'None'}
+                      </p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Bug Sweep</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.BugSweep ?? inv.Bugsweep ?? inv.bugsweep ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Lockpick</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.Lockpick ?? inv.Lockpicks ?? inv.lockpick ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Rim Kit</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.RimKit ?? inv.Rimkit ?? inv.rimkit ?? 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Materials</span>
+                      <p className="text-lg font-black text-purple-400 font-mono mt-1">{inv.Materials || 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Crack</span>
+                      <p className="text-lg font-black text-amber-400 font-mono mt-1">{inv.Crack || 0}g</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Pot</span>
+                      <p className="text-lg font-black text-emerald-400 font-mono mt-1">{inv.Pot || 0}g</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Weapon Crates</span>
+                      <p className="text-lg font-black text-white font-mono mt-1">{inv.WeaponCrates || 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Double EXP Tokens</span>
+                      <p className="text-lg font-black text-amber-400 font-mono mt-1">{inv.DoubleExpToken || 0}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Boombox</span>
+                      <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{inv.Boombox ? 'Owned' : 'None'}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">MP3 Player</span>
+                      <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{inv.Mp3 ? 'Owned' : 'None'}</p>
+                    </div>
+
+                    <div className="bg-[#121922] border border-slate-800 p-4 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Phonebook</span>
+                      <p className="text-lg font-black text-cyan-400 mt-1 font-mono">{inv.Phonebook ? 'Owned' : 'None'}</p>
+                    </div>
+                  </div>
+
+                  {/* Section: Carrying Guns & Firearms (/myguns) */}
+                  <div className="pt-6 border-t border-slate-800 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-3 gap-2">
+                      <h4 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <FiCrosshair className="w-5 h-5 text-red-400" />
+                        <span>Equipped Weapons & Firearms</span>
+                      </h4>
+                    </div>
+
+                    {weaponsList.length === 0 ? (
+                      <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-5 text-center text-slate-500 text-xs font-bold">
+                        No weapons or firearms currently equipped in carried inventory slots.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {weaponsList.map((w, idx) => (
+                          <div key={idx} className="bg-[#121922] border border-slate-800 hover:border-red-500/40 p-4 rounded-xl flex items-center justify-between transition-all shadow-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+                                <FiCrosshair className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-black text-white">{w.name}</h5>
+                                <span className="text-[10px] font-mono text-slate-400 font-semibold">Slot #{w.slot} • Weapon ID #{w.id}</span>
+                              </div>
                             </div>
-                            <div>
-                              <h5 className="text-sm font-black text-white">{w.name}</h5>
-                              <span className="text-[10px] font-mono text-slate-400 font-semibold">Slot #{w.slot} • Weapon ID #{w.id}</span>
+                            <div className="text-right font-mono">
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-red-300 text-xs font-extrabold border border-slate-700/60">
+                                {w.ammo > 0 ? `${w.ammo.toLocaleString()} Ammo` : 'Equipped'}
+                              </span>
                             </div>
                           </div>
-                          <div className="text-right font-mono">
-                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-red-300 text-xs font-extrabold border border-slate-700/60">
-                              {w.ammo > 0 ? `${w.ammo.toLocaleString()} Ammo` : 'Equipped'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* TAB CONTENT: Skills */}
             {activeTab === 'skills' && (() => {
+              const activeSkills = skillsData || ucpStats;
               const getSkillInfo = (skillVal) => {
                 const points = Number(skillVal || 0);
                 let level = 1;
@@ -1991,7 +2143,7 @@ const UcpDashboard = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {skillList.map((s) => {
-                      const info = getSkillInfo(ucpStats[s.dbKey]);
+                      const info = getSkillInfo(activeSkills[s.dbKey]);
                       return (
                         <div key={s.dbKey} className="bg-[#121922] border border-slate-800/90 hover:border-cyan-500/40 rounded-xl p-4 transition-all space-y-2">
                           <div className="flex items-center justify-between">
@@ -2055,11 +2207,11 @@ const UcpDashboard = () => {
                 <div className="space-y-4">
                   <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <FiMonitor className="w-4 h-4 text-cyan-400" />
-                    <span>Currently Active Logged-in Devices ({(ucpStats.activeSessions || []).length})</span>
+                    <span>Currently Active Logged-in Devices ({activeSessionsList.length})</span>
                   </h4>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(ucpStats.activeSessions || []).map((session, idx) => (
+                    {activeSessionsList.map((session, idx) => (
                       <div 
                         key={idx} 
                         className={`bg-[#121922] border rounded-xl p-5 transition-all space-y-3 relative overflow-hidden ${
