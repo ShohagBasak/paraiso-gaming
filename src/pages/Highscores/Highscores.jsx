@@ -260,7 +260,7 @@ const Highscores = () => {
                       <tr>
                         <th className="py-4 px-6">Rank</th>
                         <th className="py-4 px-6">
-                          {activeCategory === 'crimes' ? 'Crime' : activeCategory === 'cars' ? 'Model' : activeCategory === 'factions-roster' || activeCategory === 'factions-wealth' ? 'Gang / Faction' : activeCategory === 'kills' || activeCategory === 'arrests' || activeCategory === 'lawyer' || activeCategory === 'detective' || activeCategory === 'arms' || activeCategory === 'mechanic' || activeCategory === 'boxing' || activeCategory === 'fishing' || activeCategory === 'trucker' || activeCategory === 'carjacker' || activeCategory === 'hours' || activeCategory === 'wealth' ? 'Username' : 'Player / Model'}
+                          {activeCategory === 'crimes' ? 'Crime' : activeCategory === 'cars' ? 'Model' : activeCategory === 'factions-roster' || activeCategory === 'factions-wealth' ? 'Gang / Faction' : activeCategory === 'kills' || activeCategory === 'arrests' || activeCategory === 'lawyer' || activeCategory === 'detective' || activeCategory === 'arms' || activeCategory === 'mechanic' || activeCategory === 'boxing' || activeCategory === 'fishing' || activeCategory === 'trucker' || activeCategory === 'carjacker' || activeCategory === 'hours' || activeCategory === 'wealth' || activeCategory === 'materials' ? 'Username' : 'Player / Model'}
                         </th>
                         {activeCategory === 'arrests' ? (
                           <>
@@ -269,7 +269,7 @@ const Highscores = () => {
                           </>
                         ) : (
                           <th className="py-4 px-6 text-right">
-                            {activeCategory === 'crimes' || activeCategory === 'cars' ? 'Amount' : activeCategory === 'factions-roster' ? 'Number' : activeCategory === 'kills' ? 'Kills' : activeCategory === 'lawyer' ? 'Freed' : activeCategory === 'detective' ? 'Found' : activeCategory === 'arms' ? 'Guns Made' : activeCategory === 'mechanic' ? 'Repaired' : activeCategory === 'boxing' ? 'Fights Won' : activeCategory === 'fishing' ? 'Fishes Caught' : activeCategory === 'trucker' ? 'Delivered' : activeCategory === 'carjacker' ? 'Car Sold' : 'Score / Value'}
+                            {activeCategory === 'wealth' ? 'Total Wealth' : activeCategory === 'materials' ? 'Materials' : activeCategory === 'hours' ? 'Playing Hours' : activeCategory === 'crimes' || activeCategory === 'cars' ? 'Amount' : activeCategory === 'factions-roster' ? 'Number' : activeCategory === 'kills' ? 'Kills' : activeCategory === 'lawyer' ? 'Freed' : activeCategory === 'detective' ? 'Found' : activeCategory === 'arms' ? 'Guns Made' : activeCategory === 'mechanic' ? 'Repaired' : activeCategory === 'boxing' ? 'Fights Won' : activeCategory === 'fishing' ? 'Fishes Caught' : activeCategory === 'trucker' ? 'Delivered' : activeCategory === 'carjacker' ? 'Car Sold' : 'Score / Value'}
                           </th>
                         )}
                       </tr>
@@ -279,7 +279,7 @@ const Highscores = () => {
                         const rank = idx + 1;
                         const name = item.username || item.name || 'Unknown';
                         return (
-                          <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                          <tr key={item.id || idx} className="hover:bg-slate-800/40 transition-colors">
                             {/* Rank */}
                             <td className="py-4 px-6 font-mono font-black text-sm">
                               {rank === 1 ? (
@@ -321,7 +321,9 @@ const Highscores = () => {
                                 </div>
                                 <div>
                                   <div className="font-extrabold text-white text-sm">{name}</div>
-                                  {activeCategory === 'crimes' ? null : item.crimeName ? (
+                                  {activeCategory === 'hours' ? (
+                                    <div className="text-[10px] text-cyan-400 font-mono font-bold">Level {item.level || 1}</div>
+                                  ) : activeCategory === 'crimes' ? null : item.crimeName ? (
                                     <div className="text-[10px] text-amber-400 font-mono font-bold">Charge: {item.crimeName}</div>
                                   ) : item.modelId ? (
                                     <div className="text-[10px] text-cyan-400 font-mono font-bold">{item.modelName || `Model #${item.modelId}`}</div>
