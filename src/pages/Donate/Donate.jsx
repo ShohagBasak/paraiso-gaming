@@ -114,9 +114,6 @@ const isCoinItem = (item) => {
 
 const getItemImageUrl = (item) => {
   if (!item) return null;
-  if (isCoinItem(item)) {
-    return '/Donator_-_Paraiso_Coins.jpg';
-  }
   return item.image_url || null;
 };
 
@@ -166,7 +163,6 @@ const Donate = () => {
 
   useEffect(() => {
     fetchCategories();
-    fetchItems();
   }, []);
 
   useEffect(() => {
