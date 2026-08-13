@@ -182,7 +182,7 @@ const UcpDashboard = () => {
     if (activeTab === 'security') {
       pollInterval = setInterval(() => {
         fetchTabModuleData(activeTab);
-      }, 3000);
+      }, 300000);
     }
 
     return () => {
