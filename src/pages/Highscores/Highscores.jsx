@@ -191,7 +191,6 @@ const Highscores = () => {
                         <button
                           key={item.id}
                           onClick={() => handleCategorySelect(item.id)}
-                          onMouseEnter={() => prefetchCategory(item.id)}
                           className={`w-full cursor-pointer flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 ${
                             isSelected
                               ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25 scale-[1.01]'
