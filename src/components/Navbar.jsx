@@ -53,6 +53,10 @@ const Navbar = () => {
     { name: 'UCP', path: '/ucp' },
     { name: 'Donate Store', path: '/donate' },
     {
+      name: 'Highscores',
+      path: '/highscores'
+    },
+    {
       name: 'Rules',
       isDropdown: true,
       align: 'left',
@@ -68,17 +72,8 @@ const Navbar = () => {
       blank: true
     },
     {
-      name: 'Highscores',
-      path: '/highscores'
-    },
-    {
-      name: 'Government',
-      isDropdown: true,
-      align: 'left',
-      subLinks: [
-        { name: 'Govt Roster', path: '/roster/government' },
-        { name: 'Govt Chain of Command', path: '/roster/chain-of-command' },
-      ]
+      name: 'Govt Roster',
+      path: '/roster/government'
     },
   ];
 

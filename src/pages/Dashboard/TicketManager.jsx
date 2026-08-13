@@ -273,6 +273,7 @@ const TicketManager = () => {
         toast.success('Quantity updated');
         fetchTicketItems(selectedTicket);
         fetchTicketDetail(selectedTicket);
+        fetchMessages(selectedTicket);
       } else {
         const data = await res.json();
         toast.error(data.message || 'Failed to update');
@@ -640,7 +641,11 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                         {ticketItems.length} {ticketItems.length === 1 ? 'Item' : 'Items'} in Ticket
                       </span>
                       <span className="text-emerald-400 text-xs font-mono font-bold">
-                        • ${ticketItems.reduce((sum, ti) => sum + (parseFloat(ti.item_price || 0) * (ti.quantity || 1)), 0).toFixed(2)} Total
+                        • ${ticketItems.reduce((sum, ti) => {
+                          const isC = (ti.item_name || '').toLowerCase().includes('coin') || (ti.item_name || '').toLowerCase().includes('pc');
+                          const q = (isC && ti.quantity > 100) ? 1 : Math.max(1, ti.quantity || 1);
+                          return sum + (parseFloat(ti.item_price || 0) * q);
+                        }, 0).toFixed(2)} Total
                       </span>
                     </div>
                     {itemsExpanded ? <MdExpandLess className="text-slate-500" size={18} /> : <MdExpandMore className="text-slate-500" size={18} />}
@@ -649,8 +654,10 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                   {itemsExpanded && (
                     <div className="px-4 pb-3 space-y-1.5 border-t border-slate-800/60 pt-2">
                       {ticketItems.map((ti, idx) => {
+                        const isCoin = (ti.item_name || '').toLowerCase().includes('coin') || (ti.item_name || '').toLowerCase().includes('pc');
+                        const displayQty = (isCoin && ti.quantity > 100) ? 1 : Math.max(1, ti.quantity || 1);
                         const itemPrice = parseFloat(ti.item_price || 0);
-                        const itemTotal = itemPrice * (ti.quantity || 1);
+                        const itemTotal = itemPrice * displayQty;
                         return (
                           <div key={ti.id || idx} className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 py-1.5 px-3 rounded-xl bg-[#0d1117]/80 border border-slate-800/80">
                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -662,8 +669,17 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                                 </div>
                               )}
                               <div className="min-w-0 flex-1">
-                                <p className="text-white text-xs font-bold truncate">{ti.item_name}</p>
-                                <p className="text-slate-400 text-[10px] font-mono">${itemPrice.toFixed(2)} each</p>
+                                <p className="text-white text-xs font-bold truncate flex items-center gap-1.5 flex-wrap">
+                                  <span>{ti.item_name}</span>
+                                  {isCoin && (ti.notes || ticketDetail?.notes) && (
+                                    <span className="text-amber-400 text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                                      {ti.notes || ticketDetail.notes}
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-slate-400 text-[10px] font-mono">
+                                  ${itemPrice.toFixed(2)} {isCoin ? 'per pkg' : 'each'}
+                                </p>
                               </div>
                             </div>
 
@@ -672,18 +688,18 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                               {ticketDetail.status !== 'closed' ? (
                                 <div className="flex items-center gap-1 bg-[#080d13] border border-slate-700 rounded-lg p-0.5">
                                   <button
-                                    onClick={() => handleUpdateItemQuantity(ti.id, (ti.quantity || 1) - 1)}
-                                    disabled={(ti.quantity || 1) <= 1}
+                                    onClick={() => handleUpdateItemQuantity(ti.id, displayQty - 1)}
+                                    disabled={displayQty <= 1}
                                     className="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 flex items-center justify-center text-white text-xs transition-colors cursor-pointer"
                                     title="Decrease quantity"
                                   >
                                     <MdRemove size={10} />
                                   </button>
                                   <span className="w-7 text-center text-xs font-mono font-bold text-white">
-                                    {ti.quantity || 1}
+                                    {displayQty}
                                   </span>
                                   <button
-                                    onClick={() => handleUpdateItemQuantity(ti.id, (ti.quantity || 1) + 1)}
+                                    onClick={() => handleUpdateItemQuantity(ti.id, displayQty + 1)}
                                     className="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-white text-xs transition-colors cursor-pointer"
                                     title="Increase quantity"
                                   >
@@ -691,7 +707,7 @@ Created Date: ${new Date(ticketDetail.created_at).toLocaleString()}
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-slate-400 text-xs font-mono">x{ti.quantity || 1}</span>
+                                <span className="text-slate-400 text-xs font-mono">x{displayQty}</span>
                               )}
 
                               {/* Subtotal */}

@@ -55,6 +55,71 @@ const renderFormattedDescription = (text) => {
   );
 };
 
+const COIN_PACKAGES = [
+  { coins: 1000, price: 5, label: '1,000 PC — $5.00' },
+  { coins: 2100, price: 10, label: '2,100 PC — $10.00' },
+  { coins: 4300, price: 20, label: '4,300 PC — $20.00' },
+  { coins: 7750, price: 35, label: '7,750 PC — $35.00' },
+  { coins: 11500, price: 50, label: '11,500 PC — $50.00' },
+  { coins: 24000, price: 100, label: '24,000 PC — $100.00' }
+];
+
+const getDynamicCoinPackages = (item) => {
+  if (item && item.coin_options) {
+    try {
+      const rows = typeof item.coin_options === 'string' ? JSON.parse(item.coin_options) : item.coin_options;
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows.map(r => ({
+          coins: parseInt(r.coins) || 0,
+          price: parseFloat(r.price) || 0,
+          label: `${(parseInt(r.coins) || 0).toLocaleString()} PC — $${(parseFloat(r.price) || 0).toFixed(2)}`
+        }));
+      }
+    } catch { /* silent */ }
+  }
+  if (item && item.description) {
+    const lines = item.description.split('\n');
+    const parsed = [];
+    lines.forEach(line => {
+      const match = line.match(/(?:([0-9,\.]+)\s*PC\s*[\-\—\=]\s*\$?([0-9\.]+))|(?:\$?([0-9\.]+)\s*[\-\—\=]\s*([0-9,\.]+)\s*PC)/i);
+      if (match) {
+        const coinsStr = (match[1] || match[4] || '').replace(/,/g, '');
+        const priceStr = match[2] || match[3] || '';
+        const coins = parseInt(coinsStr);
+        const price = parseFloat(priceStr);
+        if (!isNaN(coins) && !isNaN(price)) {
+          parsed.push({
+            coins,
+            price,
+            label: `${coins.toLocaleString()} PC — $${price.toFixed(2)}`
+          });
+        }
+      }
+    });
+    if (parsed.length > 0) return parsed;
+  }
+  return COIN_PACKAGES;
+};
+
+const isCoinItem = (item) => {
+  if (!item) return false;
+  if (item.coin_options) {
+    try {
+      const parsed = typeof item.coin_options === 'string' ? JSON.parse(item.coin_options) : item.coin_options;
+      if (Array.isArray(parsed) && parsed.length > 0) return true;
+    } catch { /* silent */ }
+  }
+  return false;
+};
+
+const getItemImageUrl = (item) => {
+  if (!item) return null;
+  if (isCoinItem(item)) {
+    return '/Donator_-_Paraiso_Coins.jpg';
+  }
+  return item.image_url || null;
+};
+
 const Donate = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -68,6 +133,7 @@ const Donate = () => {
   const [ingameName, setIngameName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [selectedCoinPkgIdx, setSelectedCoinPkgIdx] = useState(0);
   const [purchasing, setPurchasing] = useState(false);
   const [successModal, setSuccessModal] = useState(null);
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
@@ -121,6 +187,7 @@ const Donate = () => {
     setIngameName('');
     setDiscordUsername('');
     setQuantity(1);
+    setSelectedCoinPkgIdx(0);
   };
 
   const confirmPurchase = async (e, customItem = null) => {
@@ -134,6 +201,11 @@ const Donate = () => {
     }
     if (!discordUsername.trim()) return;
 
+    const isCoin = isCoinItem(targetItem);
+    const coinPkgs = getDynamicCoinPackages(targetItem);
+    const selectedPkg = coinPkgs[selectedCoinPkgIdx] || coinPkgs[0] || COIN_PACKAGES[0];
+    const finalQuantity = Math.max(1, parseInt(quantity) || 1);
+
     setPurchasing(true);
     try {
       const res = await fetch(`${BASE_URL}/tickets`, {
@@ -144,12 +216,20 @@ const Donate = () => {
           item_id: targetItem.id,
           ingame_name: ingameName.trim(),
           discord_username: discordUsername.trim(),
-          quantity: Math.max(1, parseInt(quantity) || 1),
+          quantity: finalQuantity,
+          package_price: isCoin ? selectedPkg.price : undefined,
+          package_coins: isCoin ? selectedPkg.coins : undefined,
+          package_label: isCoin ? selectedPkg.label : undefined,
+          notes: isCoin ? `${finalQuantity}x (${selectedPkg.label})` : ''
         }),
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccessModal({ ticketId: data.id, item: targetItem, quantity: Math.max(1, parseInt(quantity) || 1) });
+        setSuccessModal({
+          ticketId: data.id,
+          item: isCoin ? { ...targetItem, name: `${targetItem.name} [${finalQuantity}x ${selectedPkg.label}]` } : targetItem,
+          quantity: finalQuantity
+        });
         setPurchaseModal(null);
         setItemDetailModal(null);
       } else {
@@ -163,7 +243,23 @@ const Donate = () => {
 
   const totalItemCount = Array.isArray(categories) ? categories.reduce((sum, c) => sum + (parseInt(c.item_count) || 0), 0) : 0;
 
-  const itemList = Array.isArray(items) ? items : [];
+  const rawItemList = Array.isArray(items) ? items : [];
+  const hasCoinItem = rawItemList.some(isCoinItem);
+  const itemList = hasCoinItem ? rawItemList : [
+    {
+      id: rawItemList.length > 0 ? rawItemList[0].id : 1,
+      category_id: 1,
+      name: 'Paraiso Coins',
+      category_name: 'Coins',
+      price: 5.00,
+      image_url: '/Donator_-_Paraiso_Coins.jpg',
+      description: 'Official Paraiso Coins (PC). Select packages ranging from 1,000 PC ($5) to 24,000 PC ($100).',
+      sort_order: -999,
+      is_active: 1
+    },
+    ...rawItemList
+  ];
+
   const sortedItems = [...itemList].sort((a, b) => {
     if (sortBy === 'price-low') return parseFloat(a.price) - parseFloat(b.price);
     if (sortBy === 'price-high') return parseFloat(b.price) - parseFloat(a.price);
@@ -414,7 +510,7 @@ const Donate = () => {
                   .map((item, idx) => (
                   <div
                     key={item.id}
-                    className="group bg-[#131a22] border border-slate-700/60 rounded-xl p-4 hover:border-cyan-500/40 transition-all duration-300 flex flex-col shadow-xl"
+                    className="group relative bg-[#131a22] border border-slate-700/60 rounded-xl p-4 hover:border-cyan-500/40 transition-all duration-300 flex flex-col shadow-xl"
                     style={{ animationDelay: `${idx * 60}ms` }}
                   >
                     {/* Inner Image Container matching reference */}
@@ -423,9 +519,9 @@ const Donate = () => {
                       className="relative w-full max-w-[210px] aspect-square mx-auto rounded-lg overflow-hidden bg-[#080d13] mb-4 flex items-center justify-center border border-slate-800 cursor-pointer group-hover:border-cyan-500/50 transition-all"
                       title="Click to view details"
                     >
-                      {item.image_url ? (
+                      {getItemImageUrl(item) ? (
                         <img
-                          src={item.image_url}
+                          src={getItemImageUrl(item)}
                           alt={item.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         />
@@ -458,9 +554,10 @@ const Donate = () => {
                     <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-700/60">
                       <div>
                         <span className="text-emerald-400 font-black text-lg">
-                          ${parseFloat(item.price).toFixed(2)}
+                          {isCoinItem(item) ? 'From $5.00' : `$${parseFloat(item.price).toFixed(2)}`}
                         </span>
                       </div>
+
                       <button
                         onClick={() => handlePurchase(item)}
                         className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-500/20 hover:border-emerald-400/50 transition-all duration-200 cursor-pointer active:scale-95"
@@ -501,8 +598,8 @@ const Donate = () => {
               {/* Item preview */}
               <div className="bg-[#080d13] border border-slate-800 rounded-xl p-4 mb-4">
                 <div className="flex items-center gap-4">
-                  {purchaseModal.image_url ? (
-                    <img src={purchaseModal.image_url} alt={purchaseModal.name} className="w-16 h-16 rounded-lg object-contain p-1 border border-slate-700 bg-[#0b0f15]" />
+                  {getItemImageUrl(purchaseModal) ? (
+                    <img src={getItemImageUrl(purchaseModal)} alt={purchaseModal.name} className="w-16 h-16 rounded-lg object-contain p-1 border border-slate-700 bg-[#0b0f15]" />
                   ) : (
                     <div className="w-16 h-16 rounded-lg bg-slate-800 flex items-center justify-center">
                       <MdStorefront className="text-slate-600" size={24} />
@@ -515,7 +612,7 @@ const Donate = () => {
                     )}
                     <p className="text-slate-400 text-xs mt-0.5">
                       Unit Price: <span className="text-emerald-400 font-bold">
-                        ${parseFloat(purchaseModal.price).toFixed(2)}
+                        {isCoinItem(purchaseModal) ? `$${COIN_PACKAGES[selectedCoinPkgIdx].price.toFixed(2)}` : `$${parseFloat(purchaseModal.price).toFixed(2)}`}
                       </span>
                     </p>
                   </div>
@@ -557,41 +654,110 @@ const Donate = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 items-center">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Quantity *</label>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(q => Math.max(1, (parseInt(q) || 1) - 1))}
-                        className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
-                      >
-                        <HiMinus size={14} />
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={quantity}
-                        onChange={e => setQuantity(e.target.value)}
-                        className="w-12 h-9 text-center bg-[#080d13] border border-slate-700/80 focus:border-cyan-500 rounded-lg text-white text-xs font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(q => (parseInt(q) || 0) + 1)}
-                        className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
-                      >
-                        <HiPlus size={14} />
-                      </button>
+                {/* Coin Package Selector and Package Quantity */}
+                {isCoinItem(purchaseModal) ? (
+                  (() => {
+                    const pkgs = getDynamicCoinPackages(purchaseModal);
+                    const selPkg = pkgs[selectedCoinPkgIdx] || pkgs[0] || COIN_PACKAGES[0];
+                    const pkgQty = Math.max(1, parseInt(quantity) || 1);
+                    const totalCost = selPkg.price * pkgQty;
+                    const totalCoins = selPkg.coins * pkgQty;
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Select Coin Package *</label>
+                          <select
+                            value={selectedCoinPkgIdx}
+                            onChange={e => setSelectedCoinPkgIdx(Number(e.target.value))}
+                            className="w-full px-3.5 py-2.5 bg-[#080d13] border border-cyan-500/50 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-400 cursor-pointer shadow-sm"
+                          >
+                            {pkgs.map((pkg, pIdx) => (
+                              <option key={pIdx} value={pIdx} className="bg-[#0b0f15] text-white">
+                                {pkg.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Package Quantity Selector */}
+                        <div className="grid grid-cols-2 gap-3 items-center pt-1">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Package Quantity *</label>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setQuantity(q => Math.max(1, (parseInt(q) || 1) - 1))}
+                                className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                              >
+                                <HiMinus size={14} />
+                              </button>
+                              <input
+                                type="number"
+                                min="1"
+                                required
+                                value={quantity}
+                                onChange={e => setQuantity(e.target.value)}
+                                className="w-12 h-9 text-center bg-[#080d13] border border-slate-700/80 focus:border-cyan-500 rounded-lg text-white text-xs font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setQuantity(q => (parseInt(q) || 0) + 1)}
+                                className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                              >
+                                <HiPlus size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex flex-col justify-end text-right">
+                            <span className="text-amber-400 font-bold text-xs">
+                              = {totalCoins.toLocaleString()} PC Total
+                            </span>
+                            <span className="text-emerald-400 font-black text-xl mt-0.5">
+                              ${totalCost.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 items-center">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Quantity *</label>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(q => Math.max(1, (parseInt(q) || 1) - 1))}
+                          className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                        >
+                          <HiMinus size={14} />
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          value={quantity}
+                          onChange={e => setQuantity(e.target.value)}
+                          className="w-12 h-9 text-center bg-[#080d13] border border-slate-700/80 focus:border-cyan-500 rounded-lg text-white text-xs font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(q => (parseInt(q) || 0) + 1)}
+                          className="w-9 h-9 rounded-lg bg-[#141c26] hover:bg-[#1e2836] border border-slate-700/60 flex items-center justify-center text-slate-200 hover:text-white font-bold transition-all cursor-pointer select-none active:scale-95"
+                        >
+                          <HiPlus size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col justify-end text-right">
+                      <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Amount</span>
+                      <span className="text-emerald-400 font-black text-xl">
+                        ${(parseFloat(purchaseModal.price) * Math.max(1, parseInt(quantity) || 1)).toFixed(2)}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-end text-right">
-                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Amount</span>
-                    <span className="text-emerald-400 font-black text-xl">
-                      ${(parseFloat(purchaseModal.price) * Math.max(1, parseInt(quantity) || 1)).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60">
@@ -628,7 +794,7 @@ const Donate = () => {
 
       {/* ── ITEM DETAIL MODAL ── */}
       {itemDetailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080d13]/80 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-lg bg-[#0b0f15] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Top Accent Line */}
             <div className="h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-cyan-500 shrink-0"></div>
@@ -654,9 +820,9 @@ const Donate = () => {
                 {/* Left: Image */}
                 <div className="sm:col-span-5 flex justify-center">
                   <div className="w-full aspect-square max-w-[180px] rounded-xl bg-[#080d13] border border-slate-800 p-3 flex items-center justify-center shadow-inner">
-                    {itemDetailModal.image_url ? (
+                    {getItemImageUrl(itemDetailModal) ? (
                       <img
-                        src={itemDetailModal.image_url}
+                        src={getItemImageUrl(itemDetailModal)}
                         alt={itemDetailModal.name}
                         className="w-full h-full object-contain"
                       />

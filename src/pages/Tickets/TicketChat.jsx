@@ -14,6 +14,26 @@ const statusConfig = {
   closed: { label: 'Completed', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30', dot: 'bg-emerald-400' },
 };
 
+const COIN_PACKAGES = [
+  { coins: 1000, price: 5, label: '1,000 PC — $5.00' },
+  { coins: 2100, price: 10, label: '2,100 PC — $10.00' },
+  { coins: 4300, price: 20, label: '4,300 PC — $20.00' },
+  { coins: 7750, price: 35, label: '7,750 PC — $35.00' },
+  { coins: 11500, price: 50, label: '11,500 PC — $50.00' },
+  { coins: 24000, price: 100, label: '24,000 PC — $100.00' },
+];
+
+const isCoinItem = (item) => {
+  if (!item) return false;
+  if (item.coin_options) {
+    try {
+      const parsed = typeof item.coin_options === 'string' ? JSON.parse(item.coin_options) : item.coin_options;
+      if (Array.isArray(parsed) && parsed.length > 0) return true;
+    } catch { /* silent */ }
+  }
+  return false;
+};
+
 // ─── Add Item Modal Component ───
 const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
   const [categories, setCategories] = useState([]);
@@ -23,6 +43,7 @@ const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [selectedCoinPkgIdx, setSelectedCoinPkgIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchCategories = async () => {
@@ -51,6 +72,7 @@ const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
       fetchItems();
       setSelectedItem(null);
       setQuantity(1);
+      setSelectedCoinPkgIdx(0);
       setSearchQuery('');
     }
   }, [isOpen]);
@@ -62,12 +84,22 @@ const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
   const handleAddItem = async () => {
     if (!selectedItem) return;
     setSubmitting(true);
+    const isCoin = isCoinItem(selectedItem);
+    const selectedPkg = COIN_PACKAGES[selectedCoinPkgIdx] || COIN_PACKAGES[0];
+    const pkgQty = Math.max(1, quantity);
+
     try {
       const res = await fetch(`${BASE_URL}/tickets/${ticketId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ item_id: selectedItem.id, quantity: Math.max(1, quantity) }),
+        body: JSON.stringify({
+          item_id: selectedItem.id,
+          quantity: pkgQty,
+          package_price: isCoin ? selectedPkg.price : undefined,
+          package_coins: isCoin ? selectedPkg.coins : undefined,
+          package_label: isCoin ? `${pkgQty}x (${selectedPkg.label})` : undefined
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -122,16 +154,40 @@ const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
               )}
               <div className="min-w-0 flex-1">
                 <h4 className="text-white font-bold text-sm">{selectedItem.name}</h4>
-                <p className="text-emerald-400 text-sm font-mono font-bold mt-1">${parseFloat(selectedItem.price).toFixed(2)}</p>
+                <p className="text-emerald-400 text-sm font-mono font-bold mt-1">
+                  {isCoinItem(selectedItem)
+                    ? `From $5.00`
+                    : `$${parseFloat(selectedItem.price).toFixed(2)}`}
+                </p>
                 {selectedItem.category_name && (
                   <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">{selectedItem.category_name}</p>
                 )}
               </div>
             </div>
 
+            {/* Coin Package Selector */}
+            {isCoinItem(selectedItem) && (
+              <div className="flex flex-col gap-1 mb-4">
+                <label className="text-slate-300 text-xs font-bold uppercase tracking-wider">Select Coin Package *</label>
+                <select
+                  value={selectedCoinPkgIdx}
+                  onChange={e => setSelectedCoinPkgIdx(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-[#080d13] border border-cyan-500/50 rounded-xl text-white text-xs font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                >
+                  {COIN_PACKAGES.map((pkg, pIdx) => (
+                    <option key={pIdx} value={pIdx} className="bg-[#0b0f15] text-white">
+                      {pkg.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Quantity */}
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-slate-400 text-xs uppercase tracking-wider font-medium">Quantity:</span>
+              <span className="text-slate-400 text-xs uppercase tracking-wider font-medium">
+                {isCoinItem(selectedItem) ? 'Pkg Quantity:' : 'Quantity:'}
+              </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -154,7 +210,9 @@ const AddItemModal = ({ isOpen, onClose, ticketId, onItemAdded }) => {
                 </button>
               </div>
               <span className="text-emerald-400 font-mono text-sm font-bold ml-auto">
-                ${(parseFloat(selectedItem.price) * quantity).toFixed(2)}
+                ${(isCoinItem(selectedItem)
+                  ? (COIN_PACKAGES[selectedCoinPkgIdx]?.price || 5) * quantity
+                  : parseFloat(selectedItem.price) * quantity).toFixed(2)}
               </span>
             </div>
 
@@ -516,6 +574,7 @@ const TicketChat = () => {
         if (data.ticketId == id) {
           setItemRefreshTrigger(prev => prev + 1);
           fetchTicket();
+          fetchMessages();
         }
       });
 
@@ -531,6 +590,13 @@ const TicketChat = () => {
         if (data.ticketId == id) {
           setItemRefreshTrigger(prev => prev + 1);
           fetchTicket();
+          fetchMessages();
+        }
+      });
+
+      socket.on('ticket-message-updated', (data) => {
+        if (data.ticket_id == id) {
+          fetchMessages();
         }
       });
 

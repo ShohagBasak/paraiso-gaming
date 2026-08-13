@@ -89,10 +89,6 @@ const UcpDashboard = () => {
   const [sessionsData, setSessionsData] = useState([]);
   const [isModuleLoading, setIsModuleLoading] = useState(false);
 
-  const igAdminLevel = Number(ucpStats?.AdminLevel || ucpStats?.Admin || ucpPlayer?.adminLevel || 0);
-  const isIgAdmin = igAdminLevel > 0 || ucpPlayer?.role === 'master' || ucpPlayer?.role === 'admin';
-
-
 
   const fetchTabModuleData = async (tab) => {
     const token = localStorage.getItem('ucp_token');
@@ -173,7 +169,6 @@ const UcpDashboard = () => {
   };
 
   useEffect(() => {
-    if (fetchUcpStats) fetchUcpStats();
     if (activeTab && ['vehicles', 'properties', 'faction', 'gang', 'inventory', 'skills', 'finance', 'security'].includes(activeTab)) {
       fetchTabModuleData(activeTab);
     }
@@ -236,20 +231,21 @@ const UcpDashboard = () => {
     );
   }
 
-  const skinId = Number(ucpStats.Skin || 0);
+  const skinId = Number(ucpStats.skin ?? ucpStats.Skin ?? 0);
   const skinImgUrl = `https://assets.open.mp/assets/images/skins/${skinId}.png`;
   const fallbackSkinUrl = `https://raw.githubusercontent.com/uSAMP/samp-skins/master/skins/${skinId}.png`;
 
   // Calculate formatted total wealth
-  const cash = Number(ucpStats.Cash || 0);
-  const bank = Number(ucpStats.Bank || 0);
-  const paycheck = Number(ucpStats.Paycheck || 0);
+  const cash = Number(ucpStats.cash ?? ucpStats.Cash ?? 0);
+  const bank = Number(ucpStats.bank ?? ucpStats.Bank ?? 0);
+  const paycheck = Number(ucpStats.paycheck ?? ucpStats.Paycheck ?? 0);
   const totalWealth = cash + bank;
   const formattedWealth = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(totalWealth);
 
   // Level & XP Progress
-  const currentLevel = Number(ucpStats.Level || 1);
-  const respect = Number(ucpStats.Respect || 0);
+  const currentLevel = Number(ucpStats.level ?? ucpStats.Level ?? 1);
+  const respect = Number(ucpStats.respect ?? ucpStats.Respect ?? 0);
+  const hoursPlayed = Number(ucpStats.hoursPlayed ?? ucpStats.HoursPlayed ?? ucpStats.connectTime ?? ucpStats.ConnectTime ?? 0);
   const reqRespect = currentLevel * 4;
   const levelProgress = Math.min(100, Math.round((respect / reqRespect) * 100));
 
@@ -286,19 +282,19 @@ const UcpDashboard = () => {
 
     // Check specific skill columns first if present in MySQL DB
     let skillPoints = 0;
-    if (jId === 9 && (stats.ArmsSkill !== undefined || stats.pArmsSkill !== undefined)) {
-      skillPoints = Number(stats.ArmsSkill || stats.pArmsSkill || 0);
-    } else if (jId === 2 && (stats.LawyerSkill !== undefined || stats.pLawyerSkill !== undefined)) {
-      skillPoints = Number(stats.LawyerSkill || stats.pLawyerSkill || 0);
-    } else if (jId === 7 && (stats.MechSkill !== undefined || stats.pMechSkill !== undefined)) {
-      skillPoints = Number(stats.MechSkill || stats.pMechSkill || 0);
-    } else if ((jId === 10 || jId === 20) && (stats.TruckSkill !== undefined || stats.pTruckSkill !== undefined)) {
-      skillPoints = Number(stats.TruckSkill || stats.pTruckSkill || 0);
-    } else if (jId === 1 && (stats.DetSkill !== undefined || stats.DetectiveSkill !== undefined)) {
-      skillPoints = Number(stats.DetSkill || stats.DetectiveSkill || 0);
+    if (jId === 9 && (stats.armsSkill !== undefined || stats.ArmsSkill !== undefined || stats.pArmsSkill !== undefined)) {
+      skillPoints = Number(stats.armsSkill || stats.ArmsSkill || stats.pArmsSkill || 0);
+    } else if (jId === 2 && (stats.lawyerSkill !== undefined || stats.LawyerSkill !== undefined || stats.pLawyerSkill !== undefined)) {
+      skillPoints = Number(stats.lawyerSkill || stats.LawyerSkill || stats.pLawyerSkill || 0);
+    } else if (jId === 7 && (stats.mechSkill !== undefined || stats.MechSkill !== undefined || stats.pMechSkill !== undefined)) {
+      skillPoints = Number(stats.mechSkill || stats.MechSkill || stats.pMechSkill || 0);
+    } else if ((jId === 10 || jId === 20) && (stats.truckSkill !== undefined || stats.TruckSkill !== undefined || stats.pTruckSkill !== undefined)) {
+      skillPoints = Number(stats.truckSkill || stats.TruckSkill || stats.pTruckSkill || 0);
+    } else if (jId === 1 && (stats.detSkill !== undefined || stats.DetSkill !== undefined || stats.DetectiveSkill !== undefined)) {
+      skillPoints = Number(stats.detSkill || stats.DetSkill || stats.DetectiveSkill || 0);
     } else {
       // Fallback to generic JobSkill / Job2Skill
-      skillPoints = Number((isSecondary ? stats.Job2Skill : stats.JobSkill) || (isSecondary ? stats.Job2Level : stats.JobLevel) || stats.JobSkill || 0);
+      skillPoints = Number((isSecondary ? (stats.job2Skill ?? stats.Job2Skill) : (stats.jobSkill ?? stats.JobSkill)) || (isSecondary ? (stats.job2Level ?? stats.Job2Level) : (stats.jobLevel ?? stats.JobLevel)) || 0);
     }
 
     // Convert raw skill points or direct level number
@@ -327,11 +323,12 @@ const UcpDashboard = () => {
   };
 
   const getDonatorExpiryText = (stats) => {
-    if (!stats || !stats.Donator || Number(stats.Donator) === 0) {
+    const donatorVal = stats?.donator ?? stats?.Donator;
+    if (!stats || !donatorVal || Number(donatorVal) === 0) {
       return 'Expired / None';
     }
 
-    const expTime = stats.DonatorTime ?? stats.DonatorDate ?? stats.DonatorExp ?? stats.DonatorExpire ?? stats.DonatorExpiration ?? stats.VIPTime ?? stats.VIPDate ?? stats.VIPExp ?? stats.VIPExpire ?? stats.DTime ?? stats.DDate ?? stats.DonationDate ?? stats.DonationTime ?? stats.DonationExp;
+    const expTime = stats.donatorTime ?? stats.DonatorTime ?? stats.DonatorDate ?? stats.DonatorExp ?? stats.DonatorExpire ?? stats.DonatorExpiration ?? stats.VIPTime ?? stats.VIPDate ?? stats.VIPExp ?? stats.VIPExpire ?? stats.DTime ?? stats.DDate ?? stats.DonationDate ?? stats.DonationTime ?? stats.DonationExp;
 
     if (expTime === undefined || expTime === null || expTime === '' || String(expTime).toLowerCase() === 'permanent' || String(expTime) === '9999999999') {
       return 'Permanent';
@@ -455,6 +452,24 @@ const UcpDashboard = () => {
       return null;
     }
 
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Direct ISO / Standard Date parsing (e.g. "2026-08-13T12:39:17.000Z")
+    if (typeof dateVal === 'string' && (dateVal.includes('T') || dateVal.includes('Z'))) {
+      const d = new Date(dateVal);
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0');
+        const monthStr = monthNames[d.getMonth()];
+        const year = d.getFullYear();
+        let hours = d.getHours();
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        const ampmStr = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        const formattedHours = String(hours).padStart(2, '0');
+        return `${day} ${monthStr} ${year}, ${formattedHours}:${minutes} ${ampmStr}`;
+      }
+    }
+
     const strVal = String(dateVal).trim();
 
     // Ignore small integers (like ConnectTime = 21 minutes played)
@@ -467,8 +482,6 @@ const UcpDashboard = () => {
     let day = null;
     let hours = 0;
     let minutes = 0;
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     // Time string from timeVal parameter
     if (timeVal && typeof timeVal === 'string' && timeVal.trim() !== '') {
@@ -561,8 +574,8 @@ const UcpDashboard = () => {
 
   const formatLastLogin = (stats) => {
     if (!stats) return 'N/A';
-    const dateVal = stats.LastLogin ?? stats.LastLoginDate ?? stats.LastConnected ?? stats.LastConnect ?? stats.LastOn ?? stats.LastSeen ?? stats.LoginTime ?? stats.LastDate ?? stats.LastTime;
-    const timeVal = stats.LastLoginTime ?? stats.LoginTimeStr ?? stats.ConnectTimeStr;
+    const dateVal = stats.lastLogin ?? stats.LastLogin ?? stats.LastLoginDate ?? stats.LastConnected ?? stats.LastConnect ?? stats.LastOn ?? stats.LastSeen ?? stats.LoginTime ?? stats.LastDate ?? stats.LastTime;
+    const timeVal = stats.lastLoginTime ?? stats.LastLoginTime ?? stats.LoginTimeStr ?? stats.ConnectTimeStr;
     const formatted = parseAnyDate(dateVal, timeVal);
     return formatted || 'Recently Online';
   };
@@ -706,9 +719,9 @@ const UcpDashboard = () => {
 
   const getOfficialFactionName = (stats) => {
     if (!stats) return 'None';
-    const memberId = typeof stats === 'object' ? Number(stats.Member || 0) : 0;
-    const leaderId = typeof stats === 'object' ? Number(stats.Leader || 0) : 0;
-    const rawFactionId = typeof stats === 'object' ? Number(stats.Faction || 0) : Number(stats || 0);
+    const memberId = typeof stats === 'object' ? Number(stats.member ?? stats.Member ?? 0) : 0;
+    const leaderId = typeof stats === 'object' ? Number(stats.leader ?? stats.Leader ?? 0) : 0;
+    const rawFactionId = typeof stats === 'object' ? Number(stats.faction ?? stats.Faction ?? 0) : Number(stats || 0);
     const fId = memberId || leaderId || rawFactionId;
 
     if (officialFactionIds.includes(fId)) {
@@ -721,18 +734,18 @@ const UcpDashboard = () => {
 
   const isOfficialFactionLeader = (stats) => {
     if (!stats || typeof stats !== 'object') return false;
-    const memberId = Number(stats.Member || 0);
-    const leaderId = Number(stats.Leader || 0);
-    const rawFactionId = Number(stats.Faction || 0);
+    const memberId = Number(stats.member ?? stats.Member ?? 0);
+    const leaderId = Number(stats.leader ?? stats.Leader ?? 0);
+    const rawFactionId = Number(stats.faction ?? stats.Faction ?? 0);
     const fId = memberId || leaderId || rawFactionId;
     return leaderId > 0 && officialFactionIds.includes(fId);
   };
 
   const getOfficialFactionColor = (stats) => {
     if (!stats) return '#38bdf8';
-    const memberId = typeof stats === 'object' ? Number(stats.Member || 0) : 0;
-    const leaderId = typeof stats === 'object' ? Number(stats.Leader || 0) : 0;
-    const rawFactionId = typeof stats === 'object' ? Number(stats.Faction || 0) : Number(stats || 0);
+    const memberId = typeof stats === 'object' ? Number(stats.member ?? stats.Member ?? 0) : 0;
+    const leaderId = typeof stats === 'object' ? Number(stats.leader ?? stats.Leader ?? 0) : 0;
+    const rawFactionId = typeof stats === 'object' ? Number(stats.faction ?? stats.Faction ?? 0) : Number(stats || 0);
     const fId = memberId || leaderId || rawFactionId;
     return factionMeta[fId]?.color || '#38bdf8';
   };
@@ -820,16 +833,17 @@ const UcpDashboard = () => {
     return groupRanks[fId]?.[rankNum] || `Rank #${rankNum}`;
   };
 
-  const playerName = ucpStats.Username || ucpPlayer?.username || 'Character';
-  const playerId = ucpStats.ID || ucpPlayer?.id || 0;
+  const playerName = ucpStats.username ?? ucpStats.Username ?? ucpPlayer?.username ?? 'Character';
+  const playerId = ucpStats.id ?? ucpStats.ID ?? ucpPlayer?.id ?? 0;
 
   const getAffiliationDetails = (stats) => {
     if (!stats) return { label: 'Affiliation / Faction', value: 'Civilian', isLeader: false, color: '#38bdf8', badgeText: 'Leader' };
 
-    const memberId = Number(stats.Member || 0);
-    const leaderId = Number(stats.Leader || 0);
-    const rawFactionId = Number(stats.Faction || 0);
-    const gangColId = Number(stats.Gang || 0);
+    const memberId = Number(stats.member ?? stats.Member ?? 0);
+    const leaderId = Number(stats.leader ?? stats.Leader ?? 0);
+    const rawFactionId = Number(stats.faction ?? stats.Faction ?? 0);
+    const gangColId = Number(stats.gang ?? stats.Gang ?? 0);
+    const gangLeaderVal = Number(stats.gangLeader ?? stats.GangLeader ?? 0);
     const fId = memberId || leaderId || rawFactionId;
 
     if (fId > 0 && officialFactionIds.includes(fId)) {
@@ -846,7 +860,7 @@ const UcpDashboard = () => {
     }
 
     if (fId === 6 || gangColId === 1) {
-      const isLeader = leaderId === 6 || Number(stats.GangLeader || 0) === 1;
+      const isLeader = leaderId === 6 || gangLeaderVal === 1;
       return {
         label: 'Affiliation / Family',
         value: 'Grove Street Families',
@@ -857,7 +871,7 @@ const UcpDashboard = () => {
     }
 
     if (gangColId === 2) {
-      const isLeader = Number(stats.GangLeader || 0) === 1;
+      const isLeader = gangLeaderVal === 1;
       return {
         label: 'Affiliation / Family',
         value: '18th Street Pacris Fraternity',
@@ -868,7 +882,7 @@ const UcpDashboard = () => {
     }
 
     if (fId === 8 || gangColId === 3) {
-      const isLeader = leaderId === 8 || Number(stats.GangLeader || 0) === 1;
+      const isLeader = leaderId === 8 || gangLeaderVal === 1;
       return {
         label: 'Affiliation / Family',
         value: 'La Cosa Nostra',
@@ -1084,7 +1098,7 @@ const UcpDashboard = () => {
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Playing Hours</p>
-                  <p className="text-xl font-black text-white mt-0.5 font-mono">{ucpStats.ConnectTime || 0} hrs</p>
+                  <p className="text-xl font-black text-white mt-0.5 font-mono">{hoursPlayed} hrs</p>
                 </div>
               </div>
 
@@ -1175,13 +1189,13 @@ const UcpDashboard = () => {
                             <span>Health Status</span>
                           </span>
                           <span className="text-xs font-mono font-extrabold text-rose-400">
-                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.Health || 100))))}% HP
+                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.health ?? ucpStats.Health ?? 100))))}% HP
                           </span>
                         </div>
                         <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-gradient-to-r from-rose-500 to-rose-400 transition-all duration-500 rounded-full"
-                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.Health || 100))))}%` }}
+                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.health ?? ucpStats.Health ?? 100))))}%` }}
                           />
                         </div>
                       </div>
@@ -1194,13 +1208,13 @@ const UcpDashboard = () => {
                             <span>Armor Protection</span>
                           </span>
                           <span className="text-xs font-mono font-extrabold text-cyan-400">
-                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.Armor || ucpStats.Armour || ucpStats.SpawnArmor || ucpStats.pArmor || ucpStats.pArmour || 0))))}% AP
+                            {Math.min(100, Math.max(0, Math.round(Number(ucpStats.armor ?? ucpStats.Armor ?? ucpStats.Armour ?? ucpStats.SpawnArmor ?? ucpStats.pArmor ?? ucpStats.pArmour ?? 0))))}% AP
                           </span>
                         </div>
                         <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 rounded-full"
-                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.Armor || ucpStats.Armour || ucpStats.SpawnArmor || ucpStats.pArmor || ucpStats.pArmour || 0))))}%` }}
+                            style={{ width: `${Math.min(100, Math.max(0, Math.round(Number(ucpStats.armor ?? ucpStats.Armor ?? ucpStats.Armour ?? ucpStats.SpawnArmor ?? ucpStats.pArmor ?? ucpStats.pArmour ?? 0))))}%` }}
                           />
                         </div>
                       </div>
@@ -1208,7 +1222,7 @@ const UcpDashboard = () => {
                       <div className="bg-[#121922] border border-slate-800/80 rounded-xl p-4">
                         <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Phone Number</p>
                         <p className="text-base font-extrabold text-white mt-1 font-mono">
-                          {ucpStats.PhoneNumber && Number(ucpStats.PhoneNumber) !== 0 ? ucpStats.PhoneNumber : 'N/A'}
+                          {(ucpStats.phoneNumber ?? ucpStats.PhoneNumber) && Number(ucpStats.phoneNumber ?? ucpStats.PhoneNumber) !== 0 ? (ucpStats.phoneNumber ?? ucpStats.PhoneNumber) : 'N/A'}
                         </p>
                       </div>
 
@@ -1230,14 +1244,14 @@ const UcpDashboard = () => {
                         <div>
                           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Primary Job</p>
                           <p className="text-base font-extrabold text-white mt-1">
-                            {getJobName(ucpStats.Job)}
+                            {getJobName(ucpStats.job ?? ucpStats.Job)}
                           </p>
                         </div>
-                        {getJobSkillLevel(ucpStats.Job, ucpStats, false) && (
+                        {getJobSkillLevel(ucpStats.job ?? ucpStats.Job, ucpStats, false) && (
                           <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between">
                             <span className="text-[10px] font-extrabold text-slate-500 uppercase">Skill Level</span>
                             <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono font-bold">
-                              {getJobSkillLevel(ucpStats.Job, ucpStats, false)}
+                              {getJobSkillLevel(ucpStats.job ?? ucpStats.Job, ucpStats, false)}
                             </span>
                           </div>
                         )}
@@ -1247,14 +1261,14 @@ const UcpDashboard = () => {
                         <div>
                           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Secondary Job</p>
                           <p className="text-base font-extrabold text-white mt-1">
-                            {getJobName(ucpStats.Job2)}
+                            {getJobName(ucpStats.job2 ?? ucpStats.Job2)}
                           </p>
                         </div>
-                        {getJobSkillLevel(ucpStats.Job2, ucpStats, true) && (
+                        {getJobSkillLevel(ucpStats.job2 ?? ucpStats.Job2, ucpStats, true) && (
                           <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between">
                             <span className="text-[10px] font-extrabold text-slate-500 uppercase">Skill Level</span>
                             <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono font-bold">
-                              {getJobSkillLevel(ucpStats.Job2, ucpStats, true)}
+                              {getJobSkillLevel(ucpStats.job2 ?? ucpStats.Job2, ucpStats, true)}
                             </span>
                           </div>
                         )}

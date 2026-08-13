@@ -58,11 +58,61 @@ const DonateManager = () => {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', price: '', image_url: '' });
+  const [coinPkgRows, setCoinPkgRows] = useState([]);
   const [imagePreview, setImagePreview] = useState('');
   const [savingItem, setSavingItem] = useState(false);
 
   // Delete confirm
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: '', id: null, name: '' });
+
+  const parsePkgRowsFromItem = (item) => {
+    const defaultPkgs = [
+      { coins: 1000, price: 5 },
+      { coins: 2100, price: 10 },
+      { coins: 4300, price: 20 },
+      { coins: 7750, price: 35 },
+      { coins: 11500, price: 50 },
+      { coins: 24000, price: 100 }
+    ];
+    if (item && item.coin_options) {
+      try {
+        const parsed = JSON.parse(item.coin_options);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch { /* silent */ }
+    }
+    if (item && item.description) {
+      const lines = item.description.split('\n');
+      const rows = [];
+      lines.forEach(l => {
+        const match = l.match(/(?:([0-9,\.]+)\s*PC\s*[\-\—\=]\s*\$?([0-9\.]+))|(?:\$?([0-9\.]+)\s*[\-\—\=]\s*([0-9,\.]+)\s*PC)/i);
+        if (match) {
+          const coins = parseInt((match[1] || match[4] || '').replace(/,/g, ''));
+          const price = parseFloat(match[2] || match[3] || '');
+          if (!isNaN(coins) && !isNaN(price)) rows.push({ coins, price });
+        }
+      });
+      if (rows.length > 0) return rows;
+    }
+    return defaultPkgs;
+  };
+
+  const handlePkgRowChange = (index, field, val) => {
+    const updated = coinPkgRows.map((r, i) => i === index ? { ...r, [field]: val } : r);
+    setCoinPkgRows(updated);
+    setItemForm(f => ({ ...f, coin_options: JSON.stringify(updated) }));
+  };
+
+  const handleAddPkgRow = () => {
+    const updated = [...coinPkgRows, { coins: '', price: '' }];
+    setCoinPkgRows(updated);
+    setItemForm(f => ({ ...f, coin_options: JSON.stringify(updated) }));
+  };
+
+  const handleRemovePkgRow = (index) => {
+    const updated = coinPkgRows.filter((_, i) => i !== index);
+    setCoinPkgRows(updated);
+    setItemForm(f => ({ ...f, coin_options: JSON.stringify(updated) }));
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -241,6 +291,8 @@ const DonateManager = () => {
     }
   };
 
+  const [enableCoinPkgs, setEnableCoinPkgs] = useState(false);
+
   const handleSaveItem = async () => {
     if (!itemForm.name.trim()) return toast.error('Item name is required');
     if (!itemForm.category_id) return toast.error('Select a category');
@@ -257,6 +309,7 @@ const DonateManager = () => {
           ...itemForm,
           price: parseFloat(itemForm.price) || 0,
           category_id: parseInt(itemForm.category_id),
+          coin_options: enableCoinPkgs ? JSON.stringify(coinPkgRows) : null,
         }),
       });
       if (res.ok) {
@@ -309,12 +362,22 @@ const DonateManager = () => {
 
   const openEditItem = (item) => {
     setEditingItem(item);
+    const hasCoinOpts = !!(item && item.coin_options && (() => {
+      try {
+        const p = typeof item.coin_options === 'string' ? JSON.parse(item.coin_options) : item.coin_options;
+        return Array.isArray(p) && p.length > 0;
+      } catch { return false; }
+    })());
+    setEnableCoinPkgs(hasCoinOpts);
+    const rows = parsePkgRowsFromItem(item);
+    setCoinPkgRows(rows);
     setItemForm({
       name: item.name,
       description: item.description || '',
       category_id: item.category_id,
       price: item.price,
       image_url: item.image_url || '',
+      coin_options: item.coin_options || null,
     });
     setImagePreview(item.image_url || '');
     setShowItemForm(true);
@@ -521,6 +584,84 @@ const DonateManager = () => {
                           placeholder="48.50" />
                       </div>
                     </div>
+
+                    {/* Toggle Checkbox for Coin Package Purchase Dropdown */}
+                    <div className="bg-[#080d13] border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h5 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                          <span>🪙 Enable Multi-Tier Coin Packages</span>
+                        </h5>
+                        <p className="text-slate-400 text-[11px] mt-0.5 leading-relaxed">
+                          Check this box if this item offers multi-tier coin packages dropdown (e.g. 1,000 PC — $5, 2,100 PC — $10). Uncheck for normal products.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={enableCoinPkgs}
+                          onChange={e => setEnableCoinPkgs(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                      </label>
+                    </div>
+
+                    {/* Coin Packages Section (Only if enabled via toggle switch) */}
+                    {enableCoinPkgs && (
+                      <div className="bg-[#080d13] border border-cyan-500/30 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                            <span>🪙</span> Coin Packages Config
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAddPkgRow}
+                            className="px-2.5 py-1 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <MdAdd size={14} /> Add Row
+                          </button>
+                        </div>
+                        <p className="text-slate-400 text-[11px]">
+                          Set the coin amounts and prices for the store purchase dropdown.
+                        </p>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {coinPkgRows.map((row, rIdx) => (
+                            <div key={rIdx} className="flex items-center gap-2">
+                              <div className="flex-1 flex items-center gap-1">
+                                <span className="text-slate-500 text-xs shrink-0">Coins:</span>
+                                <input
+                                  type="number"
+                                  value={row.coins}
+                                  onChange={(e) => handlePkgRowChange(rIdx, 'coins', e.target.value)}
+                                  placeholder="e.g. 1000"
+                                  className="w-full px-2.5 py-1.5 bg-[#0b0f15] border border-slate-800 focus:border-cyan-500 rounded-lg text-white text-xs font-mono"
+                                />
+                              </div>
+                              <div className="flex-1 flex items-center gap-1">
+                                <span className="text-slate-500 text-xs shrink-0">Price ($):</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={row.price}
+                                  onChange={(e) => handlePkgRowChange(rIdx, 'price', e.target.value)}
+                                  placeholder="e.g. 5.00"
+                                  className="w-full px-2.5 py-1.5 bg-[#0b0f15] border border-slate-800 focus:border-cyan-500 rounded-lg text-emerald-400 text-xs font-mono"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePkgRow(rIdx)}
+                                className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete row"
+                              >
+                                <MdDelete size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Description */}
                     <div className="flex flex-col gap-1.5">

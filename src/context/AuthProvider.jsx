@@ -145,10 +145,9 @@ const AuthProvider = ({ children }) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email: (email || '').trim(), password }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Login failed');
+        const data = await parseResponse(res, 'Login failed. Please check your credentials.');
         const userData = data.user || data;
         if (data.token) {
             localStorage.setItem('token', data.token);

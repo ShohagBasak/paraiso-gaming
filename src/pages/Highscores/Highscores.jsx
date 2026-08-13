@@ -31,7 +31,7 @@ const categoriesList = [
     items: [
       { id: 'detective', label: 'Detective', icon: FiSearch, unit: '' },
       { id: 'lawyer', label: 'Lawyer', icon: FiBriefcase, unit: '' },
-      { id: 'prostitute', label: 'Whore', icon: FiActivity, unit: '' },
+      { id: 'prostitute', label: 'Whore', icon: FiActivity, unit: 'Times' },
       { id: 'drugs', label: 'Drug Dealer', icon: FiZap, unit: '' },
       { id: 'smuggler', label: 'Drug Smuggler', icon: FiCompass, unit: '' },
       { id: 'arms', label: 'Arms Dealer', icon: FiCrosshair, unit: '' },
@@ -131,8 +131,9 @@ const Highscores = () => {
 
   const filteredHighscores = highscores.filter(item => {
     const name = item.username || item.name || '';
-    if (name.toLowerCase().includes('hitman')) return false;
-    return name.toLowerCase().includes(searchTerm.toLowerCase());
+    const lower = name.toLowerCase();
+    if (lower.includes('hitman') || lower === 'brian_gutierrez') return false;
+    return lower.includes(searchTerm.toLowerCase());
   });
 
   const formatVal = (val, unit) => {
