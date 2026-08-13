@@ -161,7 +161,7 @@ const Highscores = () => {
         {/* ── Page Header ── */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase font-mono">
-            PGAMING <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">HIGHSCORES</span>
+            PARAISO GAMING <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">HIGHSCORES</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 font-mono leading-relaxed">
             Welcome to <span className="text-cyan-400 font-bold">Paraiso Roleplay</span> Highscores page. Live player statistics gathered directly from our SA-MP server (<span className="text-slate-300 font-bold">samp.pgaming.net:7777</span>). Statistics are updated automatically every 5 minutes.

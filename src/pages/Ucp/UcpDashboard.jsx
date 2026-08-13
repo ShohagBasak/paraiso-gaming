@@ -912,7 +912,7 @@ const UcpDashboard = () => {
               />
             </div>
             <div>
-              <h4 className="text-sm font-black text-white">Paraiso Roleplay</h4>
+              <h4 className="text-sm font-black text-white">PARAISO GAMING</h4>
               <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest font-mono">USER CONTROL PANEL</p>
             </div>
           </div>
@@ -942,8 +942,8 @@ const UcpDashboard = () => {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-white truncate tracking-tight leading-tight">
-                  Paraiso Roleplay
+                <h3 className="text-sm sm:text-base font-black text-white truncate tracking-tight leading-tight uppercase">
+                  PARAISO GAMING
                 </h3>
                 <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest font-mono mt-0.5">
                   USER CONTROL PANEL
@@ -2337,7 +2337,7 @@ const UcpDashboard = () => {
                       className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-95"
                     >
                       <FiMessageSquare className="w-4 h-4" />
-                      <span>Official Forum Support & Tickets</span>
+                      <span>Official Forum</span>
                       <FiExternalLink className="w-3.5 h-3.5 opacity-80" />
                     </a>
 
@@ -2353,57 +2353,6 @@ const UcpDashboard = () => {
                     </a>
                   </div>
                 </div>
-
-                {/* Step-by-Step Ticket Creation Guide */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                    <FiMessageSquare className="w-4 h-4 text-cyan-400" />
-                    <span>How to Submit a Support Ticket (Forum & Discord)</span>
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
-                        01
-                      </div>
-                      <h5 className="text-sm font-extrabold text-white">Visit Forum / Discord</h5>
-                      <p className="text-xs text-slate-400 leading-normal">
-                        Click <span className="text-cyan-400 font-mono font-bold">Official Forum Support</span> or join our Discord server.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
-                        02
-                      </div>
-                      <h5 className="text-sm font-extrabold text-white">Support & Tickets</h5>
-                      <p className="text-xs text-slate-400 leading-normal">
-                        Open the <span className="text-cyan-400 font-mono font-bold">Support & Tickets</span> section on Forum or Discord.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
-                        03
-                      </div>
-                      <h5 className="text-sm font-extrabold text-white">Submit Ticket</h5>
-                      <p className="text-xs text-slate-400 leading-normal">
-                        Create a new thread or ticket selecting your category (Account / Bug / Refund).
-                      </p>
-                    </div>
-
-                    <div className="bg-[#121922] border border-slate-800 p-5 rounded-xl space-y-2 hover:border-cyan-500/40 transition-all">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono font-black flex items-center justify-center text-sm">
-                        04
-                      </div>
-                      <h5 className="text-sm font-extrabold text-white">Staff Review</h5>
-                      <p className="text-xs text-slate-400 leading-normal">
-                        Provide details & screenshots. Our Admin Team will assist you promptly!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             )}
 
