@@ -6,15 +6,16 @@ import { SITE } from '../config/site';
 const Footer = () => {
   const quickLinks = [
     { name: 'Home',             path: '/' },
+    { name: 'Highscores',       path: '/highscores' },
     { name: 'General Rules',    path: '/rules' },
     { name: 'Server Offenses',  path: '/rules/offenses' },
     { name: 'Staff',            path: '/staff' },
   ];
 
   const externalLinks = [
-    { name: 'Forums',        path: 'https://forums.pgaming.net/index.php' },
-    { name: 'Faction Apply', path: 'https://forums.pgaming.net/index.php#factions.8' },
-    { name: 'Gangs Apply',   path: 'https://forums.pgaming.net/index.php#gangs' },
+    { name: 'Forums',             path: 'https://forums.pgaming.net/index.php' },
+    { name: 'Faction Apply',      path: 'https://forums.pgaming.net/index.php#factions.8' },
+    { name: 'Gangs Apply',        path: 'https://forums.pgaming.net/index.php#gangs' },
   ];
 
   return (

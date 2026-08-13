@@ -69,7 +69,7 @@ export const UcpProvider = ({ children }) => {
         setUcpPlayer(data.user);
         localStorage.setItem('ucp_user', JSON.stringify(data.user));
         fetchUcpStats(token, data.user);
-      } else if (res.status === 401 || res.status === 403) {
+      } else if (res.status === 401 || res.status === 403 || res.status === 404) {
         localStorage.removeItem('ucp_token');
         localStorage.removeItem('ucp_user');
         localStorage.removeItem('ucp_stats');
@@ -88,6 +88,7 @@ export const UcpProvider = ({ children }) => {
   const fetchUcpStats = async (overrideToken, fallbackUser) => {
     try {
       const token = overrideToken || localStorage.getItem('ucp_token');
+      if (!token) return;
       const res = await fetch(`${API_BASE_URL}/api/ucp/stats?_t=${Date.now()}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export const UcpProvider = ({ children }) => {
         const data = await res.json();
         setUcpStats(data.stats);
         localStorage.setItem('ucp_stats', JSON.stringify(data.stats));
-      } else if (res.status === 401 || res.status === 403) {
+      } else if (res.status === 401 || res.status === 403 || res.status === 404) {
         localStorage.removeItem('ucp_token');
         localStorage.removeItem('ucp_user');
         localStorage.removeItem('ucp_stats');

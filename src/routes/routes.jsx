@@ -33,6 +33,7 @@ import ServerSettingsManager from '../pages/Dashboard/ServerSettingsManager';
 import MyTickets from '../pages/Tickets/MyTickets';
 import TicketChat from '../pages/Tickets/TicketChat';
 import UcpPage from '../pages/Ucp/UcpPage';
+import Highscores from '../pages/Highscores/Highscores';
 
 import PermissionGuard from '../components/PermissionGuard';
 import PrivateRoute from '../components/PrivateRoute';
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: '/ucp',
         element: <UcpPage />,
+      },
+      {
+        path: '/highscores',
+        element: <Highscores />,
       },
       {
         path: '/donate',

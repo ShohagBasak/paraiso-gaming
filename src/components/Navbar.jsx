@@ -68,6 +68,10 @@ const Navbar = () => {
       blank: true
     },
     {
+      name: 'Highscores',
+      path: '/highscores'
+    },
+    {
       name: 'Government',
       isDropdown: true,
       align: 'left',

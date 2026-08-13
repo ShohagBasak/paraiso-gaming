@@ -7,7 +7,7 @@ import {
   FiX, FiCrosshair, FiSmartphone, FiMonitor, FiGlobe, 
   FiPower, FiTrash2, FiHelpCircle, FiExternalLink, FiLifeBuoy, 
   FiMessageSquare, FiCheck, FiKey, FiUserPlus, FiUserMinus, 
-  FiEdit3, FiUnlock
+  FiEdit3, FiUnlock, FiRefreshCw
 } from 'react-icons/fi';
 import { FaDiscord } from 'react-icons/fa';
 
@@ -17,7 +17,9 @@ const UcpDashboard = () => {
   const { ucpPlayer, ucpStats, loading, fetchUcpStats, logoutUcp } = useUcp();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('ucp_active_tab') || 'overview';
+    const saved = localStorage.getItem('ucp_active_tab');
+    if (saved && saved.startsWith('admin')) return 'overview';
+    return saved || 'overview';
   });
   const [rosterViewMode, setRosterViewMode] = useState('grid');
   const [isRevoking, setIsRevoking] = useState(false);
@@ -86,6 +88,11 @@ const UcpDashboard = () => {
   const [financeData, setFinanceData] = useState(null);
   const [sessionsData, setSessionsData] = useState([]);
   const [isModuleLoading, setIsModuleLoading] = useState(false);
+
+  const igAdminLevel = Number(ucpStats?.AdminLevel || ucpStats?.Admin || ucpPlayer?.adminLevel || 0);
+  const isIgAdmin = igAdminLevel > 0 || ucpPlayer?.role === 'master' || ucpPlayer?.role === 'admin';
+
+
 
   const fetchTabModuleData = async (tab) => {
     const token = localStorage.getItem('ucp_token');
@@ -170,6 +177,17 @@ const UcpDashboard = () => {
     if (activeTab && ['vehicles', 'properties', 'faction', 'gang', 'inventory', 'skills', 'finance', 'security'].includes(activeTab)) {
       fetchTabModuleData(activeTab);
     }
+
+    let pollInterval = null;
+    if (activeTab === 'security') {
+      pollInterval = setInterval(() => {
+        fetchTabModuleData(activeTab);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
   }, [activeTab]);
 
   const handleTabChange = (tab) => {
@@ -1030,7 +1048,7 @@ const UcpDashboard = () => {
               </button>
             </nav>
 
-            <hr className="border-slate-800" />
+
 
             {/* Logout Action */}
             <button
