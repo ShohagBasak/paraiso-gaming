@@ -84,16 +84,6 @@ const Highscores = () => {
 
   const cacheRef = useRef({});
 
-  const prefetchCategory = async (catId) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/highscores?category=${catId}`);
-      if (res.ok) {
-        const data = await res.json();
-        cacheRef.current[catId] = data.highscores || [];
-      }
-    } catch (e) {}
-  };
-
   useEffect(() => {
     // If cached in memory and non-empty, display immediately
     if (cacheRef.current[activeCategory] && cacheRef.current[activeCategory].length > 0) {
@@ -131,14 +121,6 @@ const Highscores = () => {
     };
 
     fetchHighscores();
-
-    // Background prefetch all categories after page load
-    const allCategories = categoriesList.flatMap(g => g.items).map(i => i.id);
-    allCategories.forEach(id => {
-      if (id !== activeCategory) {
-        prefetchCategory(id);
-      }
-    });
 
     const interval = setInterval(() => {
       fetchHighscores();
