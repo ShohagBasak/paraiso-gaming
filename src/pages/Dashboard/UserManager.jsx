@@ -20,7 +20,6 @@ const RoleBadge = ({ role }) => (
 );
 
 const permissionOptions = [
-    { key: 'settings', label: '⚙️ Server Settings' },
     { key: 'banners', label: '🖼️ Banners' },
     { key: 'announcements', label: '📢 Announcements' },
     { key: 'staff', label: '👥 Staff Roster' },

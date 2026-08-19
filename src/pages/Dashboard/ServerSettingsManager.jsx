@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaServer, FaGlobe, FaCircle } from 'react-icons/fa';
-import { MdSave, MdRefresh } from 'react-icons/md';
+import useAuth from '../../hooks/useAuth';
+import { MdSave, MdRefresh, MdLock } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 import { BASE_URL } from '../../config/api';
 
 const ServerSettingsManager = () => {
+  const { user } = useAuth();
+  const isMaster = user?.role === 'master';
   const [serverIp, setServerIp] = useState('');
   const [discordUrl, setDiscordUrl] = useState('');
   const [status, setStatus] = useState('online');
@@ -35,6 +38,10 @@ const ServerSettingsManager = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!isMaster) {
+      toast.error('Access Denied: Only Master Admins can change Connection Information & Status.');
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`${BASE_URL}/server-info`, {
@@ -90,6 +97,20 @@ const ServerSettingsManager = () => {
     }
   };
 
+  if (!isMaster) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-xl">
+          <MdLock size={32} />
+        </div>
+        <h3 className="text-xl font-black text-white uppercase tracking-wider">Access Restricted</h3>
+        <p className="text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
+          Only Master Admins have permission to access or view Server IP & Status Settings. Please contact the Master Admin team if you need assistance.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl">
       {/* Header */}
@@ -124,10 +145,26 @@ const ServerSettingsManager = () => {
             <div className="bg-[#0d1117] border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600"></div>
               
-              <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-                <FaGlobe className="text-cyan-400" />
-                Connection Information & Status
+              <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaGlobe className="text-cyan-400" />
+                  <span>Connection Information & Status</span>
+                </div>
+                {!isMaster && (
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/30 flex items-center gap-1 font-mono">
+                    <MdLock size={12} /> Master Admin Only
+                  </span>
+                )}
               </h3>
+
+              {!isMaster && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-start gap-2.5 mb-5">
+                  <MdLock size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Restricted Settings:</strong> Only Master Admins have permission to modify Server Connection Info & Status.
+                  </span>
+                </div>
+              )}
 
               <div className="space-y-5">
                 {/* Server Status Selection */}
@@ -138,8 +175,11 @@ const ServerSettingsManager = () => {
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => setStatus('online')}
-                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      disabled={!isMaster}
+                      onClick={() => isMaster && setStatus('online')}
+                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        !isMaster ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      } ${
                         status === 'online'
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/10'
                           : 'bg-[#080d13] border-slate-800 text-slate-400 hover:text-white'
@@ -151,8 +191,11 @@ const ServerSettingsManager = () => {
 
                     <button
                       type="button"
-                      onClick={() => setStatus('offline')}
-                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      disabled={!isMaster}
+                      onClick={() => isMaster && setStatus('offline')}
+                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        !isMaster ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      } ${
                         status === 'offline'
                           ? 'bg-red-500/20 border-red-500 text-red-400 shadow-lg shadow-red-500/10'
                           : 'bg-[#080d13] border-slate-800 text-slate-400 hover:text-white'
@@ -164,8 +207,11 @@ const ServerSettingsManager = () => {
 
                     <button
                       type="button"
-                      onClick={() => setStatus('maintenance')}
-                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      disabled={!isMaster}
+                      onClick={() => isMaster && setStatus('maintenance')}
+                      className={`p-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                        !isMaster ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      } ${
                         status === 'maintenance'
                           ? 'bg-amber-500/20 border-amber-500 text-amber-400 shadow-lg shadow-amber-500/10'
                           : 'bg-[#080d13] border-slate-800 text-slate-400 hover:text-white'
@@ -184,10 +230,13 @@ const ServerSettingsManager = () => {
                   </label>
                   <input
                     type="text"
+                    disabled={!isMaster}
                     value={serverIp}
                     onChange={(e) => setServerIp(e.target.value)}
                     placeholder="e.g. play.paraiso-rp.com:7777 or Coming Soon..."
-                    className="w-full px-4 py-3 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-cyan-400 font-mono text-sm focus:outline-none transition-all"
+                    className={`w-full px-4 py-3 bg-[#080d13] border border-slate-800 focus:border-cyan-500 rounded-xl text-cyan-400 font-mono text-sm focus:outline-none transition-all ${
+                      !isMaster ? 'opacity-60 cursor-not-allowed bg-[#080d13]/50' : ''
+                    }`}
                   />
                   <p className="text-slate-500 text-xs mt-1.5">
                     This text will be copied when users click "Click to Copy IP" on the home page.
@@ -198,10 +247,11 @@ const ServerSettingsManager = () => {
               <div className="flex justify-end pt-6 border-t border-slate-800/80 mt-6">
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  disabled={saving || !isMaster}
+                  title={!isMaster ? 'Only Master Admins can save settings' : ''}
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  <MdSave size={18} />
+                  {isMaster ? <MdSave size={18} /> : <MdLock size={18} />}
                   {saving ? 'Saving...' : 'Save Settings'}
                 </button>
               </div>

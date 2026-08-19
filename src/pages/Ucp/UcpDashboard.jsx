@@ -7,7 +7,7 @@ import {
   FiX, FiCrosshair, FiSmartphone, FiMonitor, FiGlobe, 
   FiPower, FiTrash2, FiHelpCircle, FiExternalLink, FiLifeBuoy, 
   FiMessageSquare, FiCheck, FiKey, FiUserPlus, FiUserMinus, 
-  FiEdit3, FiUnlock, FiRefreshCw
+  FiEdit3, FiUnlock, FiRefreshCw, FiMail
 } from 'react-icons/fi';
 import { FaDiscord } from 'react-icons/fa';
 
@@ -25,11 +25,30 @@ const UcpDashboard = () => {
   const [isRevoking, setIsRevoking] = useState(false);
   const [securityMessage, setSecurityMessage] = useState('');
 
+  // Two-Factor Authentication (2FA) State
+  const [is2faEnabled, setIs2faEnabled] = useState(false);
+  const [show2faSetupModal, setShow2faSetupModal] = useState(false);
+  const [show2faDisableModal, setShow2faDisableModal] = useState(false);
+  const [setupSecret, setSetupSecret] = useState('');
+  const [setupQrCode, setSetupQrCode] = useState('');
+  const [otpVerifyCode, setOtpVerifyCode] = useState('');
+  const [otpVerifyError, setOtpVerifyError] = useState('');
+  const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
+
+  // Email OTP State
+  const [emailOtpData, setEmailOtpData] = useState({ email: null, is_verified: 0, email_otp_enabled: 0 });
+  const [emailInput, setEmailInput] = useState('');
+  const [emailVerifyCode, setEmailVerifyCode] = useState('');
+  const [emailOtpMsg, setEmailOtpMsg] = useState('');
+  const [emailOtpError, setEmailOtpError] = useState('');
+  const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
+  const [showEmailVerifyInput, setShowEmailVerifyInput] = useState(false);
+
   const handleRevokeOtherSessions = async () => {
     try {
       setIsRevoking(true);
       setSecurityMessage('');
-      const token = localStorage.getItem('ucp_token');
+      const token = sessionStorage.getItem('ucp_token');
       const res = await fetch(`${API_BASE_URL}/api/ucp/sessions/revoke-others`, {
         method: 'POST',
         headers: {
@@ -55,7 +74,7 @@ const UcpDashboard = () => {
   const handleRevokeSingleSession = async (sessionId) => {
     try {
       setSecurityMessage('');
-      const token = localStorage.getItem('ucp_token');
+      const token = sessionStorage.getItem('ucp_token');
       const res = await fetch(`${API_BASE_URL}/api/ucp/sessions/revoke-one`, {
         method: 'POST',
         headers: {
@@ -77,6 +96,99 @@ const UcpDashboard = () => {
     }
   };
 
+  // Two-Factor Authentication (2FA) Event Handlers
+  const handleInitiate2faSetup = async () => {
+    try {
+      setOtpVerifyError('');
+      setOtpVerifyCode('');
+      setIsOtpSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/2fa/setup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSetupSecret(data.secret);
+        setSetupQrCode(data.qrCodeUrl);
+        setShow2faSetupModal(true);
+      } else {
+        setSecurityMessage(data.message || 'Failed to initiate 2FA setup.');
+      }
+    } catch (err) {
+      setSecurityMessage('Connection error. Please try again.');
+    } finally {
+      setIsOtpSubmitting(false);
+    }
+  };
+
+  const handleVerify2fa = async (e) => {
+    e.preventDefault();
+    if (otpVerifyCode.trim().length !== 6) {
+      return setOtpVerifyError('Please enter a valid 6-digit code.');
+    }
+    try {
+      setOtpVerifyError('');
+      setIsOtpSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/2fa/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: otpVerifyCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIs2faEnabled(true);
+        setShow2faSetupModal(false);
+        setSecurityMessage('Two-Factor Authentication has been successfully enabled!');
+      } else {
+        setOtpVerifyError(data.message || 'Incorrect verification code.');
+      }
+    } catch (err) {
+      setOtpVerifyError('Connection error. Please try again.');
+    } finally {
+      setIsOtpSubmitting(false);
+    }
+  };
+
+  const handleDisable2fa = async (e) => {
+    e.preventDefault();
+    if (otpVerifyCode.trim().length !== 6) {
+      return setOtpVerifyError('Please enter a valid 6-digit code.');
+    }
+    try {
+      setOtpVerifyError('');
+      setIsOtpSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/2fa/disable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: otpVerifyCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIs2faEnabled(false);
+        setShow2faDisableModal(false);
+        setSecurityMessage('Two-Factor Authentication has been successfully disabled.');
+      } else {
+        setOtpVerifyError(data.message || 'Incorrect verification code.');
+      }
+    } catch (err) {
+      setOtpVerifyError('Connection error. Please try again.');
+    } finally {
+      setIsOtpSubmitting(false);
+    }
+  };
+
   // Modular On-Demand Module State
   const [vehicles, setVehicles] = useState([]);
   const [houses, setHouses] = useState([]);
@@ -91,7 +203,7 @@ const UcpDashboard = () => {
 
 
   const fetchTabModuleData = async (tab) => {
-    const token = localStorage.getItem('ucp_token');
+    const token = sessionStorage.getItem('ucp_token');
     if (!token) return;
     try {
       setIsModuleLoading(true);
@@ -160,6 +272,31 @@ const UcpDashboard = () => {
           const data = await res.json();
           setSessionsData(data.activeSessions || []);
         }
+
+        try {
+          const res2fa = await fetch(`${API_BASE_URL}/api/ucp/2fa/status`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res2fa.ok) {
+            const data2fa = await res2fa.json();
+            setIs2faEnabled(data2fa.isEnabled);
+          }
+        } catch (err2fa) {
+          console.error('Error fetching 2FA status:', err2fa);
+        }
+
+        try {
+          const resEmail = await fetch(`${API_BASE_URL}/api/ucp/email`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (resEmail.ok) {
+            const dataEmail = await resEmail.json();
+            setEmailOtpData(dataEmail);
+            setEmailInput(dataEmail.email || '');
+          }
+        } catch (errEmail) {
+          console.error('Error fetching email settings:', errEmail);
+        }
       }
     } catch (err) {
       console.error('Error fetching modular tab data:', err);
@@ -191,6 +328,117 @@ const UcpDashboard = () => {
     setIsSidebarOpen(false);
   };
 
+  // ── Email OTP Handlers ─────────────────────────────────────
+  const handleSaveEmail = async () => {
+    setEmailOtpMsg(''); setEmailOtpError('');
+    if (!emailInput || !emailInput.includes('@')) {
+      return setEmailOtpError('Please enter a valid email address.');
+    }
+    try {
+      setIsEmailSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/email/save`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailOtpMsg(data.message);
+        setShowEmailVerifyInput(true);
+        setEmailOtpData(prev => ({ ...prev, email: emailInput.trim().toLowerCase(), is_verified: 0, email_otp_enabled: 0 }));
+      } else {
+        setEmailOtpError(data.message || 'Failed to save email.');
+      }
+    } catch { setEmailOtpError('Connection error. Please try again.'); }
+    finally { setIsEmailSubmitting(false); }
+  };
+
+  const handleResendVerify = async () => {
+    setEmailOtpMsg(''); setEmailOtpError('');
+    try {
+      setIsEmailSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/email/resend-verify`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setEmailOtpMsg(data.message);
+      else setEmailOtpError(data.message || 'Failed to resend code.');
+    } catch { setEmailOtpError('Connection error.'); }
+    finally { setIsEmailSubmitting(false); }
+  };
+
+  const handleVerifyEmail = async () => {
+    setEmailOtpMsg(''); setEmailOtpError('');
+    if (!emailVerifyCode || emailVerifyCode.length !== 6) {
+      return setEmailOtpError('Please enter the 6-digit code.');
+    }
+    try {
+      setIsEmailSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/email/verify`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: emailVerifyCode })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailOtpMsg(data.message);
+        setShowEmailVerifyInput(false);
+        setEmailVerifyCode('');
+        setEmailOtpData(prev => ({ ...prev, is_verified: 1 }));
+      } else {
+        setEmailOtpError(data.message || 'Verification failed.');
+      }
+    } catch { setEmailOtpError('Connection error.'); }
+    finally { setIsEmailSubmitting(false); }
+  };
+
+  const handleToggleEmailOtp = async (enable) => {
+    setEmailOtpMsg(''); setEmailOtpError('');
+    try {
+      setIsEmailSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/email/toggle-otp`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enable })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailOtpMsg(data.message);
+        setEmailOtpData(prev => ({ ...prev, email_otp_enabled: enable ? 1 : 0 }));
+      } else {
+        setEmailOtpError(data.message || 'Failed to update setting.');
+      }
+    } catch { setEmailOtpError('Connection error.'); }
+    finally { setIsEmailSubmitting(false); }
+  };
+
+  const handleRemoveEmail = async () => {
+    setEmailOtpMsg(''); setEmailOtpError('');
+    try {
+      setIsEmailSubmitting(true);
+      const token = sessionStorage.getItem('ucp_token');
+      const res = await fetch(`${API_BASE_URL}/api/ucp/email`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailOtpMsg(data.message);
+        setEmailOtpData({ email: null, is_verified: 0, email_otp_enabled: 0 });
+        setEmailInput('');
+        setShowEmailVerifyInput(false);
+      } else {
+        setEmailOtpError(data.message || 'Failed to remove email.');
+      }
+    } catch { setEmailOtpError('Connection error.'); }
+    finally { setIsEmailSubmitting(false); }
+  };
+
   // Unified fallback arrays
   const vehiclesList = vehicles.length > 0 ? vehicles : (ucpStats?.vehicles || []);
   const housesList = houses.length > 0 ? houses : (ucpStats?.houses || []);
@@ -199,17 +447,21 @@ const UcpDashboard = () => {
   const gangMembersList = gangMembers.length > 0 ? gangMembers : (ucpStats?.gangMembers || []);
   const activeSessionsList = sessionsData.length > 0 ? sessionsData : (ucpStats?.activeSessions || []);
 
-  // Real In-Game Faction Colors and Meta
+  // Real In-Game Faction Colors and Meta matching SA-MP `groups` DB table
   const factionMeta = {
     1: { name: 'Paraiso Police Department', short: 'PPD', color: '#3b82f6' },
     2: { name: 'Federal Bureau of Investigation', short: 'FBI', color: '#6366f1' },
     3: { name: 'Paraiso Fire & Medic Department', short: 'PFMD', color: '#ef4444' },
-    4: { name: 'Hitman Agency', short: 'Hitman', color: '#eab308' },
+    4: { name: 'Paraiso San Andreas News', short: 'SAN', color: '#10b981' },
     5: { name: 'Paraiso National Guard', short: 'PNG', color: '#22c55e' },
-    6: { name: 'LCN Mafia', short: 'LCN', color: '#a855f7' },
-    7: { name: 'Yakuza Mafia', short: 'Yakuza', color: '#ec4899' },
-    8: { name: 'Street Gang', short: 'Gang', color: '#f97316' },
-    9: { name: 'Paraiso San Andreas News', short: 'SAN', color: '#10b981' }
+    6: { name: 'Grove Street Families', short: 'GSF', color: '#10b981' },
+    7: { name: '18th Street Pacris Fraternity', short: '18th Street Pac', color: '#f97316' },
+    8: { name: 'La Cosa Nostra', short: 'LCN', color: '#a855f7' },
+    9: { name: 'Paraiso Hitman Agency', short: 'HMA', color: '#eab308' },
+    10: { name: 'Santa Blanca', short: 'Santa Blanca', color: '#ec4899' },
+    12: { name: 'Government', short: 'GOV', color: '#eab308' },
+    13: { name: 'The Sovereignty', short: 'Sovereignty', color: '#6366f1' },
+    14: { name: 'Paraiso Towing and Recovery', short: 'Towing', color: '#f59e0b' }
   };
 
   if (loading || !ucpStats) {
@@ -305,11 +557,11 @@ const UcpDashboard = () => {
     if (skillPoints === 0) return 'Level 1';
 
     // Godfather / SA-MP Skill Point brackets to Skill Level
-    if (skillPoints < 50) return `Level 1 (${skillPoints} pts)`;
-    if (skillPoints < 100) return `Level 2 (${skillPoints} pts)`;
-    if (skillPoints < 200) return `Level 3 (${skillPoints} pts)`;
-    if (skillPoints < 400) return `Level 4 (${skillPoints} pts)`;
-    return `Level 5 Master (${skillPoints} pts)`;
+    if (skillPoints < 50) return `Level 1`;
+    if (skillPoints < 100) return `Level 2`;
+    if (skillPoints < 200) return `Level 3`;
+    if (skillPoints < 400) return `Level 4`;
+    return `Level 5`;
   };
 
   const getDonatorRank = (donatorVal) => {
@@ -714,7 +966,7 @@ const UcpDashboard = () => {
   };
 
   // Official Factions vs Families & Gangs Classification
-  const officialFactionIds = [1, 2, 3, 4, 5, 9];
+  const officialFactionIds = [1, 2, 3, 4, 5, 9, 12, 14];
   const familyGangIds = [6, 7, 8, 10, 11, 12, 13];
 
   const getOfficialFactionName = (stats) => {
@@ -725,6 +977,7 @@ const UcpDashboard = () => {
     const fId = memberId || leaderId || rawFactionId;
 
     if (officialFactionIds.includes(fId)) {
+      if (fId === 9) return 'None'; // Faction #9 is Hitman Agency (Secret Organization)
       const meta = factionMeta[fId];
       return meta ? `${meta.short} (${meta.name})` : `Faction #${fId}`;
     }
@@ -756,17 +1009,20 @@ const UcpDashboard = () => {
 
   const getOfficialFactionRank = (stats) => {
     if (!stats) return 'No Rank';
-    const rankNum = Number(stats.Rank || 0);
-    const memberId = Number(stats.Member || stats.Leader || stats.Faction || 0);
+    const rankNum = Number(stats.Rank ?? stats.rank ?? 0);
+    const userFacId = ucpStats ? Number(ucpStats.Member ?? ucpStats.member ?? ucpStats.Leader ?? ucpStats.leader ?? ucpStats.Faction ?? ucpStats.faction ?? 0) : 0;
+    const memberId = Number(stats.Member ?? stats.member ?? stats.Leader ?? stats.leader ?? stats.Faction ?? stats.faction ?? userFacId ?? 0);
 
-    if (!memberId || !officialFactionIds.includes(memberId)) return 'No Rank';
+    if (!memberId || !officialFactionIds.includes(memberId)) return `Rank #${rankNum}`;
     const groupRanks = {
       1: { 0: 'Rookie', 1: 'Officer', 2: 'Senior Officer', 3: 'Corporal', 4: 'Sergeant', 5: 'Lieutenant', 6: 'Captain', 7: 'Deputy Chief', 8: 'Chief of Police', 9: 'Chief of Police' },
       2: { 0: 'Intern', 1: 'Agent', 2: 'Special Agent', 3: 'Senior Agent', 4: 'Supervisory Agent', 5: 'Chief of Staff', 6: 'Asst. Director', 7: 'Director' },
       3: { 0: 'Paramedic', 1: 'Firefighter', 2: 'Senior Paramedic', 3: 'Lead Paramedic', 4: 'Lieutenant', 5: 'Captain', 6: 'Assistant Commissioner', 7: 'Deputy Commissioner', 8: 'Commissioner', 9: 'Chief' },
       4: { 0: 'Intern', 1: 'Reporter', 2: 'Senior Reporter', 3: 'Broadcaster', 4: 'Broadcast Editor', 5: 'Manager', 6: 'Producer' },
       5: { 0: 'Private', 1: 'Private First Class', 2: 'Corporal', 3: 'Sergeant', 4: 'Staff Sergeant', 5: 'Master Sergeant', 6: 'Lieutenant', 7: 'Captain', 8: 'Major', 9: 'Colonel' },
-      9: { 0: 'Intern', 1: 'Freelancer', 2: 'Markman', 3: 'Agent', 4: 'Special Agent', 5: 'Vice Director', 6: 'Director' }
+      9: { 0: 'Intern', 1: 'Freelancer', 2: 'Markman', 3: 'Agent', 4: 'Special Agent', 5: 'Vice Director', 6: 'Director' },
+      12: { 0: 'Intern', 1: 'Clerk', 2: 'Officer', 3: 'Supervisor', 4: 'Director', 5: 'Governor', 6: 'President' },
+      14: { 0: 'Trainee', 1: 'Driver', 2: 'Mechanic', 3: 'Senior Driver', 4: 'Supervisor', 5: 'Manager', 6: 'Owner' }
     };
     return groupRanks[memberId]?.[rankNum] || `Rank #${rankNum}`;
   };
@@ -814,18 +1070,19 @@ const UcpDashboard = () => {
 
   const getFamilyRankTitle = (stats) => {
     if (!stats) return 'No Rank';
-    const rankNum = Number(stats.Rank || 0);
-    const memberId = Number(stats.Member || stats.Leader || stats.Faction || 0);
-    const gangColId = Number(stats.Gang || 0);
-    if (!memberId || officialFactionIds.includes(memberId)) return 'No Rank';
-    const fId = familyGangIds.includes(memberId) ? memberId : (gangColId && gangColId !== 255 ? gangColId : 6);
+    const rankNum = Number(stats.Rank ?? stats.rank ?? 0);
+    const userGangId = ucpStats ? Number(ucpStats.Member ?? ucpStats.member ?? ucpStats.Leader ?? ucpStats.leader ?? ucpStats.Faction ?? ucpStats.faction ?? ucpStats.Gang ?? ucpStats.gang ?? 0) : 0;
+    const memberId = Number(stats.Member ?? stats.member ?? stats.Leader ?? stats.leader ?? stats.Faction ?? stats.faction ?? userGangId ?? 0);
+    const gangColId = Number(stats.Gang ?? stats.gang ?? (ucpStats ? (ucpStats.Gang ?? ucpStats.gang) : 0) ?? 0);
+
+    const fId = familyGangIds.includes(memberId) ? memberId : (gangColId && gangColId !== 255 ? gangColId : (familyGangIds.includes(userGangId) ? userGangId : 6));
 
     const groupRanks = {
-      6: { 1: 'Young G', 2: 'Soldier', 3: 'Big Homie', 4: 'O.G.', 5: 'Shot Caller', 6: 'Kingpin', 7: 'Kingpin' },
+      6: { 0: 'Young G', 1: 'Young G', 2: 'Soldier', 3: 'Big Homie', 4: 'O.G.', 5: 'Shot Caller', 6: 'Kingpin', 7: 'Kingpin' },
       7: { 0: 'Enforcer', 1: 'Original', 2: 'Tail Gunner', 3: 'Sergeant-Arms', 4: 'Road-Captain', 5: 'Vice-President', 6: 'President' },
       8: { 0: 'Worker', 1: 'Outsider', 2: 'Associate', 3: 'Soldato', 4: 'Caporegime', 5: 'Consigliere', 6: 'The Don' },
-      10: { 1: 'Outcast', 2: 'Dealer', 3: 'Enforcer', 4: 'Shot Caller', 5: 'Under Boss', 6: 'Kingpin', 7: 'Head' },
-      11: { 1: 'Cholo', 2: 'Hood Rat', 3: 'Vato Loco', 4: 'The Assesino', 5: 'The Sicario', 6: 'Emperador', 7: "The Founder's" },
+      10: { 0: 'Outcast', 1: 'Outcast', 2: 'Dealer', 3: 'Enforcer', 4: 'Shot Caller', 5: 'Under Boss', 6: 'Kingpin', 7: 'Head' },
+      11: { 0: 'Cholo', 1: 'Cholo', 2: 'Hood Rat', 3: 'Vato Loco', 4: 'The Assesino', 5: 'The Sicario', 6: 'Emperador', 7: "The Founder's" },
       12: { 0: 'Rank 0', 1: 'Rank 1', 2: 'Rank 2', 3: 'Rank 3', 4: 'Rank 4', 5: 'Rank 5', 6: 'Rank 6' },
       13: { 0: 'Matrunner', 1: 'Peasant', 2: 'Worker', 3: 'Militant', 4: 'Revolutionist', 5: 'Admiral', 6: 'Emperor' }
     };
@@ -839,6 +1096,18 @@ const UcpDashboard = () => {
   const getAffiliationDetails = (stats) => {
     if (!stats) return { label: 'Affiliation / Faction', value: 'Civilian', isLeader: false, color: '#38bdf8', badgeText: 'Leader' };
 
+    // Dynamic Backend `groups` DB table integration
+    if (stats.factionName && stats.factionName !== 'Civilian') {
+      const name = `${stats.factionShortName} (${stats.factionName})`;
+      return {
+        label: 'Affiliation / Faction',
+        value: name,
+        isLeader: Boolean(stats.isLeader),
+        badgeText: 'Leader',
+        color: stats.factionColor || '#38bdf8'
+      };
+    }
+
     const memberId = Number(stats.member ?? stats.Member ?? 0);
     const leaderId = Number(stats.leader ?? stats.Leader ?? 0);
     const rawFactionId = Number(stats.faction ?? stats.Faction ?? 0);
@@ -847,6 +1116,10 @@ const UcpDashboard = () => {
     const fId = memberId || leaderId || rawFactionId;
 
     if (fId > 0 && officialFactionIds.includes(fId)) {
+      // Faction #9 is Hitman Agency (Secret Organization) - display as Civilian to preserve secret identity!
+      if (fId === 9) {
+        return { label: 'Affiliation / Faction', value: 'Civilian', isLeader: false, color: '#38bdf8', badgeText: 'Leader' };
+      }
       const meta = factionMeta[fId];
       const name = meta ? `${meta.short} (${meta.name})` : `Faction #${fId}`;
       const isLeader = leaderId > 0 && leaderId === fId;
@@ -1046,7 +1319,7 @@ const UcpDashboard = () => {
                 }`}
               >
                 <FiShield className="w-4 h-4 text-emerald-400" />
-                <span>Active Devices</span>
+                <span>Two-Factor Authentication (2FA)</span>
               </button>
 
               <button
@@ -2183,7 +2456,7 @@ const UcpDashboard = () => {
                               {s.name} Level: <span className="text-cyan-400 font-mono">{info.level}</span>
                             </span>
                             <span className="text-xs font-mono font-bold text-slate-400">
-                              {info.points} / {info.req} XP
+                              {info.isMax ? `${info.points.toLocaleString()} pts` : `${info.points} / ${info.req} XP`}
                             </span>
                           </div>
 
@@ -2288,10 +2561,14 @@ const UcpDashboard = () => {
 
                         <div className="pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
                           <div>
-                            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">IP Address</span>
-                            <span className="text-slate-300 font-mono font-bold mt-0.5 flex items-center gap-1">
-                              <FiGlobe className="w-3 h-3 text-slate-400" />
-                              <span>{session.ip || '127.0.0.1'}</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Device Platform</span>
+                            <span className="text-slate-300 font-mono font-bold mt-0.5 flex items-center gap-1.5">
+                              {session.deviceType === 'Mobile' ? (
+                                <FiSmartphone className="w-3.5 h-3.5 text-cyan-400" />
+                              ) : (
+                                <FiMonitor className="w-3.5 h-3.5 text-cyan-400" />
+                              )}
+                              <span>{session.deviceType || 'Desktop Device'}</span>
                             </span>
                           </div>
 
@@ -2307,6 +2584,235 @@ const UcpDashboard = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Two-Factor Authentication (2FA) Security Box */}
+                <div className="border-t border-slate-800/85 pt-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                        <FiLock className="w-4 h-4 text-cyan-400" />
+                        <span>Two-Factor Authentication (2FA)</span>
+                      </h4>
+                      <p className="text-xs text-slate-400">
+                        Secure your UCP account by requiring a 6-digit verification code from Google Authenticator when logging in.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {is2faEnabled ? (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+                          Active & Enabled
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-wider">
+                          Disabled
+                        </span>
+                      )}
+
+                      {is2faEnabled ? (
+                        <button
+                          onClick={() => {
+                            setOtpVerifyError('');
+                            setOtpVerifyCode('');
+                            setShow2faDisableModal(true);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-extrabold uppercase tracking-wider transition-all active:scale-95"
+                        >
+                          Disable 2FA
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleInitiate2faSetup}
+                          disabled={isOtpSubmitting}
+                          className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 border border-cyan-500 text-[#080d13] text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {isOtpSubmitting ? 'Loading...' : 'Enable 2FA'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email OTP Login Section */}
+                <div className="border-t border-slate-800/85 pt-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                        <FiMail className="w-4 h-4 text-blue-400" />
+                        <span>Email OTP Login</span>
+                      </h4>
+                      <p className="text-xs text-slate-400">
+                        Register a personal email to receive a one-time code each time you log in. This works as an alternative to Google Authenticator.
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {emailOtpData.email && emailOtpData.is_verified ? (
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${emailOtpData.email_otp_enabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                          {emailOtpData.email_otp_enabled ? 'Active & Enabled' : 'Verified — Disabled'}
+                        </span>
+                      ) : emailOtpData.email && !emailOtpData.is_verified ? (
+                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
+                          Pending Verification
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase tracking-wider">
+                          Not Configured
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email message/error */}
+                  {(emailOtpMsg || emailOtpError) && (
+                    <div className={`p-3 rounded-xl text-xs font-bold border ${emailOtpMsg ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                      {emailOtpMsg || emailOtpError}
+                    </div>
+                  )}
+
+                  {/* Email input + save */}
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={e => setEmailInput(e.target.value)}
+                      placeholder="your@email.com"
+                      className="flex-1 bg-[#080d13] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono transition-all"
+                    />
+                    <button
+                      onClick={handleSaveEmail}
+                      disabled={isEmailSubmitting}
+                      className="px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
+                    >
+                      {isEmailSubmitting ? '...' : emailOtpData.email ? 'Update' : 'Save & Verify'}
+                    </button>
+                    {emailOtpData.email && (
+                      <button
+                        onClick={handleRemoveEmail}
+                        disabled={isEmailSubmitting}
+                        className="px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs transition-all active:scale-95 disabled:opacity-50"
+                        title="Remove email"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Verify OTP code input */}
+                  {(showEmailVerifyInput || (emailOtpData.email && !emailOtpData.is_verified)) && (
+                    <div className="bg-[#080d13] border border-amber-500/20 rounded-xl p-4 space-y-3">
+                      <p className="text-xs text-amber-300 font-semibold">
+                        A verification code was sent to <span className="font-mono font-black">{emailOtpData.email}</span>. Enter it below:
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={emailVerifyCode}
+                          onChange={e => setEmailVerifyCode(e.target.value.replace(/\D/g, ''))}
+                          placeholder="6-digit code"
+                          className="flex-1 bg-[#0d131a] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono tracking-widest text-center transition-all"
+                        />
+                        <button
+                          onClick={handleVerifyEmail}
+                          disabled={isEmailSubmitting}
+                          className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
+                        >
+                          Verify
+                        </button>
+                      </div>
+                      <button
+                        onClick={handleResendVerify}
+                        disabled={isEmailSubmitting}
+                        className="text-xs text-slate-400 hover:text-slate-300 underline transition-all disabled:opacity-50"
+                      >
+                        Didn't receive the code? Resend
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Enable/Disable Email OTP toggle (only if verified) */}
+                  {emailOtpData.email && emailOtpData.is_verified === 1 && (
+                    <div className="flex items-center justify-between bg-[#121922] border border-slate-800 rounded-xl px-4 py-3">
+                      <div>
+                        <div className="text-xs font-extrabold text-white">Login with Email OTP</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">Receive a code to <span className="font-mono">{emailOtpData.email}</span> each login</div>
+                      </div>
+                      <button
+                        onClick={() => handleToggleEmailOtp(!emailOtpData.email_otp_enabled)}
+                        disabled={isEmailSubmitting}
+                        className={`relative w-12 h-6 rounded-full transition-all disabled:opacity-50 flex-shrink-0 ${emailOtpData.email_otp_enabled ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${emailOtpData.email_otp_enabled ? 'left-6' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Security Overview Cards */}
+                <div className="border-t border-slate-800/85 pt-6">
+                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <FiShield className="w-4 h-4 text-emerald-400" />
+                    <span>Account Security Overview</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Active Sessions count */}
+                    <div className="bg-[#121922] border border-slate-800 rounded-xl p-4 space-y-1 group hover:border-cyan-500/30 transition-all">
+                      <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Active Sessions</div>
+                      <div className="text-2xl font-black text-cyan-400">{activeSessionsList.length}</div>
+                      <div className="text-[11px] text-slate-400 leading-snug">
+                        {activeSessionsList.length > 1 ? `${activeSessionsList.length - 1} other device(s) logged in` : 'Only this device is active'}
+                      </div>
+                    </div>
+
+                    {/* 2FA Status */}
+                    <div className={`bg-[#121922] border rounded-xl p-4 space-y-1 hover:border-opacity-50 transition-all ${is2faEnabled ? 'border-emerald-500/30 group' : 'border-slate-800 group'}`}>
+                      <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">2FA Status</div>
+                      <div className={`text-2xl font-black ${is2faEnabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {is2faEnabled ? 'Secured' : 'Exposed'}
+                      </div>
+                      <div className="text-[11px] text-slate-400 leading-snug">
+                        {is2faEnabled ? 'Google Authenticator active' : 'Enable 2FA for full protection'}
+                      </div>
+                    </div>
+
+                    {/* Session Type */}
+                    <div className="bg-[#121922] border border-slate-800 rounded-xl p-4 space-y-1 group hover:border-cyan-500/30 transition-all">
+                      <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Session Type</div>
+                      <div className="text-2xl font-black text-amber-400">Per-Session</div>
+                      <div className="text-[11px] text-slate-400 leading-snug">
+                        Auto-logout when browser is closed
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Tips */}
+                <div className="border-t border-slate-800/85 pt-6">
+                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <FiAlertTriangle className="w-4 h-4 text-amber-400" />
+                    <span>Account Protection Tips</span>
+                  </h4>
+                  <div className="space-y-2.5">
+                    {[
+                      { icon: FiLock, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20', title: 'Enable Two-Factor Authentication', desc: 'Add an extra layer of protection. Even if your password is leaked, attackers cannot log in without your phone\'s code.' },
+                      { icon: FiPower, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', title: 'Log Out All Unknown Devices', desc: 'If you notice a device you don\'t recognize in the active sessions list, immediately click "Log Out All Other Devices".' },
+                      { icon: FiSmartphone, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', title: 'Keep Your Authenticator App Safe', desc: 'Never share your Google Authenticator QR code or backup key with anyone. Treat it like your password.' },
+                      { icon: FiKey, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', title: 'Use a Strong In-Game Password', desc: 'Use a unique password that is not shared with any other game or account to protect your character.' },
+                    ].map((tip, idx) => (
+                      <div key={idx} className={`flex items-start gap-3 p-3 rounded-xl bg-[#121922] border border-slate-800 hover:border-slate-700 transition-all`}>
+                        <div className={`mt-0.5 flex-shrink-0 p-2 rounded-lg border ${tip.bg}`}>
+                          <tip.icon className={`w-3.5 h-3.5 ${tip.color}`} />
+                        </div>
+                        <div>
+                          <div className="text-xs font-extrabold text-white">{tip.title}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5 leading-snug">{tip.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             )}
 
@@ -2355,6 +2861,152 @@ const UcpDashboard = () => {
                 </div>
               </div>
             )}
+
+          {/* 2FA SETUP MODAL */}
+          {show2faSetupModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300 animate-fadeIn">
+              <div className="bg-[#0b131a] border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-6 animate-scaleIn">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <FiLock className="text-cyan-400" />
+                    <span>Configure Two-Factor Auth (2FA)</span>
+                  </h3>
+                  <button
+                    onClick={() => setShow2faSetupModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Scan this QR code using Google Authenticator, Authy, or any other TOTP-compatible app on your phone.
+                  </p>
+
+                  {/* QR Code Container */}
+                  <div className="bg-white p-4 rounded-xl flex items-center justify-center mx-auto w-48 h-48 border-4 border-cyan-500/25 shadow-lg">
+                    <img src={setupQrCode} alt="2FA QR Code" className="w-full h-full object-contain" />
+                  </div>
+
+                  {/* Secret Key Display */}
+                  <div className="bg-[#121922] border border-slate-800 rounded-xl p-3 text-center space-y-1">
+                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Setup Key (Manual Entry)</span>
+                    <div className="font-mono font-bold text-xs text-cyan-400 select-all tracking-widest break-all">
+                      {setupSecret}
+                    </div>
+                  </div>
+
+                  {/* Verification Form */}
+                  <form onSubmit={handleVerify2fa} className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
+                        Enter the 6-Digit Code from App
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpVerifyCode}
+                        onChange={(e) => setOtpVerifyCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="000 000"
+                        className="w-full bg-[#121922] border border-slate-800 focus:border-cyan-500 rounded-xl px-4 py-3 text-center font-mono font-bold text-xl text-white tracking-widest focus:outline-none transition-all placeholder:text-slate-600"
+                        required
+                      />
+                    </div>
+
+                    {otpVerifyError && (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold text-center">
+                        {otpVerifyError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShow2faSetupModal(false)}
+                        className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isOtpSubmitting}
+                        className="flex-1 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-[#080d13] font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                      >
+                        {isOtpSubmitting ? 'Verifying...' : 'Verify & Enable'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2FA DISABLE MODAL */}
+          {show2faDisableModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300 animate-fadeIn">
+              <div className="bg-[#0b131a] border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-6 animate-scaleIn">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <FiLock className="text-red-400" />
+                    <span>Disable Two-Factor Auth (2FA)</span>
+                  </h3>
+                  <button
+                    onClick={() => setShow2faDisableModal(false)}
+                    className="text-slate-400 hover:text-white transition-colors"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-300 leading-relaxed text-center">
+                    To deactivate 2FA security on your account, please enter the current 6-digit verification code from your authenticator app.
+                  </p>
+
+                  <form onSubmit={handleDisable2fa} className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block text-center">
+                        Authenticator Code
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpVerifyCode}
+                        onChange={(e) => setOtpVerifyCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="000 000"
+                        className="w-full bg-[#121922] border border-slate-800 focus:border-red-500/50 rounded-xl px-4 py-3 text-center font-mono font-bold text-xl text-white tracking-widest focus:outline-none transition-all placeholder:text-slate-600"
+                        required
+                      />
+                    </div>
+
+                    {otpVerifyError && (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold text-center">
+                        {otpVerifyError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShow2faDisableModal(false)}
+                        className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isOtpSubmitting}
+                        className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
+                      >
+                        {isOtpSubmitting ? 'Disabling...' : 'Confirm Disable'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
 
           </main>
 

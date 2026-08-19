@@ -51,11 +51,11 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'UCP', path: '/ucp' },
-    { name: 'Donate Store', path: '/donate' },
     {
       name: 'Highscores',
       path: '/highscores'
     },
+    { name: 'Donate Store', path: '/donate' },
     {
       name: 'Rules',
       isDropdown: true,
@@ -236,8 +236,8 @@ const Navbar = () => {
               className="flex items-center gap-2 flex-shrink-0 transition-all duration-500 ease-in-out origin-left"
               style={{ transform: isLarge ? 'scale(1.6)' : 'scale(1)' }}
             >
-              <div className="w-12 h-12  rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
-                <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow overflow-hidden">
+                <img src="/logonobg.png" alt="logo" className="w-full h-full object-contain" />
               </div>
             </Link>
 
@@ -273,8 +273,8 @@ const Navbar = () => {
           className="absolute top-[16px] left-4 flex items-center gap-2 flex-shrink-0"
           onClick={() => setIsOpen(false)}
         >
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow">
-            <span className="text-white font-bold text-lg"><img src='./logonobg.png' alt="logo" /></span>
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center hover:shadow-lg hover:shadow-cyan-400/50 transition-shadow overflow-hidden">
+            <img src="/logonobg.png" alt="logo" className="w-full h-full object-contain" />
           </div>
         </Link>
 

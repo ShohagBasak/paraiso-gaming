@@ -30,6 +30,7 @@ import CreateUserManager from '../pages/Dashboard/CreateUserManager';
 import DonateManager from '../pages/Dashboard/DonateManager';
 import TicketManager from '../pages/Dashboard/TicketManager';
 import ServerSettingsManager from '../pages/Dashboard/ServerSettingsManager';
+import UcpSecurityManager from '../pages/Dashboard/UcpSecurityManager';
 import MyTickets from '../pages/Tickets/MyTickets';
 import TicketChat from '../pages/Tickets/TicketChat';
 import UcpPage from '../pages/Ucp/UcpPage';
@@ -124,6 +125,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'server-settings', element: <ServerSettingsManager /> },
+      { path: 'ucp-security', element: <MasterRoute><UcpSecurityManager /></MasterRoute> },
       { path: 'banners', element: <PermissionGuard permission="banners"><BannerManager /></PermissionGuard> },
       { path: 'announcements', element: <PermissionGuard permission="announcements"><AnnouncementManager /></PermissionGuard> },
       { path: 'users', element: <PermissionGuard permission="users"><UserManager /></PermissionGuard> },

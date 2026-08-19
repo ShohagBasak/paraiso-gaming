@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router';
 import { Toaster, toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import {
-    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree, MdPersonAdd, MdVpnKey, MdStore, MdConfirmationNumber
+    MdDashboard, MdImage, MdCampaign, MdLogout, MdMenu, MdClose, MdPeople, MdSupervisedUserCircle, MdHome, MdOutlineAccountBalance, MdGroup, MdQuestionAnswer, MdAccountTree, MdPersonAdd, MdVpnKey, MdStore, MdConfirmationNumber, MdSecurity
 } from 'react-icons/md';
 import { FaGamepad, FaServer } from 'react-icons/fa';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -14,7 +14,8 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const navItems = [
     { to: '/dashboard', label: 'Overview', icon: <MdDashboard size={20} />, end: true },
-    { to: '/dashboard/server-settings', label: 'Server Settings', icon: <FaServer size={20} />, permission: 'settings' },
+    { to: '/dashboard/server-settings', label: 'Server Settings', icon: <FaServer size={20} />, masterOnly: true },
+    { to: '/dashboard/ucp-security', label: 'UCP Security', icon: <MdSecurity size={20} />, masterOnly: true },
     { to: '/dashboard/banners', label: 'Banner Slides', icon: <MdImage size={20} />, permission: 'banners' },
     { to: '/dashboard/announcements', label: 'Announcements', icon: <MdCampaign size={20} />, permission: 'announcements' },
     { to: '/dashboard/staff', label: 'Staff Roster', icon: <MdSupervisedUserCircle size={20} />, permission: 'staff' },

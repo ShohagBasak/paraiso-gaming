@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export const UcpProvider = ({ children }) => {
   const [ucpPlayer, setUcpPlayer] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('ucp_user');
+      const savedUser = sessionStorage.getItem('ucp_user');
       return savedUser ? JSON.parse(savedUser) : null;
     } catch {
       return null;
@@ -15,7 +15,7 @@ export const UcpProvider = ({ children }) => {
 
   const [ucpStats, setUcpStats] = useState(() => {
     try {
-      const savedStats = localStorage.getItem('ucp_stats');
+      const savedStats = sessionStorage.getItem('ucp_stats');
       return savedStats ? JSON.parse(savedStats) : null;
     } catch {
       return null;
@@ -31,7 +31,7 @@ export const UcpProvider = ({ children }) => {
 
   const checkUcpSession = async () => {
     try {
-      const token = localStorage.getItem('ucp_token');
+      const token = sessionStorage.getItem('ucp_token');
       if (!token) {
         setUcpPlayer(null);
         setUcpStats(null);
@@ -50,15 +50,15 @@ export const UcpProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         setUcpPlayer(data.user);
-        localStorage.setItem('ucp_user', JSON.stringify(data.user));
+        sessionStorage.setItem('ucp_user', JSON.stringify(data.user));
         if (data.stats) {
           setUcpStats(data.stats);
-          localStorage.setItem('ucp_stats', JSON.stringify(data.stats));
+          sessionStorage.setItem('ucp_stats', JSON.stringify(data.stats));
         }
       } else if (res.status === 401 || res.status === 403 || res.status === 404) {
-        localStorage.removeItem('ucp_token');
-        localStorage.removeItem('ucp_user');
-        localStorage.removeItem('ucp_stats');
+        sessionStorage.removeItem('ucp_token');
+        sessionStorage.removeItem('ucp_user');
+        sessionStorage.removeItem('ucp_stats');
         setUcpPlayer(null);
         setUcpStats(null);
       }
@@ -71,7 +71,7 @@ export const UcpProvider = ({ children }) => {
 
   const fetchUcpStats = async (overrideToken, fallbackUser) => {
     try {
-      const token = overrideToken || localStorage.getItem('ucp_token');
+      const token = overrideToken || sessionStorage.getItem('ucp_token');
       if (!token) return;
       const res = await fetch(`${API_BASE_URL}/api/ucp/stats?_t=${Date.now()}`, {
         headers: {
@@ -84,11 +84,11 @@ export const UcpProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         setUcpStats(data.stats);
-        localStorage.setItem('ucp_stats', JSON.stringify(data.stats));
+        sessionStorage.setItem('ucp_stats', JSON.stringify(data.stats));
       } else if (res.status === 401 || res.status === 403 || res.status === 404) {
-        localStorage.removeItem('ucp_token');
-        localStorage.removeItem('ucp_user');
-        localStorage.removeItem('ucp_stats');
+        sessionStorage.removeItem('ucp_token');
+        sessionStorage.removeItem('ucp_user');
+        sessionStorage.removeItem('ucp_stats');
         setUcpPlayer(null);
         setUcpStats(null);
       } else if (fallbackUser && !ucpStats) {
@@ -99,28 +99,32 @@ export const UcpProvider = ({ children }) => {
     }
   };
 
-  const loginUcp = async (username, password) => {
+  const loginUcp = async (username, password, captchaToken = '') => {
     const res = await fetch(`${API_BASE_URL}/api/ucp/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, captchaToken })
     });
 
     const data = await res.json();
     if (!res.ok) {
-      throw new Error(data.message || 'UCP login failed');
+      const err = new Error(data.message || 'UCP login failed');
+      err.data = data;
+      err.requiresCaptcha = Boolean(data.requiresCaptcha);
+      err.isLocked = Boolean(data.isLocked);
+      throw err;
     }
 
     if (data.token) {
-      localStorage.setItem('ucp_token', data.token);
+      sessionStorage.setItem('ucp_token', data.token);
     }
     if (data.user) {
-      localStorage.setItem('ucp_user', JSON.stringify(data.user));
+      sessionStorage.setItem('ucp_user', JSON.stringify(data.user));
+      setUcpPlayer(data.user);
+      await fetchUcpStats(data.token, data.user);
     }
 
-    setUcpPlayer(data.user);
-    await fetchUcpStats(data.token, data.user);
     return data;
   };
 
@@ -133,9 +137,9 @@ export const UcpProvider = ({ children }) => {
     } catch (err) {
       console.error("UCP logout error:", err);
     } finally {
-      localStorage.removeItem('ucp_token');
-      localStorage.removeItem('ucp_user');
-      localStorage.removeItem('ucp_stats');
+      sessionStorage.removeItem('ucp_token');
+      sessionStorage.removeItem('ucp_user');
+      sessionStorage.removeItem('ucp_stats');
       setUcpPlayer(null);
       setUcpStats(null);
     }

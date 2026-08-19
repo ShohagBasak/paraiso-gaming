@@ -39,6 +39,7 @@ const categoriesList = [
       { id: 'boxing', label: 'Boxing', icon: FiZap, unit: '' },
       { id: 'fishing', label: 'Fishing', icon: FiActivity, unit: '' },
       { id: 'trucker', label: 'Trucker', icon: FiTruck, unit: '' },
+      { id: 'farmer', label: 'Farmer', icon: FiActivity, unit: '' },
       { id: 'carjacker', label: 'Carjacker', icon: FiGrid, unit: '' },
     ]
   }
@@ -202,9 +203,6 @@ const Highscores = () => {
                             <IconComp className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-cyan-400'}`} />
                             <span>{item.label}</span>
                           </div>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isSelected ? 'bg-black/30 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                            {item.unit}
-                          </span>
                         </button>
                       );
                     })}
@@ -242,7 +240,7 @@ const Highscores = () => {
                       <tr>
                         <th className="py-4 px-6">Rank</th>
                         <th className="py-4 px-6">
-                          {activeCategory === 'crimes' ? 'Crime' : activeCategory === 'cars' ? 'Model' : activeCategory === 'factions-roster' || activeCategory === 'factions-wealth' ? 'Gang / Faction' : activeCategory === 'kills' || activeCategory === 'arrests' || activeCategory === 'lawyer' || activeCategory === 'detective' || activeCategory === 'arms' || activeCategory === 'mechanic' || activeCategory === 'boxing' || activeCategory === 'fishing' || activeCategory === 'trucker' || activeCategory === 'carjacker' || activeCategory === 'hours' || activeCategory === 'wealth' || activeCategory === 'materials' ? 'Username' : 'Player / Model'}
+                          {activeCategory === 'crimes' ? 'Crime' : activeCategory === 'cars' ? 'Model' : activeCategory === 'factions-roster' || activeCategory === 'factions-wealth' ? 'Gang / Faction' : activeCategory === 'kills' || activeCategory === 'arrests' || activeCategory === 'lawyer' || activeCategory === 'detective' || activeCategory === 'arms' || activeCategory === 'mechanic' || activeCategory === 'boxing' || activeCategory === 'fishing' || activeCategory === 'trucker' || activeCategory === 'farmer' || activeCategory === 'carjacker' || activeCategory === 'smuggler' || activeCategory === 'drugs' || activeCategory === 'prostitute' || activeCategory === 'hours' || activeCategory === 'wealth' || activeCategory === 'materials' ? 'Username' : 'Player / Model'}
                         </th>
                         {activeCategory === 'arrests' ? (
                           <>
@@ -251,7 +249,7 @@ const Highscores = () => {
                           </>
                         ) : (
                           <th className="py-4 px-6 text-right">
-                            {activeCategory === 'wealth' ? 'Total Wealth' : activeCategory === 'materials' ? 'Materials' : activeCategory === 'hours' ? 'Playing Hours' : activeCategory === 'crimes' || activeCategory === 'cars' ? 'Amount' : activeCategory === 'factions-roster' ? 'Number' : activeCategory === 'kills' ? 'Kills' : activeCategory === 'lawyer' ? 'Freed' : activeCategory === 'detective' ? 'Found' : activeCategory === 'arms' ? 'Guns Made' : activeCategory === 'mechanic' ? 'Repaired' : activeCategory === 'boxing' ? 'Fights Won' : activeCategory === 'fishing' ? 'Fishes Caught' : activeCategory === 'trucker' ? 'Delivered' : activeCategory === 'carjacker' ? 'Car Sold' : 'Score / Value'}
+                            {activeCategory === 'wealth' ? 'Total Wealth' : activeCategory === 'materials' ? 'Materials' : activeCategory === 'hours' ? 'Playing Hours' : activeCategory === 'crimes' || activeCategory === 'cars' ? 'Amount' : activeCategory === 'factions-roster' ? 'Members' : activeCategory === 'kills' ? 'Kills' : activeCategory === 'lawyer' ? 'Freed' : activeCategory === 'detective' ? 'Found' : activeCategory === 'drugs' ? 'Number of Deals' : activeCategory === 'smuggler' ? 'Crates Smuggled' : activeCategory === 'arms' ? 'Guns Made' : activeCategory === 'mechanic' ? 'Repaired' : activeCategory === 'boxing' ? 'Fights Won' : activeCategory === 'fishing' ? 'Fishes Caught' : activeCategory === 'trucker' ? 'Delivered' : activeCategory === 'farmer' ? 'Harvests' : activeCategory === 'carjacker' ? 'Car Sold' : 'Score / Value'}
                           </th>
                         )}
                       </tr>
@@ -294,7 +292,8 @@ const Highscores = () => {
                                     <img
                                       src={`https://assets.open.mp/assets/images/skins/${item.skin ?? item.skinId}.png`}
                                       alt="skin"
-                                      className="w-full h-full object-contain p-0.5 rounded-lg"
+                                      className="w-full h-full rounded-lg"
+                                      style={{ objectFit: 'cover', objectPosition: 'center 5%' }}
                                       onError={(e) => { e.target.style.display = 'none'; }}
                                     />
                                   ) : (
@@ -326,7 +325,7 @@ const Highscores = () => {
                               </>
                             ) : (
                               <td className="py-4 px-6 text-right font-mono font-black text-sm text-cyan-400">
-                                {formatVal(item.value, item.unit || activeCategoryObj.unit)}
+                                {formatVal(item.value, (activeCategory === 'factions-roster') ? '' : (item.unit || activeCategoryObj.unit))}
                               </td>
                             )}
                           </tr>

@@ -240,21 +240,7 @@ const Donate = () => {
   const totalItemCount = Array.isArray(categories) ? categories.reduce((sum, c) => sum + (parseInt(c.item_count) || 0), 0) : 0;
 
   const rawItemList = Array.isArray(items) ? items : [];
-  const hasCoinItem = rawItemList.some(isCoinItem);
-  const itemList = hasCoinItem ? rawItemList : [
-    {
-      id: rawItemList.length > 0 ? rawItemList[0].id : 1,
-      category_id: 1,
-      name: 'Paraiso Coins',
-      category_name: 'Coins',
-      price: 5.00,
-      image_url: '/Donator_-_Paraiso_Coins.jpg',
-      description: 'Official Paraiso Coins (PC). Select packages ranging from 1,000 PC ($5) to 24,000 PC ($100).',
-      sort_order: -999,
-      is_active: 1
-    },
-    ...rawItemList
-  ];
+  const itemList = rawItemList;
 
   const sortedItems = [...itemList].sort((a, b) => {
     if (sortBy === 'price-low') return parseFloat(a.price) - parseFloat(b.price);
